@@ -52,6 +52,32 @@ class CompleteSessionResponse(BaseModel):
 class UpdateAvatarRequest(BaseModel):
     avatar_id: str
 
+class TopicHistoryResponse(BaseModel):
+    name: str
+    area: str
+
+class SessionHistoryResponse(BaseModel):
+    id: int
+    score: int
+    xp_earned: int
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    topic: TopicHistoryResponse
+
+    class Config:
+        from_attributes = True
+
+@router.get("/history", response_model=List[SessionHistoryResponse])
+def get_session_history(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Retrieves the completed practice history of the authenticated user.
+    """
+    sessions = db.query(MathSession).filter(
+        MathSession.user_id == current_user.id,
+        MathSession.completed_at.isnot(None)
+    ).order_by(MathSession.completed_at.desc()).all()
+    return sessions
+
 def calculate_streak(user: User, db: Session):
     """
     Calculates and updates user's daily learning streak.

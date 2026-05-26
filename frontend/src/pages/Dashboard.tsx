@@ -125,15 +125,14 @@ export const Dashboard: React.FC = () => {
     return user.achievements.some((a) => a.badge_key === key);
   };
 
-  // Transform session history for Recharts progress curves
-  const chartData = [
-    { name: language === "es" ? "Aritmética" : "Arithmetic", XP: user.xp_total > 230 ? 150 : Math.min(150, user.xp_total) },
-    { name: language === "es" ? "Álgebra" : "Algebra", XP: user.xp_total > 230 ? 80 : Math.max(0, user.xp_total - 150) },
-    { name: language === "es" ? "Geometría" : "Geometry", XP: isBadgeUnlocked("perfect_score") ? 60 : 0 },
-    { name: language === "es" ? "Trigonometría" : "Trig", XP: 0 },
-    { name: language === "es" ? "Cálculo" : "Calculus", XP: isBadgeUnlocked("streak_3") ? 50 : 0 },
-    { name: language === "es" ? "Estadística" : "Stats", XP: 0 },
-  ];
+  // Transform session history for Recharts progress curves (Accuracy of the past 10 sessions)
+  const recentHistory = [...history].slice(0, 10).reverse();
+  const chartData = recentHistory.map((record) => ({
+    date: new Date(record.completed_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" }),
+    [language === "es" ? "Puntaje" : "Score"]: record.score,
+    topicName: record.topic.name,
+    xp: record.xp_earned
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
@@ -256,34 +255,64 @@ export const Dashboard: React.FC = () => {
 
         {/* Analytics & Progression Curve Right Columns */}
         <div className="lg:col-span-2 space-y-6">
-          {/* XP Progress chart */}
+          {/* Accuracy Progress chart */}
           <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
             <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
-              {language === "es" ? "Progreso de XP por Área" : "XP Progression by Math Area"}
+              {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
             </h3>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorXp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
-                      borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
-                      borderRadius: "12px",
-                      color: theme === "dark" ? "#f8fafc" : "#0f172a",
-                    }}
-                  />
-                  <Area type="monotone" dataKey="XP" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorXp)" />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="h-64 flex flex-col justify-center">
+              {history.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
+                        borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
+                        borderRadius: "16px",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                        color: theme === "dark" ? "#f8fafc" : "#0f172a",
+                        fontSize: "12px",
+                        border: "1px solid"
+                      }}
+                      labelFormatter={(label, items) => {
+                        if (items && items[0]) {
+                          return items[0].payload.topicName;
+                        }
+                        return label;
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey={language === "es" ? "Puntaje" : "Score"} 
+                      stroke="#8b5cf6" 
+                      strokeWidth={2.5} 
+                      fillOpacity={1} 
+                      fill="url(#colorScore)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl h-full transition-colors duration-200">
+                  <div className="text-4xl mb-2">📈</div>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {language === "es" ? "¡Gráfico de Progreso Vacío!" : "No Progression Data Yet!"}
+                  </p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
+                    {language === "es" 
+                      ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
+                      : "Complete your first math training session to visualize your accuracy learning curve here."}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

@@ -4,8 +4,11 @@ import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { useApp } from "../services/AppContext";
 import { badgesConfig } from "../services/translations";
-import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { VoiceService } from "../services/voice";
+import { SoundEffects } from "../services/SoundEffects";
+import { triggerConfetti, triggerSuperCelebration } from "../services/confetti";
 
 interface Exercise {
   id: number;
@@ -54,6 +57,13 @@ export const Session: React.FC = () => {
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [completedSummary, setCompletedSummary] = useState<CompletionSummary | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      VoiceService.stop();
+    };
+  }, []);
 
   useEffect(() => {
     const initSession = async () => {
@@ -99,6 +109,12 @@ export const Session: React.FC = () => {
         is_correct: res.data.is_correct,
         explanation: res.data.explanation,
       });
+
+      if (res.data.is_correct) {
+        SoundEffects.playCorrect();
+      } else {
+        SoundEffects.playIncorrect();
+      }
     } catch (err) {
       console.error("Error evaluating answer:", err);
       alert(
@@ -112,6 +128,8 @@ export const Session: React.FC = () => {
   };
 
   const handleContinue = async () => {
+    VoiceService.stop();
+    setIsSpeaking(false);
     setEvaluation(null);
     setUserAnswer("");
 
@@ -128,6 +146,13 @@ export const Session: React.FC = () => {
       try {
         const res = await api.post(`/sessions/${sessionId}/complete`);
         setCompletedSummary(res.data);
+
+        SoundEffects.playTriumph();
+        if (res.data.score === res.data.total_questions || (res.data.newly_unlocked && res.data.newly_unlocked.length > 0)) {
+          triggerSuperCelebration();
+        } else {
+          triggerConfetti();
+        }
       } catch (err) {
         console.error("Error completing session:", err);
         alert(
@@ -359,18 +384,53 @@ export const Session: React.FC = () => {
                     : "bg-amber-500/5 border-amber-500/35 text-amber-700 dark:text-amber-300"
                 }`}
               >
-                <div className="flex items-center gap-2 font-bold text-sm mb-3">
-                  {evaluation.is_correct ? (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
-                      <span>{language === "es" ? "¡Respuesta Correcta!" : "Correct Answer!"}</span>
-                    </>
-                  ) : (
-                    <>
-                      <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                      <span>{language === "es" ? "Intento Completado (¡Aprende del error!)" : "Attempt Logged (Learn from mistake!)"}</span>
-                    </>
-                  )}
+                <div className="flex items-center justify-between font-bold text-sm mb-3 gap-4">
+                  <div className="flex items-center gap-2">
+                    {evaluation.is_correct ? (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
+                        <span>{language === "es" ? "¡Respuesta Correcta!" : "Correct Answer!"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                        <span>{language === "es" ? "Intento Completado (¡Aprende del error!)" : "Attempt Logged (Learn from mistake!)"}</span>
+                      </>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isSpeaking) {
+                        VoiceService.stop();
+                        setIsSpeaking(false);
+                      } else {
+                        setIsSpeaking(true);
+                        VoiceService.speak(evaluation.explanation, language, () => setIsSpeaking(false));
+                      }
+                    }}
+                    title={isSpeaking ? (language === "es" ? "Detener voz" : "Stop voice") : (language === "es" ? "Escuchar explicación" : "Listen to explanation")}
+                    className={`p-1.5 rounded-lg border flex items-center justify-center gap-1 transition-all text-xs font-semibold shrink-0 ${
+                      isSpeaking
+                        ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                        : evaluation.is_correct
+                          ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-450 hover:bg-green-500/20"
+                          : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-450 hover:bg-amber-500/20"
+                    }`}
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                        <span>{language === "es" ? "Silenciar" : "Mute"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>{language === "es" ? "Escuchar" : "Listen"}</span>
+                      </>
+                    )}
+                  </button>
                 </div>
                 
                 <div className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed prose dark:prose-invert">

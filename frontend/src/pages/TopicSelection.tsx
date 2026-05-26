@@ -4,8 +4,9 @@ import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
-import { ArrowLeft, BookOpen, GraduationCap, Play, HelpCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, BookOpen, GraduationCap, Play, HelpCircle, Loader2, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { VoiceService } from "../services/voice";
 
 interface Topic {
   id: number;
@@ -20,8 +21,15 @@ export const TopicSelection: React.FC = () => {
   const [explanation, setExplanation] = useState<string>("");
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const navigate = useNavigate();
   const { t, language } = useApp();
+
+  useEffect(() => {
+    return () => {
+      VoiceService.stop();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -38,6 +46,8 @@ export const TopicSelection: React.FC = () => {
   }, []);
 
   const handleSelectTopic = async (topic: Topic) => {
+    VoiceService.stop();
+    setIsSpeaking(false);
     setSelectedTopic(topic);
     setExplanation("");
     setLoadingExplanation(true);
@@ -168,6 +178,46 @@ export const TopicSelection: React.FC = () => {
                   </div>
                 ) : (
                   <>
+                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6 gap-4">
+                      <div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">
+                          {language === "es" ? "Lección Interactiva" : "Interactive Lesson"}
+                        </span>
+                        <h3 className="text-xl font-black text-slate-850 dark:text-white mt-0.5">
+                          {selectedTopic.name}
+                        </h3>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (isSpeaking) {
+                            VoiceService.stop();
+                            setIsSpeaking(false);
+                          } else {
+                            setIsSpeaking(true);
+                            VoiceService.speak(explanation, language, () => setIsSpeaking(false));
+                          }
+                        }}
+                        title={isSpeaking ? (language === "es" ? "Detener voz" : "Stop voice") : (language === "es" ? "Escuchar lección" : "Listen to lesson")}
+                        className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all text-xs font-bold shrink-0 ${
+                          isSpeaking
+                            ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                            : "bg-mathPurple-500/10 border-mathPurple-500/30 text-mathPurple-700 dark:text-mathPurple-400 hover:bg-mathPurple-500/20"
+                        }`}
+                      >
+                        {isSpeaking ? (
+                          <>
+                            <VolumeX className="w-4 h-4 animate-pulse" />
+                            <span>{language === "es" ? "Silenciar" : "Mute"}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-4 h-4" />
+                            <span>{language === "es" ? "Escuchar" : "Listen"}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
                     <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
                       <MathRenderer text={explanation} />
                     </div>
