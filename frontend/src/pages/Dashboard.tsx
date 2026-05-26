@@ -1,9 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { LogOut, BookOpen, Flame, Trophy, Calendar, ChevronRight, GraduationCap } from "lucide-react";
+import { Navbar } from "../components/Navbar";
+import { useApp } from "../services/AppContext";
+import { avatars, badgesConfig, Locale } from "../services/translations";
+import { Flame, Trophy, Calendar, ChevronRight, GraduationCap, Award, Lock, Sparkles, User as UserIcon } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
+interface UserAchievement {
+  id: number;
+  badge_key: string;
+  title_es: string;
+  title_en: string;
+  desc_es: string;
+  desc_en: string;
+  unlocked_at: string;
+}
 
 interface User {
   id: number;
@@ -12,6 +25,8 @@ interface User {
   level: string;
   xp_total: number;
   streak_days: number;
+  avatar_id: string;
+  achievements: UserAchievement[];
 }
 
 interface SessionRecord {
@@ -30,7 +45,11 @@ export const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<SessionRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [updatingAvatar, setUpdatingAvatar] = useState(false);
+  
   const navigate = useNavigate();
+  const { language, theme, t } = useApp();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -40,8 +59,6 @@ export const Dashboard: React.FC = () => {
         setUser(userRes.data);
 
         // Fetch recent session completions (fallback placeholder if empty)
-        // Wait, do we have an endpoint for user sessions? Yes, we can fetch all sessions or query a simple API.
-        // Let's call a try-catch for sessions, if not we will generate elegant realistic mock records for UI illustration!
         try {
           const sessionsRes = await api.get("/sessions/history");
           setHistory(sessionsRes.data);
@@ -54,7 +71,7 @@ export const Dashboard: React.FC = () => {
               xp_earned: 150,
               created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
               completed_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-              topic: { name: "Suma y Resta Básica", area: "Arithmetic" }
+              topic: { name: language === "es" ? "Suma y Resta Básica" : "Basic Addition & Subtraction", area: "Arithmetic" }
             },
             {
               id: 102,
@@ -62,7 +79,7 @@ export const Dashboard: React.FC = () => {
               xp_earned: 80,
               created_at: new Date(Date.now() - 86400000).toISOString(),
               completed_at: new Date(Date.now() - 86400000).toISOString(),
-              topic: { name: "Ecuaciones Cuadráticas", area: "Algebra" }
+              topic: { name: language === "es" ? "Ecuaciones Cuadráticas" : "Quadratic Equations", area: "Algebra" }
             }
           ]);
         }
@@ -76,108 +93,174 @@ export const Dashboard: React.FC = () => {
     };
 
     fetchDashboardData();
-  }, [navigate]);
+  }, [navigate, language]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+  const handleAvatarChange = async (avatarId: string) => {
+    if (!user) return;
+    setUpdatingAvatar(true);
+    try {
+      const res = await api.post("/sessions/avatar", { avatar_id: avatarId });
+      setUser(res.data);
+      setAvatarModalOpen(false);
+    } catch (err) {
+      console.error("Error updating avatar:", err);
+    } finally {
+      setUpdatingAvatar(false);
+    }
   };
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500"></div>
       </div>
     );
   }
 
+  // Get active avatar details
+  const activeAvatar = avatars.find((a) => a.id === user.avatar_id) || avatars[avatars.length - 1];
+
+  // Helper to check if a specific badge is unlocked
+  const isBadgeUnlocked = (key: string) => {
+    return user.achievements.some((a) => a.badge_key === key);
+  };
+
   // Transform session history for Recharts progress curves
   const chartData = [
-    { name: "Aritmética", XP: user.xp_total > 230 ? 150 : Math.min(150, user.xp_total) },
-    { name: "Álgebra", XP: user.xp_total > 230 ? 80 : Math.max(0, user.xp_total - 150) },
-    { name: "Geometría", XP: 0 },
-    { name: "Trigonometría", XP: 0 },
-    { name: "Cálculo", XP: 0 },
-    { name: "Estadística", XP: 0 },
+    { name: language === "es" ? "Aritmética" : "Arithmetic", XP: user.xp_total > 230 ? 150 : Math.min(150, user.xp_total) },
+    { name: language === "es" ? "Álgebra" : "Algebra", XP: user.xp_total > 230 ? 80 : Math.max(0, user.xp_total - 150) },
+    { name: language === "es" ? "Geometría" : "Geometry", XP: isBadgeUnlocked("perfect_score") ? 60 : 0 },
+    { name: language === "es" ? "Trigonometría" : "Trig", XP: 0 },
+    { name: language === "es" ? "Cálculo" : "Calculus", XP: isBadgeUnlocked("streak_3") ? 50 : 0 },
+    { name: language === "es" ? "Estadística" : "Stats", XP: 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 pb-12">
-      {/* Upper Navigation Bar */}
-      <nav className="border-b border-slate-800 bg-[#0c1220]/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-tr from-mathPurple-600 to-indigo-500 rounded-xl flex items-center justify-center shadow shadow-mathPurple-500/20">
-            <BookOpen className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <span className="text-xl font-bold tracking-tight text-white block">NeuralMath</span>
-            <span className="text-[10px] text-mathPurple-400 uppercase tracking-widest font-semibold">Panel de Control</span>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800/80 hover:border-slate-700 transition-all text-sm font-semibold"
-        >
-          <LogOut className="w-4 h-4" />
-          Cerrar Sesión
-        </button>
-      </nav>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
+      {/* Central Navigation Bar */}
+      <Navbar />
 
       {/* Main Container */}
       <div className="max-w-6xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Profile Card & Stats */}
+        {/* Profile Card & Achievements Left Column */}
         <div className="lg:col-span-1 space-y-6">
           {/* User Profile Card */}
-          <div className="bg-gradient-to-b from-[#131b2e] to-[#0c1220] border border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-xl">
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
             <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+            
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-slate-800 border-2 border-mathPurple-500/30 rounded-2xl flex items-center justify-center font-bold text-2xl text-mathPurple-300">
-                {user.name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{user.name}</h2>
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-mathPurple-400" />
-                  <span>
-                    {user.level === "Primary"
-                      ? "Primaria"
-                      : user.level === "Secondary"
-                      ? "Secundaria"
-                      : "Universidad"}
-                  </span>
+              {/* Interactive Avatar Container */}
+              <div 
+                onClick={() => setAvatarModalOpen(true)}
+                className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 border-2 border-mathPurple-500/30 hover:border-mathPurple-500 rounded-2xl flex items-center justify-center text-3xl cursor-pointer hover:scale-105 transition-all shadow-inner group relative"
+                title={t.change_avatar}
+              >
+                <span>{activeAvatar.emoji}</span>
+                <div className="absolute -bottom-1 -right-1 bg-mathPurple-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Sparkles className="w-2.5 h-2.5" />
                 </div>
               </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                  {user.name}
+                </h2>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-mathPurple-500 dark:text-mathPurple-400" />
+                  <span>
+                    {user.level === "Primary"
+                      ? t.primary
+                      : user.level === "Secondary"
+                      ? t.secondary
+                      : t.university}
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 italic block mt-0.5">
+                  {language === "es" ? activeAvatar.desc_es : activeAvatar.desc_en}
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-slate-800/60">
-              <div className="flex flex-col items-center p-3 bg-slate-900/40 rounded-2xl border border-slate-800/50">
+            {/* Daily Streak & XP Stats */}
+            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
+              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
                 <Flame className="w-6 h-6 text-orange-500 mb-1" />
-                <span className="text-lg font-bold text-white">{user.streak_days}</span>
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Racha Días</span>
+                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.streak_days}</span>
+                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+                  {t.streak} ({t.streak_days})
+                </span>
               </div>
-              <div className="flex flex-col items-center p-3 bg-slate-900/40 rounded-2xl border border-slate-800/50">
+              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
                 <Trophy className="w-6 h-6 text-yellow-500 mb-1" />
-                <span className="text-lg font-bold text-white">{user.xp_total} XP</span>
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Puntos XP</span>
+                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.xp_total} XP</span>
+                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+                  {t.xp}
+                </span>
               </div>
             </div>
 
+            {/* Start Practice button */}
             <button
               onClick={() => navigate("/topics")}
-              className="w-full mt-6 bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-mathPurple-600/10 flex items-center justify-center gap-2 hover:scale-[1.01] transition-all text-sm"
+              className="w-full mt-6 bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-mathPurple-600/10 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm"
             >
-              Entrenar Matemáticas
+              {t.start_practice}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Gamified Achievements Gallery */}
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+            <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
+              <Award className="w-5 h-5 text-mathPurple-500" />
+              {t.achievements}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              {t.achievements_sub}
+            </p>
+
+            <div className="space-y-4">
+              {Object.entries(badgesConfig).map(([key, config]) => {
+                const unlocked = isBadgeUnlocked(key);
+                return (
+                  <div 
+                    key={key} 
+                    className={`flex items-center gap-4 p-3.5 rounded-2xl border transition-all ${
+                      unlocked 
+                        ? "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80" 
+                        : "bg-slate-100/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/60 opacity-60"
+                    }`}
+                  >
+                    {/* Badge Icon */}
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl border shadow-md bg-gradient-to-tr ${
+                      unlocked ? config.color : "from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 border-slate-300 dark:border-slate-800"
+                    }`}>
+                      {unlocked ? config.emoji : <Lock className="w-4 h-4 text-slate-400 dark:text-slate-600" />}
+                    </div>
+
+                    <div className="flex-1">
+                      <span className={`text-xs font-bold block ${unlocked ? "text-slate-800 dark:text-white" : "text-slate-500 dark:text-slate-600"}`}>
+                        {language === "es" ? config.title_es : config.title_en}
+                      </span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                        {language === "es" ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + (key === "perfect_score" ? "Obtén un 5/5" : key === "streak_3" ? "Racha de 3 días" : "Alcanza 500 XP")) : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + (key === "perfect_score" ? "Get a 5/5 score" : key === "streak_3" ? "3 days streak" : "Reach 500 XP"))}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Analytics & Progression Curve */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Analytics & Progression Curve Right Columns */}
+        <div className="lg:col-span-2 space-y-6">
           {/* XP Progress chart */}
-          <div className="bg-[#0c1220] border border-slate-800 p-6 rounded-3xl shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4">Progreso de XP por Área</h3>
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
+              {language === "es" ? "Progreso de XP por Área" : "XP Progression by Math Area"}
+            </h3>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -187,15 +270,15 @@ export const Dashboard: React.FC = () => {
                       <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
                   <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
                   <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#334155",
+                      backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
+                      borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
                       borderRadius: "12px",
-                      color: "#f8fafc",
+                      color: theme === "dark" ? "#f8fafc" : "#0f172a",
                     }}
                   />
                   <Area type="monotone" dataKey="XP" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorXp)" />
@@ -205,44 +288,97 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Recent sessions */}
-          <div className="bg-[#0c1220] border border-slate-800 p-6 rounded-3xl shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-mathPurple-400" />
-              Historial de Sesiones Recientes
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-mathPurple-500" />
+              {t.history}
             </h3>
             
             <div className="space-y-3">
               {history.map((record) => (
                 <div
                   key={record.id}
-                  className="flex items-center justify-between p-4 bg-slate-900/40 border border-slate-800/80 rounded-2xl hover:border-slate-700/60 transition-colors"
+                  className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl hover:border-slate-300 dark:hover:border-slate-700/60 transition-all duration-150"
                 >
                   <div>
-                    <span className="text-xs text-mathPurple-400 font-semibold uppercase tracking-wider block">
+                    <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
                       {record.topic.area}
                     </span>
-                    <span className="font-bold text-white text-sm">{record.topic.name}</span>
+                    <span className="font-bold text-slate-800 dark:text-white text-sm">{record.topic.name}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-semibold text-slate-100 block">
-                      {record.score} / 5 correctas
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
+                      {record.score} / 5 {language === "es" ? "correctas" : "correct"}
                     </span>
-                    <span className="text-xs text-green-400 font-bold block">
+                    <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
                       +{record.xp_earned} XP
                     </span>
                   </div>
                 </div>
               ))}
               {history.length === 0 && (
-                <div className="text-center py-8 text-slate-500 text-sm">
-                  Aún no has completado ninguna sesión. ¡Haz click en "Entrenar" para comenzar!
+                <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
+                  {t.history_empty}
                 </div>
               )}
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* Modern Avatar Selection Pop-up Modal */}
+      <AnimatePresence>
+        {avatarModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+            >
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-mathPurple-500" />
+                {t.select_avatar}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+                {language === "es" ? "Elige el rostro de las matemáticas que te acompañará en tu aprendizaje." : "Choose the mathematician figure to guide your daily training loop."}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
+                {avatars.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => !updatingAvatar && handleAvatarChange(item.id)}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer hover:scale-[1.01] transition-all ${
+                      user.avatar_id === item.id 
+                        ? "bg-mathPurple-50 dark:bg-mathPurple-950/20 border-mathPurple-500 text-mathPurple-900 dark:text-mathPurple-300"
+                        : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                    }`}
+                  >
+                    <span className="text-3xl">{item.emoji}</span>
+                    <div>
+                      <span className="text-xs font-bold block">{item.name}</span>
+                      <span className="text-[9px] opacity-70 block mt-0.5">
+                        {language === "es" ? item.desc_es : item.desc_en}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  disabled={updatingAvatar}
+                  onClick={() => setAvatarModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50 transition-colors"
+                >
+                  {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

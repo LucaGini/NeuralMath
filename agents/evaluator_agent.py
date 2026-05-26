@@ -45,9 +45,13 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
             cleaned = cleaned[7:]
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3]
-        cleaned = cleaned.strip()
+        # Safeguard LaTeX backslashes (e.g. \frac, \times) from JSON parsing collisions (like interpreting \t as tab)
+        import re
+        protected = cleaned.replace("\\\\", "__DOUBLE_BACKSLASH__")
+        escaped = re.sub(r'\\([a-zA-Z])', r'\\\\\1', protected)
+        cleaned_json = escaped.replace("__DOUBLE_BACKSLASH__", "\\\\")
         
-        parsed = json.loads(cleaned)
+        parsed = json.loads(cleaned_json)
         return {
             "evaluations": [parsed] # We can merge this or append it in the graph state
         }

@@ -6,6 +6,8 @@ from app.models.user import User
 from app.models.topic import Topic
 from app.models.session import Session as MathSession
 from app.models.exercise import Exercise
+from app.models.achievement import Achievement
+from app.schemas.user import AchievementResponse, UserResponse
 from app.api.auth import get_current_user
 from agents.graph import math_tutor_graph
 from pydantic import BaseModel
@@ -45,6 +47,10 @@ class CompleteSessionResponse(BaseModel):
     xp_earned: int
     streak_days: int
     motivation_message: str
+    newly_unlocked: List[AchievementResponse] = []
+
+class UpdateAvatarRequest(BaseModel):
+    avatar_id: str
 
 def calculate_streak(user: User, db: Session):
     """
@@ -258,15 +264,79 @@ def complete_session(session_id: int, db: Session = Depends(get_db), current_use
         res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"motivation_{session_id}"}})
         motivation_message = res.get("motivation_message", "¡Felicitaciones por terminar tu entrenamiento diario!")
         
+        # Check for achievements
+        newly_unlocked = []
+        
+        # 1. Prodigio Matemático (perfect_score)
+        if correct_count == total_questions and total_questions > 0:
+            badge_key = "perfect_score"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Prodigio Matemático",
+                    title_en="Math Prodigy",
+                    desc_es="Resolviste correctamente todos los ejercicios de una sesión.",
+                    desc_en="Solved all exercises correctly in a single session."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 2. Guerrero Diario (streak_3)
+        if current_user.streak_days >= 3:
+            badge_key = "streak_3"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Guerrero Diario",
+                    title_en="Daily Warrior",
+                    desc_es="Mantuviste una racha de aprendizaje de 3 días consecutivos.",
+                    desc_en="Maintained an active learning streak of 3 consecutive days."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 3. Gran Maestro (xp_500)
+        if current_user.xp_total >= 500:
+            badge_key = "xp_500"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Gran Maestro",
+                    title_en="Grandmaster",
+                    desc_es="Alcanzaste un total acumulado de 500 XP.",
+                    desc_en="Accumulated a lifetime total of 500 XP."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
         db.commit()
         
+        for ach in newly_unlocked:
+            db.refresh(ach)
+            
         return {
             "session_id": session_record.id,
             "score": correct_count,
             "total_questions": total_questions,
             "xp_earned": xp_earned,
             "streak_days": current_user.streak_days,
-            "motivation_message": motivation_message
+            "motivation_message": motivation_message,
+            "newly_unlocked": newly_unlocked
         }
     except Exception as e:
         db.rollback()
@@ -274,3 +344,10 @@ def complete_session(session_id: int, db: Session = Depends(get_db), current_use
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error compiling motivator response: {str(e)}"
         )
+
+@router.post("/avatar", response_model=UserResponse)
+def update_avatar(req: UpdateAvatarRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    current_user.avatar_id = req.avatar_id
+    db.commit()
+    db.refresh(current_user)
+    return current_user

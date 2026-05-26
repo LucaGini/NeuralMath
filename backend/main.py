@@ -4,6 +4,8 @@ from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
 from app.api import auth, topics, sessions
 from app.models.topic import Topic
+from app.models.user import User
+from app.models.achievement import Achievement
 
 # Initialize the PostgreSQL schema tables
 Base.metadata.create_all(bind=engine)

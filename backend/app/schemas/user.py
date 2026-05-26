@@ -1,6 +1,18 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+
+class AchievementResponse(BaseModel):
+    id: int
+    badge_key: str
+    title_es: str
+    title_en: str
+    desc_es: str
+    desc_en: str
+    unlocked_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class UserBase(BaseModel):
     name: str
@@ -14,8 +26,10 @@ class UserResponse(UserBase):
     id: int
     xp_total: int
     streak_days: int
+    avatar_id: str
     last_active_at: Optional[datetime] = None
     created_at: datetime
+    achievements: List[AchievementResponse] = []
 
     class Config:
         from_attributes = True
