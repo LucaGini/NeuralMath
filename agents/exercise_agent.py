@@ -29,7 +29,17 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display)\n"
         "- 'correct_answer': a brief, single correct answer string (e.g., '3' or '(x-2)(x-3)' or '1/2')\n"
         "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
-        "- 'order_index': sequential integer starting at 0\n\n"
+        "- 'order_index': sequential integer starting at 0\n"
+        "- 'exercise_type': one of 'free_text', 'multiple_choice', or 'fill_blank'\n"
+        "- 'choices': a list of exactly 4 strings IF exercise_type is 'multiple_choice', else null. One of the choices must exactly match 'correct_answer'; the other three must be plausible wrong answers (common misconceptions)\n"
+        "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
+        "EXERCISE TYPE SELECTION RULES:\n"
+        "- For 'Primary' level: prefer 'multiple_choice' (60%) and 'fill_blank' (40%). No 'free_text'.\n"
+        "- For 'Secondary' level: mix all three types evenly (33% each).\n"
+        "- For 'University' level: prefer 'free_text' (70%), use 'fill_blank' (20%) and 'multiple_choice' (10%).\n\n"
+        "EXERCISE DESIGN RULES:\n"
+        "- For 'fill_blank': write the question with '___' marking the missing value (e.g. 'Si $2x + 3 = 11$, entonces $x = ___$')\n"
+        "- For 'multiple_choice': do not put any labels (like A, B, C, D) inside choices. The choices should just be the mathematical values or expressions.\n\n"
         "Ensure the questions escalate in complexity. Do not include any explanation or markdown wrappers outside of the JSON block."
     )
 
@@ -42,7 +52,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         f"- If the topic is 'Multiplicación y División', generate ONLY basic multiplications and divisions (no equations!).\n"
         f"- Never reuse the exact example equation provided below.\n\n"
         "Format the output strictly as a JSON object, e.g.:\n"
-        '{\n  "exercises": [\n    {"question": "Resuelve $x + 2 = 5$", "correct_answer": "3", "difficulty_level": "Fácil", "order_index": 0},\n    ...\n  ]\n}'
+        '{\n  "exercises": [\n    {\n      "question": "Resuelve $x + 2 = 5$",\n      "correct_answer": "3",\n      "difficulty_level": "Fácil",\n      "order_index": 0,\n      "exercise_type": "multiple_choice",\n      "choices": ["1", "3", "5", "7"],\n      "skill_tags": ["linear_equations", "basic_arithmetic"]\n    },\n    ...\n  ]\n}'
     )
 
     try:

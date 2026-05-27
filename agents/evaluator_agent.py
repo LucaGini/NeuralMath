@@ -19,23 +19,35 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
     user_answer = current_session.get("current_exercise_user_answer", "")
     
     system_instruction = (
-        "You are 'EvaluatorAgent', a highly supportive and analytical math tutor in the NeuralMath platform.\n"
-        "Your role is to evaluate a student's answer to a specific math problem.\n"
+        "You are 'EvaluatorAgent', an expert math tutor and highly rigorous answer validator in the NeuralMath platform.\n"
+        "Your role is to strictly evaluate a student's answer to a specific math problem.\n"
         "You must return ONLY a JSON object containing:\n"
         "- 'is_correct': a boolean representing if the user's answer is correct.\n"
-        "- 'explanation': a supportive, teaching-focused explanation in Spanish.\n\n"
+        "- 'explanation': a supportive, teaching-focused explanation in Spanish.\n"
+        "- 'error_type': if is_correct is false, classify the mistake as one of: "
+        "'sign_error', 'distribution_error', 'order_of_operations', 'exponent_rule', "
+        "'cancellation_error', 'arithmetic_slip', 'conceptual_error', 'other'. If is_correct is true, set to null.\n"
+        "- 'misconception': if is_correct is false, write ONE brief sentence in Spanish identifying the specific wrong belief or action. E.g. 'Olvidaste cambiar el signo de la desigualdad al dividir por un número negativo.' If correct, set to null.\n\n"
+        "RULES FOR MATHEMATICAL RIGOR (CRITICAL):\n"
+        "1. NEVER be lenient with incorrect math values or expressions. If the expected correct answer is '(x-3)(x-4)' and the student enters '(x-3)(x-9)', this is absolutely INCORRECT because their product expands to $x^2 - 12x + 27$, not $x^2 - 7x + 12$. You MUST mark it is_correct = false.\n"
+        "2. Do NOT blindly agree with the student. You must physically calculate and expand both the Expected Correct Answer and the Student's Submitted Answer to verify if they are mathematically identical or equivalent.\n"
+        "3. Support equivalence in representations (e.g. order of factors like '(x-3)(x-4)' vs '(x-4)(x-3)', or decimals like '0.5' vs '1/2'). But if the numerical or algebraic content is different, it is wrong.\n"
+        "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Expected Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question'. If the student's answer is mathematically correct and perfectly solves/satisfies the system of equations or algebraic question, you MUST override the incorrect database key and mark 'is_correct' as True. Celebrate their correctness and do not penalize them for system typos.\n\n"
         "RULES FOR THE EXPLANATION:\n"
         "1. NEVER just say 'Incorrecto' or 'Correcto'. Start with encouragement.\n"
         "2. If CORRECT, celebrate their logic, highlight why their step works, and restate the mathematical conclusion using KaTeX ($...$).\n"
-        "3. If INCORRECT, show empathy. Pinpoint the likely mistake (e.g. sign error, order of operations, division error). Teach the correct step-by-step resolution clearly using math equations so they learn from it.\n"
-        "4. Output strictly valid JSON."
+        "3. If INCORRECT, show empathy. Teach the correct step-by-step resolution clearly using math equations so they learn from it. Point out their specific algebraic error (e.g., expanding $(x-3)(x-9)$ gives $x^2 - 12x + 27$, which does not equal $x^2 - 7x + 12$)."
     )
 
     prompt = (
         f"Exercise Question: {exercise_question}\n"
-        f"Expected Correct Answer: {correct_answer}\n"
+        f"Expected Correct Answer in DB: {correct_answer}\n"
         f"Student's Submitted Answer: {user_answer}\n\n"
-        "Analyze the correctness. If the user's answer matches mathematically (even with slight spacing differences or standard simplifications like fraction formats), mark 'is_correct' as true."
+        "Please perform the following verification steps:\n"
+        "1. Independently solve the 'Exercise Question' step-by-step.\n"
+        "2. Check if the 'Student's Submitted Answer' is mathematically correct and solves the question.\n"
+        "3. Check if the 'Student's Submitted Answer' is equivalent to the 'Expected Correct Answer in DB'.\n"
+        "4. If the student's answer is mathematically correct for the question (even if the DB has a different/incorrect answer), mark 'is_correct' as true. If it is mathematically incorrect, mark 'is_correct' as false and explain the error step-by-step."
     )
 
     try:

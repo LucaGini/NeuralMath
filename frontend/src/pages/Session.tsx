@@ -15,11 +15,15 @@ interface Exercise {
   question: string;
   difficulty_level: string;
   order_index: number;
+  exercise_type: "free_text" | "multiple_choice" | "fill_blank";
+  choices?: string[];
 }
 
 interface Evaluation {
   is_correct: boolean;
   explanation: string;
+  error_type?: string;
+  misconception?: string;
 }
 
 interface NewlyUnlockedAchievement {
@@ -41,6 +45,28 @@ interface CompletionSummary {
   newly_unlocked: NewlyUnlockedAchievement[];
 }
 
+const errorTypeLabelsEs: Record<string, string> = {
+  sign_error: "Error de Signo",
+  distribution_error: "Error de Distribución",
+  order_of_operations: "Orden de Operaciones",
+  exponent_rule: "Regla de Exponentes",
+  cancellation_error: "Cancelación Inválida",
+  arithmetic_slip: "Error Aritmético",
+  conceptual_error: "Error Conceptual",
+  other: "Otro Error",
+};
+
+const errorTypeLabelsEn: Record<string, string> = {
+  sign_error: "Sign Error",
+  distribution_error: "Distribution Error",
+  order_of_operations: "Order of Operations",
+  exponent_rule: "Exponent Rule",
+  cancellation_error: "Invalid Cancellation",
+  arithmetic_slip: "Arithmetic Slip",
+  conceptual_error: "Conceptual Error",
+  other: "Other Error",
+};
+
 export const Session: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
@@ -59,6 +85,18 @@ export const Session: React.FC = () => {
   const [completedSummary, setCompletedSummary] = useState<CompletionSummary | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // New Roadmap states
+  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
+  const [hintLevel, setHintLevel] = useState(0);
+  const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [loadingHint, setLoadingHint] = useState(false);
+
+  useEffect(() => {
+    // Reset timer when question changes
+    setQuestionStartTime(Date.now());
+  }, [currentIndex]);
+
   useEffect(() => {
     return () => {
       VoiceService.stop();
@@ -67,15 +105,18 @@ export const Session: React.FC = () => {
 
   useEffect(() => {
     const initSession = async () => {
+      const isReview = topicId === "review";
       setLoadingMsg(
         language === "es" 
           ? "ExerciseAgent generando retos..." 
           : "ExerciseAgent generating challenges..."
       );
       try {
-        const res = await api.post("/sessions/start", {
-          topic_id: parseInt(topicId || "0"),
-        });
+        const res = isReview
+          ? await api.post("/sessions/review/start")
+          : await api.post("/sessions/start", {
+              topic_id: parseInt(topicId || "0"),
+            });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);
         setExercises(res.data.exercises);
@@ -94,20 +135,47 @@ export const Session: React.FC = () => {
     initSession();
   }, [topicId, navigate, language]);
 
+  const handleRequestHint = async () => {
+    const activeExercise = exercises[currentIndex];
+    if (hintLevel >= 4 || evaluation || loadingHint || !activeExercise) return;
+    setLoadingHint(true);
+    const nextLevel = hintLevel + 1;
+    try {
+      const res = await api.post("/sessions/hint", {
+        exercise_id: activeExercise.id,
+        hint_level: nextLevel,
+      });
+      setHintLevel(nextLevel);
+      setCurrentHint(res.data.hint);
+    } catch (err) {
+      console.error("Error fetching hint:", err);
+    } finally {
+      setLoadingHint(false);
+    }
+  };
+
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userAnswer.trim() || submitting || evaluation) return;
+    const activeExercise = exercises[currentIndex];
+    const answer = activeExercise?.exercise_type === "multiple_choice"
+      ? selectedChoice
+      : userAnswer;
+      
+    if (!answer || !answer.trim() || submitting || evaluation) return;
 
     setSubmitting(true);
     try {
-      const activeExercise = exercises[currentIndex];
+      const timeMs = Date.now() - questionStartTime;
       const res = await api.post("/sessions/answer", {
         exercise_id: activeExercise.id,
-        user_answer: userAnswer,
+        user_answer: answer,
+        time_to_answer_ms: timeMs,
       });
       setEvaluation({
         is_correct: res.data.is_correct,
         explanation: res.data.explanation,
+        error_type: res.data.error_type,
+        misconception: res.data.misconception,
       });
 
       if (res.data.is_correct) {
@@ -132,6 +200,9 @@ export const Session: React.FC = () => {
     setIsSpeaking(false);
     setEvaluation(null);
     setUserAnswer("");
+    setSelectedChoice(null);
+    setHintLevel(0);
+    setCurrentHint(null);
 
     if (currentIndex < exercises.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -344,24 +415,73 @@ export const Session: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmitAnswer} className="space-y-4">
-            <input
-              type="text"
-              value={userAnswer}
-              onChange={(e) => {
-                if (!evaluation) setUserAnswer(e.target.value);
-              }}
-              placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
-              className="w-full bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-slate-950 transition-colors text-base"
-              disabled={!!evaluation}
-              required
-              autoFocus
-            />
+            {/* === MULTIPLE CHOICE === */}
+            {activeExercise?.exercise_type === "multiple_choice" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                {activeExercise.choices?.map((choice, idx) => (
+                  <motion.button
+                    key={idx}
+                    type="button"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    disabled={!!evaluation}
+                    onClick={() => !evaluation && setSelectedChoice(choice)}
+                    className={`p-4 rounded-2xl border text-left text-sm font-semibold transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px]
+                      ${selectedChoice === choice
+                        ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/20"
+                        : "bg-slate-50 dark:bg-[#161c2c]/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:border-slate-350 hover:bg-slate-100/40"
+                      }
+                      ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
+                    `}
+                  >
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                      {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
+                    </span>
+                    <div className="flex-1 flex items-center">
+                      <MathRenderer text={choice} />
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            )}
+
+            {/* === FILL IN THE BLANK === */}
+            {activeExercise?.exercise_type === "fill_blank" && (
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={(e) => {
+                  if (!evaluation) setUserAnswer(e.target.value);
+                }}
+                placeholder={t.fill_missing}
+                className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border-2 border-dashed border-mathPurple-400/40 focus:border-mathPurple-500 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base text-center font-bold"
+                disabled={!!evaluation}
+                required
+                autoFocus
+              />
+            )}
+
+            {/* === FREE TEXT === */}
+            {(!activeExercise?.exercise_type || activeExercise.exercise_type === "free_text") && (
+              <input
+                type="text"
+                value={userAnswer}
+                onChange={(e) => {
+                  if (!evaluation) setUserAnswer(e.target.value);
+                }}
+                placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
+                className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
+                disabled={!!evaluation}
+                required
+                autoFocus
+              />
+            )}
 
             {!evaluation && (
               <button
                 type="submit"
-                disabled={submitting}
-                className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50"
+                disabled={submitting || (activeExercise?.exercise_type === "multiple_choice" ? !selectedChoice : !userAnswer.trim())}
+                className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none"
               >
                 {submitting 
                   ? (language === "es" ? "Evaluando respuesta..." : "Checking answer...") 
@@ -370,6 +490,38 @@ export const Session: React.FC = () => {
               </button>
             )}
           </form>
+
+          {/* Socratic Hint ladder */}
+          {!evaluation && activeExercise && (
+            <div className="space-y-3 pt-2">
+              {currentHint && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-2xl bg-blue-500/5 border border-blue-400/20 text-blue-700 dark:text-blue-300 text-sm leading-relaxed"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider block mb-1 text-blue-500">
+                    💡 {language === "es" ? `Pista ${hintLevel}/4` : `Hint ${hintLevel}/4`}
+                  </span>
+                  <MathRenderer text={currentHint} />
+                </motion.div>
+              )}
+              <button
+                type="button"
+                onClick={handleRequestHint}
+                disabled={hintLevel >= 4 || loadingHint}
+                className="text-xs font-bold text-slate-450 dark:text-slate-500 hover:text-mathPurple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {hintLevel === 0
+                  ? (language === "es" ? "💡 ¿Necesitas una pista? (−5 XP)" : "💡 Need a hint? (−5 XP)")
+                  : hintLevel < 4
+                    ? (language === "es" ? `💡 Pista más específica (−5 XP adicionales)` : `💡 More specific hint (−5 more XP)`)
+                    : (language === "es" ? "✨ Máximo de pistas alcanzado" : "✨ Maximum hints reached")
+                }
+                {loadingHint && <span className="animate-spin rounded-full h-3 h-3 border-t-2 border-mathPurple-500" />}
+              </button>
+            </div>
+          )}
 
           {/* Evaluator Agent Panel Popups */}
           <AnimatePresence>
@@ -384,6 +536,12 @@ export const Session: React.FC = () => {
                     : "bg-amber-500/5 border-amber-500/35 text-amber-700 dark:text-amber-300"
                 }`}
               >
+                {!evaluation.is_correct && evaluation.error_type && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-450 text-[10px] font-black uppercase tracking-wider mb-3">
+                    🏷️ {language === "es" ? errorTypeLabelsEs[evaluation.error_type] : errorTypeLabelsEn[evaluation.error_type]}
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between font-bold text-sm mb-3 gap-4">
                   <div className="flex items-center gap-2">
                     {evaluation.is_correct ? (
@@ -394,7 +552,7 @@ export const Session: React.FC = () => {
                     ) : (
                       <>
                         <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                        <span>{language === "es" ? "Intento Completado (¡Aprende del error!)" : "Attempt Logged (Learn from mistake!)"}</span>
+                        <span>{language === "es" ? "Intento Completado" : "Attempt Logged"}</span>
                       </>
                     )}
                   </div>
@@ -433,6 +591,12 @@ export const Session: React.FC = () => {
                   </button>
                 </div>
                 
+                {!evaluation.is_correct && evaluation.misconception && (
+                  <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 text-xs text-amber-750 dark:text-amber-400 mb-4 font-semibold">
+                    💡 {evaluation.misconception}
+                  </div>
+                )}
+
                 <div className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed prose dark:prose-invert">
                   <MathRenderer text={evaluation.explanation} />
                 </div>

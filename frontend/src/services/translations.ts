@@ -56,6 +56,18 @@ export interface TranslationDict {
   finish: string;
   loading: string;
   error_loading: string;
+  select_answer: string;
+  fill_missing: string;
+  progress: string;
+  skill_map: string;
+  mastered: string;
+  improving: string;
+  needs_work: string;
+  continue_path: string;
+  your_weakest_skill: string;
+  skill_map_empty: string;
+  review_weak_spots: string;
+  weak_spots: string;
 }
 
 export const translations: Record<Locale, TranslationDict> = {
@@ -115,6 +127,18 @@ export const translations: Record<Locale, TranslationDict> = {
     finish: "Finalizar Sesión",
     loading: "Cargando...",
     error_loading: "Error al cargar los datos.",
+    select_answer: "Selecciona una respuesta",
+    fill_missing: "Escribe el valor que falta...",
+    progress: "Progreso",
+    skill_map: "Mapa de Habilidades",
+    mastered: "Dominado",
+    improving: "Mejorando",
+    needs_work: "Necesita Práctica",
+    continue_path: "Continuar tu Ruta",
+    your_weakest_skill: "Tu punto más débil",
+    skill_map_empty: "¡Completa algunas sesiones para ver crecer tu mapa de habilidades!",
+    review_weak_spots: "Repasar Puntos Débiles",
+    weak_spots: "Puntos Débiles",
   },
   en: {
     dashboard: "Dashboard",
@@ -172,6 +196,18 @@ export const translations: Record<Locale, TranslationDict> = {
     finish: "Finish Session",
     loading: "Loading...",
     error_loading: "Error loading data.",
+    select_answer: "Select an answer",
+    fill_missing: "Type the missing value...",
+    progress: "Progress",
+    skill_map: "Skill Map",
+    mastered: "Mastered",
+    improving: "Improving",
+    needs_work: "Needs Work",
+    continue_path: "Continue Your Path",
+    your_weakest_skill: "Your weakest skill",
+    skill_map_empty: "Complete a few sessions to see your skill map grow!",
+    review_weak_spots: "Review Weak Spots",
+    weak_spots: "Weak Spots",
   }
 };
 

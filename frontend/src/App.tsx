@@ -7,6 +7,7 @@ import { Register } from "./pages/Register";
 import { Dashboard } from "./pages/Dashboard";
 import { TopicSelection } from "./pages/TopicSelection";
 import { Session } from "./pages/Session";
+import { Progress } from "./pages/Progress";
 
 // Setup React Query client
 const queryClient = new QueryClient({
@@ -48,6 +49,14 @@ export const App: React.FC = () => {
               element={
                 <PrivateRoute>
                   <TopicSelection />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/progress"
+              element={
+                <PrivateRoute>
+                  <Progress />
                 </PrivateRoute>
               }
             />

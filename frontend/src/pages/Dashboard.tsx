@@ -207,6 +207,15 @@ export const Dashboard: React.FC = () => {
               {t.start_practice}
               <ChevronRight className="w-4 h-4" />
             </button>
+
+            {/* Review Weak Spots button */}
+            <button
+              onClick={() => navigate("/session/review")}
+              className="w-full mt-3 border border-amber-500/30 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-450 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow shadow-amber-500/5"
+            >
+              📋 {t.review_weak_spots}
+              <ChevronRight className="w-4 h-4 text-amber-600/80" />
+            </button>
           </div>
 
           {/* Gamified Achievements Gallery */}

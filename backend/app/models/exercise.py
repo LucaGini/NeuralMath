@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -14,6 +14,16 @@ class Exercise(Base):
     evaluation_explanation = Column(Text, nullable=True)
     difficulty_level = Column(String, nullable=True)
     order_index = Column(Integer, nullable=False)
+    
+    # New Columns added in Roadmap
+    exercise_type = Column(String, default="free_text", nullable=False)
+    choices = Column(JSON, nullable=True)
+    error_type = Column(String, nullable=True)
+    misconception = Column(Text, nullable=True)
+    hint_level_used = Column(Integer, default=0, nullable=False)
+    skill_tags = Column(JSON, nullable=True)
+    time_to_answer_ms = Column(Integer, nullable=True)
 
     # Relationships
     session = relationship("Session", back_populates="exercises")
+

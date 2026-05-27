@@ -4,14 +4,15 @@ from agents.topic_agent import topic_node
 from agents.exercise_agent import exercise_node
 from agents.evaluator_agent import evaluator_node
 from agents.motivator_agent import motivator_node
+from agents.hint_agent import hint_node
 
 def route_entry(state: AgentState) -> str:
     """
     Looks up target_node in state and routes directly to the requested agent node.
     """
     target = state.get("target_node")
-    if target in ["topic", "exercise", "evaluator", "motivator"]:
-        return target
+    if target in ["topic", "exercise", "evaluator", "motivator", "hint"]:
+        return "hint_agent" if target == "hint" else target
     return "topic"
 
 # Define standard StateGraph
@@ -22,6 +23,7 @@ workflow.add_node("topic", topic_node)
 workflow.add_node("exercise", exercise_node)
 workflow.add_node("evaluator", evaluator_node)
 workflow.add_node("motivator", motivator_node)
+workflow.add_node("hint_agent", hint_node)
 
 # Configure transitions. 
 # By using a conditional entry point, all nodes are fully reachable.
@@ -32,7 +34,8 @@ workflow.set_conditional_entry_point(
         "topic": "topic",
         "exercise": "exercise",
         "evaluator": "evaluator",
-        "motivator": "motivator"
+        "motivator": "motivator",
+        "hint_agent": "hint_agent"
     }
 )
 
@@ -40,6 +43,7 @@ workflow.add_edge("topic", END)
 workflow.add_edge("exercise", END)
 workflow.add_edge("evaluator", END)
 workflow.add_edge("motivator", END)
+workflow.add_edge("hint_agent", END)
 
 # Compile the LangGraph engine
 math_tutor_graph = workflow.compile()

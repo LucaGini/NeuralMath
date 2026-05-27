@@ -107,20 +107,22 @@ def get_local_mock_response(prompt: str, system_instruction: Optional[str] = Non
             is_correct = True
         elif user_ans_clean.isdigit() and correct_ans_clean.isdigit():
             is_correct = int(user_ans_clean) == int(correct_ans_clean)
-        # Factor order-independent check: e.g. (x-2)(x-3) matches (x-3)(x-2)
-        elif "x-2" in user_ans_clean and "x-3" in user_ans_clean:
-            is_correct = True
-        elif "x-3" in user_ans_clean and "x-2" in user_ans_clean:
-            is_correct = True
-        # Limits cleanup check: e.g. "3/2" matches "\frac{3}{2}"
-        elif "3/2" in user_ans_clean and "3/2" in correct_ans_clean:
-            is_correct = True
-        elif "3/2" in user_ans_clean and "frac{3}{2}" in correct_ans_clean:
-            is_correct = True
-        elif "pi/4" in user_ans_clean and "pi/4" in correct_ans_clean:
-            is_correct = True
-        elif "pi/4" in user_ans_clean and "frac{\pi}{4}" in correct_ans_clean:
-            is_correct = True
+        else:
+            # Dynamic factor order-independent check: e.g. (x-3)(x-4) matches (x-4)(x-3)
+            import re
+            user_factors = sorted(re.findall(r'\(([^)]+)\)', user_ans_clean))
+            correct_factors = sorted(re.findall(r'\(([^)]+)\)', correct_ans_clean))
+            if user_factors and correct_factors and user_factors == correct_factors:
+                is_correct = True
+            # Limits cleanup check: e.g. "3/2" matches "\frac{3}{2}"
+            elif "3/2" in user_ans_clean and "3/2" in correct_ans_clean:
+                is_correct = True
+            elif "3/2" in user_ans_clean and "frac{3}{2}" in correct_ans_clean:
+                is_correct = True
+            elif "pi/4" in user_ans_clean and "pi/4" in correct_ans_clean:
+                is_correct = True
+            elif "pi/4" in user_ans_clean and "frac{\pi}{4}" in correct_ans_clean:
+                is_correct = True
         
         explanation = ""
         if is_correct:

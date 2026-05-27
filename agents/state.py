@@ -13,3 +13,4 @@ class AgentState(TypedDict):
     motivation_message: Optional[str]
     error: Optional[str]
     target_node: Optional[str]
+    hint: Optional[str]

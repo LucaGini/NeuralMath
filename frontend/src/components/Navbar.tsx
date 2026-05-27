@@ -41,6 +41,30 @@ export const Navbar: React.FC<NavbarProps> = () => {
         </div>
       </div>
 
+      {/* Navigation Links */}
+      {token && (
+        <div className="hidden sm:flex items-center gap-1 bg-slate-150/40 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 transition-colors">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+          >
+            {language === "es" ? "Panel" : "Dashboard"}
+          </button>
+          <button
+            onClick={() => navigate("/topics")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+          >
+            {language === "es" ? "Temas" : "Topics"}
+          </button>
+          <button
+            onClick={() => navigate("/progress")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+          >
+            {t.progress}
+          </button>
+        </div>
+      )}
+
       {/* Widgets & Controls */}
       <div className="flex items-center gap-3">
         {/* Language Selector */}

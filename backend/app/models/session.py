@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -11,6 +11,7 @@ class Session(Base):
     topic_id = Column(Integer, ForeignKey("topics.id"), nullable=False)
     score = Column(Integer, default=0, nullable=False)
     xp_earned = Column(Integer, default=0, nullable=False)
+    session_type = Column(String, default="practice", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
