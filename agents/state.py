@@ -14,3 +14,5 @@ class AgentState(TypedDict):
     error: Optional[str]
     target_node: Optional[str]
     hint: Optional[str]
+    theme: Optional[str]
+    session_type: Optional[str]

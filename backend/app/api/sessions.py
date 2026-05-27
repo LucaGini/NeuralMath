@@ -20,6 +20,7 @@ router = APIRouter(prefix="/sessions", tags=["sessions"])
 # Schemas
 class StartSessionRequest(BaseModel):
     topic_id: int
+    theme: Optional[str] = "standard"
 
 class ExerciseResponse(BaseModel):
     id: int
@@ -28,6 +29,8 @@ class ExerciseResponse(BaseModel):
     order_index: int
     exercise_type: str = "free_text"
     choices: Optional[List[str]] = None
+    protege_answer: Optional[str] = None
+    protege_explanation: Optional[str] = None
 
 class StartSessionResponse(BaseModel):
     session_id: int
@@ -151,7 +154,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
         "evaluations": None,
         "session_summary": {"recent_performance": performance_summary},
         "motivation_message": None,
-        "target_node": "exercise"
+        "target_node": "exercise",
+        "theme": req.theme or "standard",
+        "session_type": "practice"
     }
     
     try:
@@ -166,7 +171,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
             user_id=current_user.id,
             topic_id=topic.id,
             score=0,
-            xp_earned=0
+            xp_earned=0,
+            theme=req.theme or "standard",
+            session_type="practice"
         )
         db.add(new_session)
         db.commit()
@@ -202,7 +209,9 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
                     difficulty_level=e.difficulty_level,
                     order_index=e.order_index,
                     exercise_type=e.exercise_type,
-                    choices=e.choices
+                    choices=e.choices,
+                    protege_answer=e.protege_answer,
+                    protege_explanation=e.protege_explanation
                 ) for e in created_exercises
             ]
         }
@@ -247,6 +256,9 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
             "misconception": None
         }
 
+    session_type = session_record.session_type or "practice"
+    is_teach_back = session_type == "teach_back"
+
     # Invoke EvaluatorAgent for free_text and fill_blank
     state_input = {
         "user_level": current_user.level,
@@ -259,7 +271,10 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
         "session_summary": {
             "current_exercise_question": exercise.question,
             "current_exercise_correct_answer": exercise.correct_answer,
-            "current_exercise_user_answer": req.user_answer
+            "current_exercise_user_answer": req.user_answer,
+            "session_type": session_type,
+            "current_exercise_protege_answer": exercise.protege_answer,
+            "current_exercise_protege_explanation": exercise.protege_explanation
         },
         "motivation_message": None,
         "target_node": "evaluator"
@@ -283,6 +298,8 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
         exercise.evaluation_explanation = explanation
         exercise.error_type = error_type
         exercise.misconception = misconception
+        if is_teach_back:
+            exercise.student_review = req.user_answer
         db.commit()
         
         return {
@@ -652,7 +669,9 @@ def start_review_session(db: Session = Depends(get_db), current_user: User = Dep
                     difficulty_level=e.difficulty_level,
                     order_index=e.order_index,
                     exercise_type=e.exercise_type,
-                    choices=e.choices
+                    choices=e.choices,
+                    protege_answer=e.protege_answer,
+                    protege_explanation=e.protege_explanation
                 ) for e in created_exercises
             ]
         }
@@ -661,4 +680,101 @@ def start_review_session(db: Session = Depends(get_db), current_user: User = Dep
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error starting review session: {str(e)}"
+        )
+
+@router.post("/teach-back/start", response_model=StartSessionResponse)
+def start_teach_back_session(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Starts an AI Protégé ("Teach-Back") session where the user socratically corrects Alby's flawed steps.
+    Targets the user's weakest skill topic or falls back to their level.
+    """
+    rec = get_recommended_topic(db, current_user)
+    topic_id = rec.get("topic_id", 1)
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        topic = db.query(Topic).first()
+        
+    if not topic:
+        raise HTTPException(status_code=404, detail="No math topics found to start teach-back session")
+
+    # 1. Invoke ProtegeAgent via LangGraph
+    state_input = {
+        "user_level": current_user.level,
+        "topic_name": topic.name,
+        "topic_area": topic.area,
+        "explanation": None,
+        "exercises": None,
+        "user_answers": None,
+        "evaluations": None,
+        "session_summary": {
+            "recent_performance": f"Teach-Back session targeting: {rec.get('skill', 'general')}",
+            "session_type": "teach_back"
+        },
+        "motivation_message": None,
+        "target_node": "protege",
+        "theme": "standard",
+        "session_type": "teach_back"
+    }
+
+    try:
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"teachback_{topic.id}_{current_user.id}"}})
+        exercises_data = res.get("exercises", [])
+        
+        if not exercises_data:
+            raise HTTPException(status_code=500, detail="ProtegeAgent failed to return problems.")
+            
+        # Create MathSession for teach_back
+        new_session = MathSession(
+            user_id=current_user.id,
+            topic_id=topic.id,
+            score=0,
+            xp_earned=0,
+            session_type="teach_back",
+            theme="standard"
+        )
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+        
+        created_exercises = []
+        for ex in exercises_data:
+            db_ex = Exercise(
+                session_id=new_session.id,
+                question=ex.get("question"),
+                correct_answer=ex.get("correct_answer"),
+                protege_answer=ex.get("protege_answer"),
+                protege_explanation=ex.get("protege_explanation"),
+                difficulty_level=ex.get("difficulty_level", "Medio"),
+                order_index=ex.get("order_index", 0),
+                exercise_type=ex.get("exercise_type", "free_text"),
+                choices=ex.get("choices", None),
+                skill_tags=ex.get("skill_tags", None)
+            )
+            db.add(db_ex)
+            created_exercises.append(db_ex)
+            
+        db.commit()
+        
+        return {
+            "session_id": new_session.id,
+            "topic_name": f"Enseñar a Alby: {topic.name}",
+            "level": current_user.level,
+            "exercises": [
+                ExerciseResponse(
+                    id=e.id,
+                    question=e.question,
+                    difficulty_level=e.difficulty_level,
+                    order_index=e.order_index,
+                    exercise_type=e.exercise_type,
+                    choices=e.choices,
+                    protege_answer=e.protege_answer,
+                    protege_explanation=e.protege_explanation
+                ) for e in created_exercises
+            ]
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error starting teach-back session: {str(e)}"
         )

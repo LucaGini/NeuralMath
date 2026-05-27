@@ -4,7 +4,7 @@ import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
-import { ArrowLeft, BookOpen, GraduationCap, Play, HelpCircle, Loader2, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, BookOpen, GraduationCap, Play, HelpCircle, Loader2, Volume2, VolumeX, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { VoiceService } from "../services/voice";
 
@@ -22,8 +22,48 @@ export const TopicSelection: React.FC = () => {
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
   const navigate = useNavigate();
   const { t, language } = useApp();
+
+  const adventureThemes = [
+    {
+      id: "standard",
+      title_es: "Práctica Estándar",
+      title_en: "Standard Practice",
+      desc_es: "Ejercicios matemáticos puros, directos y enfocados.",
+      desc_en: "Pure, direct, and focused mathematical exercises.",
+      icon: "🌀",
+      color: "from-blue-500 to-indigo-600",
+    },
+    {
+      id: "space",
+      title_es: "Odisea Espacial",
+      title_en: "Space Odyssey",
+      desc_es: "Alinea propulsores y escapa de agujeros de gusano resolviendo ecuaciones.",
+      desc_en: "Align thrusters and escape wormholes by solving equations.",
+      icon: "🚀",
+      color: "from-purple-600 to-pink-600",
+    },
+    {
+      id: "fantasy",
+      title_es: "Reino de Fantasía",
+      title_en: "Fantasy Realm",
+      desc_es: "Lanza hechizos antiguos y derrota bestias míticas con tus cálculos.",
+      desc_en: "Cast ancient spells and defeat mythical beasts with your calculations.",
+      icon: "⚔️",
+      color: "from-amber-500 to-red-600",
+    },
+    {
+      id: "sports",
+      title_es: "Campeonato Deportivo",
+      title_en: "Sports Championship",
+      desc_es: "Anota goles y gana copas resolviendo desafíos de velocidad.",
+      desc_en: "Score goals and win trophies by solving speed-based challenges.",
+      icon: "⚽",
+      color: "from-emerald-500 to-teal-600",
+    },
+  ];
 
   useEffect(() => {
     return () => {
@@ -68,7 +108,14 @@ export const TopicSelection: React.FC = () => {
 
   const handleStartSession = () => {
     if (selectedTopic) {
-      navigate(`/session/${selectedTopic.id}`);
+      setThemeModalOpen(true);
+    }
+  };
+
+  const handleStartWithTheme = (themeChosen: string) => {
+    if (selectedTopic) {
+      setThemeModalOpen(false);
+      navigate(`/session/${selectedTopic.id}?theme=${themeChosen}`);
     }
   };
 
@@ -247,6 +294,61 @@ export const TopicSelection: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Glassmorphic Adventure Theme Selector Modal */}
+      <AnimatePresence>
+        {themeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-xl bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+            >
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-mathPurple-500" />
+                {language === "es" ? "Selecciona tu Aventura" : "Select Your Adventure"}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+                {language === "es" 
+                  ? "NeuralMath genera una misión y una historia continua con tus ejercicios. Elige el tema que prefieras:"
+                  : "NeuralMath generates a dynamic narrative quest matching your math problems. Choose your adventure theme:"}
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-1">
+                {adventureThemes.map((themeItem) => (
+                  <div
+                    key={themeItem.id}
+                    onClick={() => handleStartWithTheme(themeItem.id)}
+                    className="flex items-center gap-4 p-4 rounded-2xl border bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 hover:border-mathPurple-500/50 hover:bg-mathPurple-50/10 dark:hover:bg-[#12192a] cursor-pointer hover:scale-[1.01] transition-all duration-150 group"
+                  >
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border shadow-md bg-gradient-to-tr ${themeItem.color} text-white`}>
+                      {themeItem.icon}
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-extrabold block text-slate-800 dark:text-white group-hover:text-mathPurple-600 dark:group-hover:text-mathPurple-400 transition-colors">
+                        {language === "es" ? themeItem.title_es : themeItem.title_en}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                        {language === "es" ? themeItem.desc_es : themeItem.desc_en}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  onClick={() => setThemeModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 transition-colors"
+                >
+                  {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

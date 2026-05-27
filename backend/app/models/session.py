@@ -12,6 +12,7 @@ class Session(Base):
     score = Column(Integer, default=0, nullable=False)
     xp_earned = Column(Integer, default=0, nullable=False)
     session_type = Column(String, default="practice", nullable=False)
+    theme = Column(String, default="standard", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 

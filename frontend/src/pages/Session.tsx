@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { useApp } from "../services/AppContext";
@@ -17,6 +17,8 @@ interface Exercise {
   order_index: number;
   exercise_type: "free_text" | "multiple_choice" | "fill_blank";
   choices?: string[];
+  protege_answer?: string;
+  protege_explanation?: string;
 }
 
 interface Evaluation {
@@ -69,8 +71,10 @@ const errorTypeLabelsEn: Record<string, string> = {
 
 export const Session: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t, language, theme } = useApp();
+  const chosenTheme = searchParams.get("theme") || "standard";
 
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState("");
@@ -106,17 +110,21 @@ export const Session: React.FC = () => {
   useEffect(() => {
     const initSession = async () => {
       const isReview = topicId === "review";
+      const isTeachBack = topicId === "teach-back";
       setLoadingMsg(
         language === "es" 
           ? "ExerciseAgent generando retos..." 
           : "ExerciseAgent generating challenges..."
       );
       try {
-        const res = isReview
-          ? await api.post("/sessions/review/start")
-          : await api.post("/sessions/start", {
-              topic_id: parseInt(topicId || "0"),
-            });
+        const res = isTeachBack
+          ? await api.post("/sessions/teach-back/start")
+          : isReview
+            ? await api.post("/sessions/review/start")
+            : await api.post("/sessions/start", {
+                topic_id: parseInt(topicId || "0"),
+                theme: chosenTheme,
+              });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);
         setExercises(res.data.exercises);
@@ -414,67 +422,126 @@ export const Session: React.FC = () => {
             <MathRenderer text={activeExercise?.question || ""} />
           </div>
 
-          <form onSubmit={handleSubmitAnswer} className="space-y-4">
-            {/* === MULTIPLE CHOICE === */}
-            {activeExercise?.exercise_type === "multiple_choice" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                {activeExercise.choices?.map((choice, idx) => (
-                  <motion.button
-                    key={idx}
-                    type="button"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    disabled={!!evaluation}
-                    onClick={() => !evaluation && setSelectedChoice(choice)}
-                    className={`p-4 rounded-2xl border text-left text-sm font-semibold transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px]
-                      ${selectedChoice === choice
-                        ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/20"
-                        : "bg-slate-50 dark:bg-[#161c2c]/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:border-slate-350 hover:bg-slate-100/40"
-                      }
-                      ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
-                    `}
-                  >
-                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
-                      {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
-                    </span>
-                    <div className="flex-1 flex items-center">
-                      <MathRenderer text={choice} />
-                    </div>
-                  </motion.button>
-                ))}
+          {/* If Teach-Back Alby Task, render Alby's Robot Misconception Card here! */}
+          {activeExercise?.protege_answer && activeExercise?.protege_explanation && (
+            <div className="bg-slate-50 dark:bg-slate-900/40 border border-mathPurple-500/30 p-6 rounded-2xl space-y-4 relative overflow-hidden transition-colors shadow-inner">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-mathPurple-100 dark:bg-mathPurple-950/40 rounded-xl flex items-center justify-center text-3xl animate-bounce">
+                  🤖
+                </div>
+                <div>
+                  <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
+                    Compañero Virtual
+                  </span>
+                  <h4 className="font-extrabold text-slate-850 dark:text-white text-base">Alby cometió un error</h4>
+                </div>
               </div>
-            )}
+              
+              <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2">
+                <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
+                  Su respuesta final:
+                </span>
+                <div className="text-base font-bold text-slate-800 dark:text-white">
+                  <MathRenderer text={activeExercise.protege_answer || ""} />
+                </div>
+              </div>
 
-            {/* === FILL IN THE BLANK === */}
-            {activeExercise?.exercise_type === "fill_blank" && (
-              <input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => {
-                  if (!evaluation) setUserAnswer(e.target.value);
-                }}
-                placeholder={t.fill_missing}
-                className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border-2 border-dashed border-mathPurple-400/40 focus:border-mathPurple-500 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base text-center font-bold"
-                disabled={!!evaluation}
-                required
-                autoFocus
-              />
-            )}
+              <div className="space-y-1">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                  Su razonamiento:
+                </span>
+                <p className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed italic">
+                  <MathRenderer text={activeExercise.protege_explanation || ""} />
+                </p>
+              </div>
+            </div>
+          )}
 
-            {/* === FREE TEXT === */}
-            {(!activeExercise?.exercise_type || activeExercise.exercise_type === "free_text") && (
-              <input
-                type="text"
-                value={userAnswer}
-                onChange={(e) => {
-                  if (!evaluation) setUserAnswer(e.target.value);
-                }}
-                placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
-                className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
-                disabled={!!evaluation}
-                required
-                autoFocus
-              />
+          <form onSubmit={handleSubmitAnswer} className="space-y-4">
+            {activeExercise?.protege_answer ? (
+              /* === TEACH BACK TUTOR REVIEW TEXTAREA === */
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                  ✍️ {language === "es" ? "Tu explicación correctora para Alby:" : "Your corrective explanation for Alby:"}
+                </label>
+                <textarea
+                  value={userAnswer}
+                  onChange={(e) => {
+                    if (!evaluation) setUserAnswer(e.target.value);
+                  }}
+                  placeholder={language === "es" ? "Escríbele una explicación a Alby indicando qué error cometió y cómo llegar a la solución correcta..." : "Write Alby an explanation showing his error and how to reach the correct answer..."}
+                  rows={4}
+                  className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-sm"
+                  disabled={!!evaluation}
+                  required
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <>
+                {/* === MULTIPLE CHOICE === */}
+                {activeExercise?.exercise_type === "multiple_choice" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    {activeExercise.choices?.map((choice, idx) => (
+                      <motion.button
+                        key={idx}
+                        type="button"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        disabled={!!evaluation}
+                        onClick={() => !evaluation && setSelectedChoice(choice)}
+                        className={`p-4 rounded-2xl border text-left text-sm font-semibold transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px]
+                          ${selectedChoice === choice
+                            ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/20"
+                            : "bg-slate-50 dark:bg-[#161c2c]/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:border-slate-350 hover:bg-slate-100/40"
+                          }
+                          ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
+                        `}
+                      >
+                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                          {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
+                        </span>
+                        <div className="flex-1 flex items-center">
+                          <MathRenderer text={choice} />
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
+
+                {/* === FILL IN THE BLANK === */}
+                {activeExercise?.exercise_type === "fill_blank" && (
+                  <input
+                    type="text"
+                    value={userAnswer}
+                    onChange={(e) => {
+                      if (!evaluation) setUserAnswer(e.target.value);
+                    }}
+                    placeholder={t.fill_missing}
+                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border-2 border-dashed border-mathPurple-400/40 focus:border-mathPurple-500 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base text-center font-bold"
+                    disabled={!!evaluation}
+                    required
+                    autoFocus
+                  />
+                )}
+
+                {/* === FREE TEXT === */}
+                {(!activeExercise?.exercise_type || activeExercise.exercise_type === "free_text") && (
+                  <input
+                    type="text"
+                    value={userAnswer}
+                    onChange={(e) => {
+                      if (!evaluation) setUserAnswer(e.target.value);
+                    }}
+                    placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
+                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
+                    disabled={!!evaluation}
+                    required
+                    autoFocus
+                  />
+                )}
+              </>
             )}
 
             {!evaluation && (
@@ -485,7 +552,7 @@ export const Session: React.FC = () => {
               >
                 {submitting 
                   ? (language === "es" ? "Evaluando respuesta..." : "Checking answer...") 
-                  : t.submit}
+                  : (activeExercise?.protege_answer ? (language === "es" ? "Enviar corrección a Alby" : "Send correction to Alby") : t.submit)}
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}

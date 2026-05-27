@@ -23,6 +23,9 @@ class Exercise(Base):
     hint_level_used = Column(Integer, default=0, nullable=False)
     skill_tags = Column(JSON, nullable=True)
     time_to_answer_ms = Column(Integer, nullable=True)
+    protege_answer = Column(String, nullable=True)
+    protege_explanation = Column(Text, nullable=True)
+    student_review = Column(Text, nullable=True)
 
     # Relationships
     session = relationship("Session", back_populates="exercises")

@@ -216,6 +216,15 @@ export const Dashboard: React.FC = () => {
               📋 {t.review_weak_spots}
               <ChevronRight className="w-4 h-4 text-amber-600/80" />
             </button>
+
+            {/* Teach Alby button */}
+            <button
+              onClick={() => navigate("/session/teach-back")}
+              className="w-full mt-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-emerald-600/10"
+            >
+              🤖 {language === "es" ? "Enseñar a Alby" : "Teach Alby"}
+              <ChevronRight className="w-4 h-4 text-emerald-100" />
+            </button>
           </div>
 
           {/* Gamified Achievements Gallery */}

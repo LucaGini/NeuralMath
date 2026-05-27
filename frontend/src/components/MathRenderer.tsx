@@ -5,6 +5,28 @@ interface MathRendererProps {
   text: string;
 }
 
+const sanitizeMath = (math: string): string => {
+  if (!math) return "";
+
+  let sanitized = math;
+
+  // 1. Fix missing backslash before end{matrix/pmatrix/bmatrix/etc.}
+  sanitized = sanitized.replace(/(?<!\\)end{(matrix|pmatrix|bmatrix|vmatrix|cases)}/g, '\\end{$1}');
+
+  // 2. Fix underscores "___" inside KaTeX causing subscript crash by replacing with escaped underscores inside \text
+  sanitized = sanitized.replace(/_{2,}/g, (match) => `\\text{${match.split('').map(() => '\\_').join('')}}`);
+
+  // 3. Fix row separators inside matrices: if there's a single backslash '\' instead of '\\' separating rows
+  // E.g., \begin{pmatrix} 1 & 2 \ 3 & 4 \end{pmatrix} should become \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
+  sanitized = sanitized.replace(/\\begin{(matrix|pmatrix|bmatrix|vmatrix|cases)}(.*?)\\end{\1}/gs, (match, env, content) => {
+    // Replace lone backslash '\' with double '\\', ignoring commands starting with \ followed by letters, or existing double backslashes
+    const sanitizedContent = content.replace(/\\(?![a-zA-Z\\])/g, '\\\\');
+    return `\\begin{${env}}${sanitizedContent}\\end{${env}}`;
+  });
+
+  return sanitized;
+};
+
 export const MathRenderer: React.FC<MathRendererProps> = ({ text }) => {
   if (!text) return null;
 
@@ -18,7 +40,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ text }) => {
 
         if (isBlock) {
           try {
-            const html = katex.renderToString(blockPart, {
+            const html = katex.renderToString(sanitizeMath(blockPart), {
               displayMode: true,
               throwOnError: false,
             });
@@ -46,7 +68,7 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ text }) => {
               const isInline = inlineIdx % 2 === 1;
               if (isInline) {
                 try {
-                  const html = katex.renderToString(inlinePart, {
+                  const html = katex.renderToString(sanitizeMath(inlinePart), {
                     displayMode: false,
                     throwOnError: false,
                   });

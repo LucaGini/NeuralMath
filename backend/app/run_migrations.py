@@ -21,7 +21,13 @@ def run_migrations():
         "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS time_to_answer_ms INTEGER;",
         
         # Sprint 6
-        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS session_type VARCHAR DEFAULT 'practice' NOT NULL;"
+        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS session_type VARCHAR DEFAULT 'practice' NOT NULL;",
+
+        # Phase 2 RPG Themes & Teach-Back
+        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS theme VARCHAR DEFAULT 'standard' NOT NULL;",
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS protege_answer VARCHAR;",
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS protege_explanation TEXT;",
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS student_review TEXT;"
     ]
     
     with engine.begin() as conn:

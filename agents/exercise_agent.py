@@ -15,6 +15,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
     level = state.get("user_level", "Primary")
     topic = state.get("topic_name", "Algebra")
     area = state.get("topic_area", "Algebra")
+    theme = state.get("theme", "standard")
     
     # We can also receive a custom prompt segment about performance if supplied
     perf_history = state.get("session_summary", {}).get("recent_performance", "No historical sessions yet.")
@@ -33,6 +34,11 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         "- 'exercise_type': one of 'free_text', 'multiple_choice', or 'fill_blank'\n"
         "- 'choices': a list of exactly 4 strings IF exercise_type is 'multiple_choice', else null. One of the choices must exactly match 'correct_answer'; the other three must be plausible wrong answers (common misconceptions)\n"
         "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
+        "NARRATIVE QUEST THEMES (CRITICAL):\n"
+        "If a specific narrative 'theme' is provided (other than 'standard', such as 'space' for Space Odyssey, 'fantasy' for Fantasy Realm, 'sports' for Sports Championship):\n"
+        "1. You MUST generate a continuous, immersive narrative storyline across the 3 to 5 exercises. Each exercise represents a step in their quest/mission.\n"
+        "2. For each exercise, write a compelling, LaTeX-safe story paragraph in Spanish preceding the mathematical problem inside the 'question' field. The math problem must be the logical challenge required to solve that plot point (e.g. calculating matrix determinant to avoid an asteroid, solving a quadratic equation to cast a fire spell, calculating percentages to score a perfect goal).\n"
+        "3. Keep the tone exciting, engaging, and age-appropriate for the student's level.\n\n"
         "EXERCISE TYPE SELECTION RULES:\n"
         "- For 'Primary' level: prefer 'multiple_choice' (60%) and 'fill_blank' (40%). No 'free_text'.\n"
         "- For 'Secondary' level: mix all three types evenly (33% each).\n"
@@ -45,6 +51,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
 
     prompt = (
         f"Generate unique exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
+        f"Narrative Quest Theme: '{theme}'. If theme is NOT 'standard', wrap all questions in a continuous, exciting Spanish storyline matching this theme.\n"
         f"The student's performance history is: '{perf_history}'. Adjust the average starting difficulty accordingly.\n"
         f"Session Seed: {session_seed}. Ensure questions are randomized and different from previous sessions.\n"
         f"CRITICAL BOUNDARY INSTRUCTIONS:\n"
