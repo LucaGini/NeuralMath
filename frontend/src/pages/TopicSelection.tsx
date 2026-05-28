@@ -19,6 +19,7 @@ export const TopicSelection: React.FC = () => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [explanation, setExplanation] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -72,18 +73,28 @@ export const TopicSelection: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchTopics = async () => {
+    const fetchTopicsAndUser = async () => {
       try {
+        const userRes = await api.get("/auth/me");
+        setUser(userRes.data);
+
         const res = await api.get("/topics");
         setTopics(res.data);
       } catch (err) {
-        console.error("Error fetching topics:", err);
+        console.error("Error fetching topics or user:", err);
       } finally {
         setLoadingTopics(false);
       }
     };
-    fetchTopics();
+    fetchTopicsAndUser();
   }, []);
+
+  const filteredTopics = topics.filter((tItem) => {
+    if (!user) return true;
+    const isDemo = user.email === "estudiante@neuralmath.edu";
+    if (isDemo) return true;
+    return tItem.level === user.level;
+  });
 
   const handleSelectTopic = async (topic: Topic) => {
     VoiceService.stop();
@@ -151,7 +162,7 @@ export const TopicSelection: React.FC = () => {
             {language === "es" ? "Temas Disponibles" : "Available Topics"}
           </h3>
           <div className="grid grid-cols-1 gap-3 max-h-[65vh] overflow-y-auto pr-2">
-            {topics.map((tItem) => (
+            {filteredTopics.map((tItem) => (
               <button
                 key={tItem.id}
                 onClick={() => handleSelectTopic(tItem)}

@@ -14,29 +14,39 @@ Base.metadata.create_all(bind=engine)
 def seed_default_topics():
     db = SessionLocal()
     try:
-        if db.query(Topic).count() == 0:
-            DEFAULT_TOPICS = [
-                # Primary Topics
-                {"name": "Suma y Resta Básica", "area": "Arithmetic", "level": "Primary"},
-                {"name": "Multiplicación y División", "area": "Arithmetic", "level": "Primary"},
-                {"name": "Introducción a Ecuaciones", "area": "Algebra", "level": "Primary"},
-                {"name": "Áreas de Triángulos y Cuadrados", "area": "Geometry", "level": "Primary"},
-                
-                # Secondary Topics
-                {"name": "Fracciones y Decimales", "area": "Arithmetic", "level": "Secondary"},
-                {"name": "Ecuaciones Cuadráticas", "area": "Algebra", "level": "Secondary"},
-                {"name": "Razones Trigonométricas", "area": "Trigonometry", "level": "Secondary"},
-                {"name": "Teorema de Pitágoras", "area": "Geometry", "level": "Secondary"},
-                
-                # University Topics
-                {"name": "Límites y Continuidad", "area": "Calculus", "level": "University"},
-                {"name": "Álgebra Lineal y Matrices", "area": "Algebra", "level": "University"},
-                {"name": "Distribuciones de Probabilidad", "area": "Statistics", "level": "University"},
-                {"name": "Derivadas e Integrales", "area": "Calculus", "level": "University"},
-            ]
-            for t in DEFAULT_TOPICS:
+        DEFAULT_TOPICS = [
+            # Primary Topics
+            {"name": "Suma y Resta Básica", "area": "Arithmetic", "level": "Primary"},
+            {"name": "Multiplicación y División", "area": "Arithmetic", "level": "Primary"},
+            {"name": "Introducción a Ecuaciones", "area": "Algebra", "level": "Primary"},
+            {"name": "Áreas de Triángulos y Cuadrados", "area": "Geometry", "level": "Primary"},
+            {"name": "Secuencias y Patrones", "area": "Algebra", "level": "Primary"},
+            {"name": "Geometría y Figuras 3D", "area": "Geometry", "level": "Primary"},
+            
+            # Secondary Topics
+            {"name": "Fracciones y Decimales", "area": "Arithmetic", "level": "Secondary"},
+            {"name": "Ecuaciones Cuadráticas", "area": "Algebra", "level": "Secondary"},
+            {"name": "Razones Trigonométricas", "area": "Trigonometry", "level": "Secondary"},
+            {"name": "Teorema de Pitágoras", "area": "Geometry", "level": "Secondary"},
+            {"name": "Sistemas de Ecuaciones", "area": "Algebra", "level": "Secondary"},
+            {"name": "Permutaciones y Combinaciones", "area": "Statistics", "level": "Secondary"},
+            
+            # University Topics
+            {"name": "Límites y Continuidad", "area": "Calculus", "level": "University"},
+            {"name": "Álgebra Lineal y Matrices", "area": "Algebra", "level": "University"},
+            {"name": "Distribuciones de Probabilidad", "area": "Statistics", "level": "University"},
+            {"name": "Derivadas e Integrales", "area": "Calculus", "level": "University"},
+            {"name": "Ecuaciones Diferenciales", "area": "Calculus", "level": "University"},
+            {"name": "Pruebas de Hipótesis", "area": "Statistics", "level": "University"},
+        ]
+        seeded_new = False
+        for t in DEFAULT_TOPICS:
+            existing = db.query(Topic).filter(Topic.name == t["name"], Topic.level == t["level"]).first()
+            if not existing:
                 db_topic = Topic(name=t["name"], area=t["area"], level=t["level"])
                 db.add(db_topic)
+                seeded_new = True
+        if seeded_new:
             db.commit()
             print("Successfully seeded default math topics!")
     finally:

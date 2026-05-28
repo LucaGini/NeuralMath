@@ -4,7 +4,7 @@ import api from "../services/api";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
 import { avatars, badgesConfig, Locale } from "../services/translations";
-import { Flame, Trophy, Calendar, ChevronRight, GraduationCap, Award, Lock, Sparkles, User as UserIcon } from "lucide-react";
+import { Flame, Trophy, Calendar, ChevronRight, ChevronLeft, GraduationCap, Award, Lock, Sparkles, User as UserIcon } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -44,6 +44,9 @@ interface SessionRecord {
 export const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<SessionRecord[]>([]);
+  const [journal, setJournal] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"history" | "journal">("history");
+  const [historyPage, setHistoryPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [updatingAvatar, setUpdatingAvatar] = useState(false);
@@ -82,6 +85,13 @@ export const Dashboard: React.FC = () => {
               topic: { name: language === "es" ? "Ecuaciones Cuadráticas" : "Quadratic Equations", area: "Algebra" }
             }
           ]);
+        }
+        // Fetch Alby's Journal
+        try {
+          const journalRes = await api.get("/sessions/alby-journal");
+          setJournal(journalRes.data);
+        } catch (err) {
+          console.error("Error fetching Alby's Journal:", err);
         }
       } catch (err) {
         console.error("Dashboard validation failed, redirecting to login:", err);
@@ -125,7 +135,6 @@ export const Dashboard: React.FC = () => {
     return user.achievements.some((a) => a.badge_key === key);
   };
 
-  // Transform session history for Recharts progress curves (Accuracy of the past 10 sessions)
   const recentHistory = [...history].slice(0, 10).reverse();
   const chartData = recentHistory.map((record) => ({
     date: new Date(record.completed_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" }),
@@ -133,6 +142,11 @@ export const Dashboard: React.FC = () => {
     topicName: record.topic.name,
     xp: record.xp_earned
   }));
+
+  const HISTORY_ITEMS_PER_PAGE = 10;
+  const totalHistoryPages = Math.ceil(history.length / HISTORY_ITEMS_PER_PAGE);
+  const startHistoryIndex = (historyPage - 1) * HISTORY_ITEMS_PER_PAGE;
+  const paginatedHistory = history.slice(startHistoryIndex, startHistoryIndex + HISTORY_ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
@@ -208,6 +222,15 @@ export const Dashboard: React.FC = () => {
               <ChevronRight className="w-4 h-4" />
             </button>
 
+            {/* Speed Run button */}
+            <button
+              onClick={() => navigate("/session/speed-run")}
+              className="w-full mt-3 bg-gradient-to-r from-orange-500 to-red-650 hover:from-orange-400 hover:to-red-550 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-orange-600/10"
+            >
+              ⏱️ {language === "es" ? "Contrarreloj / Speed-Run" : "Math Speed-Run"}
+              <ChevronRight className="w-4 h-4 text-orange-100" />
+            </button>
+
             {/* Review Weak Spots button */}
             <button
               onClick={() => navigate("/session/review")}
@@ -273,103 +296,236 @@ export const Dashboard: React.FC = () => {
 
         {/* Analytics & Progression Curve Right Columns */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Accuracy Progress chart */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
-              {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
-            </h3>
-            <div className="h-64 flex flex-col justify-center">
-              {history.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
-                        borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
-                        borderRadius: "16px",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        color: theme === "dark" ? "#f8fafc" : "#0f172a",
-                        fontSize: "12px",
-                        border: "1px solid"
-                      }}
-                      labelFormatter={(label, items) => {
-                        if (items && items[0]) {
-                          return items[0].payload.topicName;
-                        }
-                        return label;
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey={language === "es" ? "Puntaje" : "Score"} 
-                      stroke="#8b5cf6" 
-                      strokeWidth={2.5} 
-                      fillOpacity={1} 
-                      fill="url(#colorScore)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl h-full transition-colors duration-200">
-                  <div className="text-4xl mb-2">📈</div>
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {language === "es" ? "¡Gráfico de Progreso Vacío!" : "No Progression Data Yet!"}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
-                    {language === "es" 
-                      ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
-                      : "Complete your first math training session to visualize your accuracy learning curve here."}
-                  </p>
-                </div>
+          {/* Tab Selection Navigation */}
+          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`pb-3 font-bold text-sm tracking-wide transition-all ${
+                activeTab === "history"
+                  ? "border-b-2 border-mathPurple-500 text-mathPurple-500"
+                  : "text-slate-400 hover:text-slate-700 dark:text-slate-450 dark:hover:text-slate-300"
+              }`}
+            >
+              {language === "es" ? "📊 Rendimiento e Historial" : "📊 Performance & History"}
+            </button>
+            <button
+              onClick={() => setActiveTab("journal")}
+              className={`pb-3 font-bold text-sm tracking-wide transition-all flex items-center gap-1.5 ${
+                activeTab === "journal"
+                  ? "border-b-2 border-emerald-500 text-emerald-500"
+                  : "text-slate-400 hover:text-slate-700 dark:text-slate-450 dark:hover:text-slate-300"
+              }`}
+            >
+              <span>🤖📓 {language === "es" ? "La Bitácora de Alby" : "Alby's Journal"}</span>
+              {journal.length > 0 && (
+                <span className="bg-emerald-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+                  {journal.length}
+                </span>
               )}
-            </div>
+            </button>
           </div>
 
-          {/* Recent sessions */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-mathPurple-500" />
-              {t.history}
-            </h3>
-            
-            <div className="space-y-3">
-              {history.map((record) => (
-                <div
-                  key={record.id}
-                  className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl hover:border-slate-300 dark:hover:border-slate-700/60 transition-all duration-150"
-                >
-                  <div>
-                    <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
-                      {record.topic.area}
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-white text-sm">{record.topic.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
-                      {record.score} / 5 {language === "es" ? "correctas" : "correct"}
-                    </span>
-                    <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
-                      +{record.xp_earned} XP
-                    </span>
-                  </div>
+          {activeTab === "history" && (
+            <>
+              {/* Accuracy Progress chart */}
+              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+                <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
+                  {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
+                </h3>
+                <div className="h-64 flex flex-col justify-center">
+                  {history.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
+                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
+                            borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
+                            borderRadius: "16px",
+                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                            color: theme === "dark" ? "#f8fafc" : "#0f172a",
+                            fontSize: "12px",
+                            border: "1px solid"
+                          }}
+                          labelFormatter={(label, items) => {
+                            if (items && items[0]) {
+                              return items[0].payload.topicName;
+                            }
+                            return label;
+                          }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey={language === "es" ? "Puntaje" : "Score"} 
+                          stroke="#8b5cf6" 
+                          strokeWidth={2.5} 
+                          fillOpacity={1} 
+                          fill="url(#colorScore)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl h-full transition-colors duration-200">
+                      <div className="text-4xl mb-2">📈</div>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-350">
+                        {language === "es" ? "¡Gráfico de Progreso Vacío!" : "No Progression Data Yet!"}
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
+                        {language === "es" 
+                          ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
+                          : "Complete your first math training session to visualize your accuracy learning curve here."}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ))}
-              {history.length === 0 && (
-                <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
-                  {t.history_empty}
+              </div>
+
+              {/* Recent sessions */}
+              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+                <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-mathPurple-500" />
+                  {t.history}
+                </h3>
+                
+                <div className="space-y-3">
+                  {paginatedHistory.map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl hover:border-slate-300 dark:hover:hover:border-slate-700/60 transition-all duration-150"
+                    >
+                      <div>
+                        <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
+                          {record.topic.area}
+                        </span>
+                        <span className="font-bold text-slate-800 dark:text-white text-sm">{record.topic.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
+                          {record.score} / 5 {language === "es" ? "correctas" : "correct"}
+                        </span>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
+                          +{record.xp_earned} XP
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {history.length === 0 && (
+                    <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
+                      {t.history_empty}
+                    </div>
+                  )}
+
+                  {/* Elegant Pagination Controls */}
+                  {totalHistoryPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4">
+                      <button
+                        onClick={() => setHistoryPage((prev) => Math.max(1, prev - 1))}
+                        disabled={historyPage === 1}
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        title={language === "es" ? "Página anterior" : "Previous page"}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+
+                      {Array.from({ length: totalHistoryPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setHistoryPage(page)}
+                          className={`w-8 h-8 rounded-xl border text-xs font-bold transition-all ${
+                            historyPage === page
+                              ? "bg-gradient-to-r from-mathPurple-600 to-indigo-600 border-mathPurple-500 text-white shadow-md shadow-mathPurple-600/10"
+                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-455 hover:text-slate-800 dark:hover:text-white"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => setHistoryPage((prev) => Math.min(totalHistoryPages, prev + 1))}
+                        disabled={historyPage === totalHistoryPages}
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        title={language === "es" ? "Siguiente página" : "Next page"}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === "journal" && (
+            <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-colors duration-200">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-6">
+                <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                  📓 {language === "es" ? "Apuntes de Alby" : "Alby's Journal"}
+                </h3>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">
+                  {language === "es" ? "Metacognición Activa" : "Active Metacognition"}
+                </span>
+              </div>
+
+              {journal.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl">
+                  <div className="text-4xl mb-2">🤖📓</div>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-355">
+                    {language === "es" ? "La bitácora está vacía" : "Alby's journal is empty!"}
+                  </p>
+                  <p className="text-xs text-slate-450 dark:text-slate-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                    {language === "es"
+                      ? "Enséñale a tu compañero Alby resolviendo correctamente lecciones en el modo 'Enseñar a Alby'."
+                      : "Teach your companion robot Alby by correctly resolving corrective feedback tasks in 'Teach Alby' mode."}
+                  </p>
+                  <button
+                    onClick={() => navigate("/session/teach-back")}
+                    className="mt-4 text-xs font-bold text-emerald-500 hover:underline uppercase tracking-wider"
+                  >
+                    {language === "es" ? "Comenzar Tutoría" : "Start Tutoring"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6 relative">
+                  {/* Notebook spiral rings representation */}
+                  <div className="absolute left-[-15px] top-0 bottom-0 w-2 flex flex-col justify-around pointer-events-none opacity-40">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="w-4 h-4 bg-slate-300 dark:bg-slate-750 rounded-full border border-slate-400 dark:border-slate-900 shadow-inner" />
+                    ))}
+                  </div>
+
+                  <div className="pl-4 space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                    {journal.map((entry, idx) => (
+                      <div
+                        key={entry.id}
+                        className="bg-amber-50/40 dark:bg-slate-900/60 border-l-4 border-amber-400 dark:border-emerald-500/80 p-4 rounded-r-2xl shadow-sm relative group hover:scale-[1.01] transition-transform duration-150"
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-amber-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+                            {language === "es" ? `Lección Aprendida #${journal.length - idx}` : `Insight Taught #${journal.length - idx}`} — {entry.concept}
+                          </span>
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500">
+                            {new Date(entry.created_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" })}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 italic leading-relaxed">
+                          "{entry.entry_text}"
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          )}
         </div>
       </div>
 

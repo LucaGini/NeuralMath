@@ -27,7 +27,19 @@ def run_migrations():
         "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS theme VARCHAR DEFAULT 'standard' NOT NULL;",
         "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS protege_answer VARCHAR;",
         "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS protege_explanation TEXT;",
-        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS student_review TEXT;"
+        "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS student_review TEXT;",
+
+        # Alby's Journal Entries
+        """
+        CREATE TABLE IF NOT EXISTS alby_journal_entries (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+            exercise_id INTEGER REFERENCES exercises(id) ON DELETE CASCADE NOT NULL,
+            concept VARCHAR NOT NULL,
+            entry_text TEXT NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+        );
+        """
     ]
     
     with engine.begin() as conn:

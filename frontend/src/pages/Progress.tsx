@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
-import { BarChart2, Award, Zap, Brain, Sparkles, BookOpen, Clock, Activity, Target } from "lucide-react";
+import { BarChart2, Award, Zap, Brain, Sparkles, BookOpen, Clock, Activity, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SkillMasteryItem {
@@ -20,6 +20,7 @@ export const Progress: React.FC = () => {
   const [skills, setSkills] = useState<SkillMasteryItem[]>([]);
   const [recommendedTopic, setRecommendedTopic] = useState<{ topic_id: number; skill: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
   const { language, t } = useApp();
 
@@ -96,6 +97,11 @@ export const Progress: React.FC = () => {
     ? skills.reduce((sum, s) => sum + s.accuracy, 0) / skills.length
     : 0;
   const masteredCount = skills.filter((s) => s.status === "mastered").length;
+
+  const ITEMS_PER_PAGE = 10;
+  const totalPages = Math.ceil(skills.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedSkills = skills.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-16 transition-colors duration-200">
@@ -212,7 +218,7 @@ export const Progress: React.FC = () => {
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {skills.map((item, idx) => {
+                {paginatedSkills.map((item, idx) => {
                   const cfg = getStatusConfig(item.status);
                   return (
                     <motion.div
@@ -272,6 +278,52 @@ export const Progress: React.FC = () => {
                   );
                 })}
               </div>
+
+              {/* Sleek Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 pt-6">
+                  <button
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.max(1, prev - 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={currentPage === 1}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                    title={language === "es" ? "Página anterior" : "Previous page"}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className={`w-10 h-10 rounded-xl border text-sm font-bold transition-all ${
+                        currentPage === page
+                          ? "bg-gradient-to-r from-mathPurple-600 to-indigo-600 border-mathPurple-500 text-white shadow-md shadow-mathPurple-600/10"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-450 hover:text-slate-800 dark:hover:text-white"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => {
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={currentPage === totalPages}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                    title={language === "es" ? "Siguiente página" : "Next page"}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

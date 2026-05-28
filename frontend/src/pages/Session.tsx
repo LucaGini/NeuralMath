@@ -73,7 +73,7 @@ export const Session: React.FC = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { t, language, theme } = useApp();
+  const { t, language, theme, showAlert, showConfirm } = useApp();
   const chosenTheme = searchParams.get("theme") || "standard";
 
   const [loading, setLoading] = useState(true);
@@ -96,10 +96,18 @@ export const Session: React.FC = () => {
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [loadingHint, setLoadingHint] = useState(false);
 
+  // Speed-Run states
+  const [sessionType, setSessionType] = useState<string>("practice");
+  const [secondsLeft, setSecondsLeft] = useState<number>(30);
+  const [timeIndicator, setTimeIndicator] = useState<{ text: string; isPositive: boolean } | null>(null);
+
   useEffect(() => {
     // Reset timer when question changes
     setQuestionStartTime(Date.now());
-  }, [currentIndex]);
+    if (sessionType === "speed_run") {
+      setSecondsLeft(30);
+    }
+  }, [currentIndex, sessionType]);
 
   useEffect(() => {
     return () => {
@@ -111,6 +119,7 @@ export const Session: React.FC = () => {
     const initSession = async () => {
       const isReview = topicId === "review";
       const isTeachBack = topicId === "teach-back";
+      const isSpeedRun = topicId === "speed-run";
       setLoadingMsg(
         language === "es" 
           ? "ExerciseAgent generando retos..." 
@@ -121,27 +130,71 @@ export const Session: React.FC = () => {
           ? await api.post("/sessions/teach-back/start")
           : isReview
             ? await api.post("/sessions/review/start")
-            : await api.post("/sessions/start", {
-                topic_id: parseInt(topicId || "0"),
-                theme: chosenTheme,
-              });
+            : isSpeedRun
+              ? await api.post("/sessions/speed-run/start")
+              : await api.post("/sessions/start", {
+                  topic_id: parseInt(topicId || "0"),
+                  theme: chosenTheme,
+                });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);
         setExercises(res.data.exercises);
+        setSessionType(res.data.session_type || "practice");
       } catch (err) {
         console.error("Error starting session:", err);
-        alert(
+        showAlert(
           language === "es" 
             ? "No se pudo iniciar la sesión. Regresando a temas." 
-            : "Could not start learning session. Returning to topics."
+            : "Could not start learning session. Returning to topics.",
+          () => navigate("/topics")
         );
-        navigate("/topics");
       } finally {
         setLoading(false);
       }
     };
     initSession();
   }, [topicId, navigate, language]);
+
+  const handleAutoSubmitComplete = async () => {
+    setLoading(true);
+    setLoadingMsg(
+      language === "es"
+        ? "¡Tiempo agotado! Evaluando desempeño final..."
+        : "Time's up! Evaluating final performance..."
+    );
+    try {
+      const res = await api.post(`/sessions/${sessionId}/complete`);
+      setCompletedSummary(res.data);
+      SoundEffects.playTriumph();
+      if (res.data.score === res.data.total_questions || (res.data.newly_unlocked && res.data.newly_unlocked.length > 0)) {
+        triggerSuperCelebration();
+      } else {
+        triggerConfetti();
+      }
+    } catch (err) {
+      console.error("Error completing speed-run session:", err);
+      navigate("/dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (sessionType !== "speed_run" || completedSummary || loading || evaluation) return;
+
+    const interval = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleAutoSubmitComplete();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [sessionType, completedSummary, loading, evaluation, sessionId]);
 
   const handleRequestHint = async () => {
     const activeExercise = exercises[currentIndex];
@@ -188,12 +241,22 @@ export const Session: React.FC = () => {
 
       if (res.data.is_correct) {
         SoundEffects.playCorrect();
+        if (sessionType === "speed_run") {
+          setSecondsLeft((prev) => prev + 5);
+          setTimeIndicator({ text: "+5s", isPositive: true });
+          setTimeout(() => setTimeIndicator(null), 1500);
+        }
       } else {
         SoundEffects.playIncorrect();
+        if (sessionType === "speed_run") {
+          setSecondsLeft((prev) => Math.max(0, prev - 5));
+          setTimeIndicator({ text: "-5s", isPositive: false });
+          setTimeout(() => setTimeIndicator(null), 1500);
+        }
       }
     } catch (err) {
       console.error("Error evaluating answer:", err);
-      alert(
+      showAlert(
         language === "es"
           ? "Ocurrió un error al procesar tu respuesta."
           : "An error occurred while checking your answer."
@@ -234,7 +297,7 @@ export const Session: React.FC = () => {
         }
       } catch (err) {
         console.error("Error completing session:", err);
-        alert(
+        showAlert(
           language === "es"
             ? "Ocurrió un error al finalizar la sesión."
             : "An error occurred while completing the session."
@@ -375,15 +438,12 @@ export const Session: React.FC = () => {
       <header className="border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-[#0c1220] px-6 py-4 flex items-center justify-between gap-6 transition-colors">
         <button
           onClick={() => {
-            if (
-              confirm(
-                language === "es" 
-                  ? "¿Estás seguro de que quieres salir? Perderás el progreso de esta sesión." 
-                  : "Are you sure you want to quit? You will lose all progress for this session."
-              )
-            ) {
-              navigate("/topics");
-            }
+            showConfirm(
+              language === "es"
+                ? "¿Estás seguro de que quieres salir? Perderás el progreso de esta sesión."
+                : "Are you sure you want to quit? You will lose all progress for this session.",
+              () => navigate("/topics")
+            );
           }}
           className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors"
         >
@@ -398,6 +458,28 @@ export const Session: React.FC = () => {
             className="bg-gradient-to-r from-mathPurple-500 to-indigo-500 h-full rounded-full"
           />
         </div>
+
+        {sessionType === "speed_run" && (
+          <div className="flex items-center gap-3 bg-orange-500/10 border border-orange-500/30 px-4 py-2 rounded-2xl relative shadow-inner animate-pulse">
+            <span className="text-sm font-black text-orange-600 dark:text-orange-400 font-mono tracking-widest">
+              ⏱️ {secondsLeft}s
+            </span>
+            <AnimatePresence>
+              {timeIndicator && (
+                <motion.span
+                  initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                  animate={{ opacity: 1, y: -20, scale: 1.1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  className={`absolute right-2 font-black text-xs ${
+                    timeIndicator.isPositive ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {timeIndicator.text}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl transition-colors">
           {currentIndex + 1} / {exercises.length}

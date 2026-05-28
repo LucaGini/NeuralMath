@@ -9,6 +9,7 @@ from app.models.topic import Topic
 from app.models.session import Session as MathSession
 from app.models.exercise import Exercise
 from app.models.achievement import Achievement
+from app.models.alby_journal import AlbyJournalEntry
 from app.schemas.user import AchievementResponse, UserResponse
 from app.api.auth import get_current_user
 from agents.graph import math_tutor_graph
@@ -18,6 +19,15 @@ from typing import List, Optional
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 # Schemas
+class AlbyJournalResponse(BaseModel):
+    id: int
+    concept: str
+    entry_text: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class StartSessionRequest(BaseModel):
     topic_id: int
     theme: Optional[str] = "standard"
@@ -36,6 +46,7 @@ class StartSessionResponse(BaseModel):
     session_id: int
     topic_name: str
     level: str
+    session_type: str = "practice"
     exercises: List[ExerciseResponse]
 
 class AnswerSubmissionRequest(BaseModel):
@@ -202,6 +213,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
             "session_id": new_session.id,
             "topic_name": topic.name,
             "level": current_user.level,
+            "session_type": "practice",
             "exercises": [
                 ExerciseResponse(
                     id=e.id,
@@ -301,6 +313,51 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
         if is_teach_back:
             exercise.student_review = req.user_answer
         db.commit()
+
+        # Alby's Journal trigger (Teach-Back MET diary)
+        if is_teach_back and is_correct:
+            concept = "conceptos matemáticos"
+            if exercise.skill_tags:
+                try:
+                    tags = exercise.skill_tags
+                    if isinstance(tags, str):
+                        tags = json.loads(tags)
+                    if tags and isinstance(tags, list):
+                        concept = tags[0].replace("_", " ")
+                except:
+                    pass
+            elif session_record.topic:
+                concept = session_record.topic.name
+
+            # Prompt to LLM or fallback
+            from agents.llm_client import call_llm
+            prompt = f"""
+            Genera una entrada de diario muy tierna, amigable y cortita (máximo 2 oraciones) escrita en primera persona por el robot "Alby".
+            Alby tiene que expresar su felicidad e infinito agradecimiento al estudiante por haberle enseñado.
+            El tema del ejercicio era: '{concept}'.
+            La pregunta era: '{exercise.question}'.
+            El error que Alby había cometido era: '{exercise.protege_explanation}'.
+            La explicación correctiva del estudiante que ayudó a Alby fue: '{req.user_answer}'.
+
+            Ejemplo: "¡Hoy mi tutor me enseñó que un signo menos cambia todo dentro del paréntesis! Ahora sí podré resolver mis tareas sin confundirme. ¡Muchas gracias!"
+            Genera únicamente la entrada de diario sin comillas ni metadatos.
+            """
+            system_instruction = "Eres Alby, un robot estudiante tierno, curioso y muy agradecido que aprende matemáticas gracias a su tutor."
+            
+            try:
+                entry_text = call_llm(prompt, system_instruction=system_instruction)
+                entry_text = entry_text.strip().replace('"', '').replace('“', '').replace('”', '')
+            except Exception as e:
+                entry_text = f"¡Hoy mi tutor me enseñó sobre '{concept}'! Gracias a su explicación, ahora entiendo perfectamente cómo resolver '{exercise.question}' sin cometer errores de signos ni lógica. ¡Eres el mejor maestro!"
+
+            journal_entry = AlbyJournalEntry(
+                user_id=current_user.id,
+                exercise_id=exercise.id,
+                concept=concept,
+                entry_text=entry_text
+            )
+            db.add(journal_entry)
+            db.commit()
         
         return {
             "exercise_id": exercise.id,
@@ -662,6 +719,7 @@ def start_review_session(db: Session = Depends(get_db), current_user: User = Dep
             "session_id": new_session.id,
             "topic_name": f"Repaso: {topic.name}",
             "level": current_user.level,
+            "session_type": "review",
             "exercises": [
                 ExerciseResponse(
                     id=e.id,
@@ -759,6 +817,7 @@ def start_teach_back_session(db: Session = Depends(get_db), current_user: User =
             "session_id": new_session.id,
             "topic_name": f"Enseñar a Alby: {topic.name}",
             "level": current_user.level,
+            "session_type": "teach_back",
             "exercises": [
                 ExerciseResponse(
                     id=e.id,
@@ -777,4 +836,109 @@ def start_teach_back_session(db: Session = Depends(get_db), current_user: User =
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error starting teach-back session: {str(e)}"
+        )
+
+@router.get("/alby-journal", response_model=List[AlbyJournalResponse])
+def get_alby_journal(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Retrieves the list of lessons Alby has successfully learned from this student.
+    """
+    entries = db.query(AlbyJournalEntry).filter(
+        AlbyJournalEntry.user_id == current_user.id
+    ).order_by(AlbyJournalEntry.created_at.desc()).all()
+    return entries
+
+@router.post("/speed-run/start", response_model=StartSessionResponse)
+def start_speed_run_session(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Starts a high-energy Time-Attack Speed-Run session for rapid math training.
+    """
+    rec = get_recommended_topic(db, current_user)
+    topic_id = rec.get("topic_id", 1)
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        topic = db.query(Topic).first()
+        
+    if not topic:
+        raise HTTPException(status_code=404, detail="No math topics found to start speed-run session")
+
+    # Invoke ExerciseAgent via LangGraph
+    state_input = {
+        "user_level": current_user.level,
+        "topic_name": topic.name,
+        "topic_area": topic.area,
+        "explanation": None,
+        "exercises": None,
+        "user_answers": None,
+        "evaluations": None,
+        "session_summary": {
+            "recent_performance": "Time-Attack Speed-Run mode. Keep exercises simple, rapid-solve, and high-energy.",
+            "session_type": "speed_run"
+        },
+        "motivation_message": None,
+        "target_node": "exercise",
+        "theme": "standard",
+        "session_type": "speed_run"
+    }
+
+    try:
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"speedrun_{topic.id}_{current_user.id}"}})
+        exercises_data = res.get("exercises", [])
+        
+        if not exercises_data:
+            raise HTTPException(status_code=500, detail="ExerciseAgent failed to return problems.")
+            
+        # Create MathSession for speed_run
+        new_session = MathSession(
+            user_id=current_user.id,
+            topic_id=topic.id,
+            score=0,
+            xp_earned=0,
+            session_type="speed_run",
+            theme="standard"
+        )
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+        
+        created_exercises = []
+        for ex in exercises_data:
+            db_ex = Exercise(
+                session_id=new_session.id,
+                question=ex.get("question"),
+                correct_answer=ex.get("correct_answer"),
+                difficulty_level="Fácil",
+                order_index=ex.get("order_index", 0),
+                exercise_type=ex.get("exercise_type", "multiple_choice" if ex.get("choices") else "fill_blank"),
+                choices=ex.get("choices", None),
+                skill_tags=ex.get("skill_tags", None)
+            )
+            db.add(db_ex)
+            created_exercises.append(db_ex)
+            
+        db.commit()
+        
+        return {
+            "session_id": new_session.id,
+            "topic_name": f"Contrarreloj: {topic.name}",
+            "level": current_user.level,
+            "session_type": "speed_run",
+            "exercises": [
+                ExerciseResponse(
+                    id=e.id,
+                    question=e.question,
+                    difficulty_level=e.difficulty_level,
+                    order_index=e.order_index,
+                    exercise_type=e.exercise_type,
+                    choices=e.choices,
+                    protege_answer=e.protege_answer,
+                    protege_explanation=e.protege_explanation
+                ) for e in created_exercises
+            ]
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error starting speed-run session: {str(e)}"
         )
