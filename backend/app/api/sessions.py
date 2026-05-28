@@ -91,6 +91,19 @@ class SkillMasteryItem(BaseModel):
     last_topic: str
     avg_time_ms: Optional[float] = None
 
+class ErrorDiagnosticItem(BaseModel):
+    error_type: str
+    label_es: str
+    label_en: str
+    count: int
+
+class ErrorDiagnosticsResponse(BaseModel):
+    total_errors: int
+    primary_error_type: Optional[str]
+    advice_es: str
+    advice_en: str
+    diagnostics: List[ErrorDiagnosticItem]
+
 class TopicHistoryResponse(BaseModel):
     name: str
     area: str
@@ -942,3 +955,124 @@ def start_speed_run_session(db: Session = Depends(get_db), current_user: User = 
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error starting speed-run session: {str(e)}"
         )
+
+@router.get("/errors/diagnostics", response_model=ErrorDiagnosticsResponse)
+def get_error_diagnostics(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Analyzes historical exercise data for incorrect answers, groups them by mathematical error classifications,
+    calculates totals, and returns highly tailored socratic metacognitive feedback.
+    """
+    # 1. Fetch incorrect exercises with error types for this user
+    exercises = db.query(Exercise).join(MathSession).filter(
+        MathSession.user_id == current_user.id,
+        Exercise.is_correct == False,
+        Exercise.error_type.isnot(None)
+    ).all()
+
+    # 2. Count occurrences of each error category
+    error_counts = {
+        "sign_error": 0,
+        "distribution_error": 0,
+        "order_of_operations": 0,
+        "exponent_rule": 0,
+        "cancellation_error": 0,
+        "arithmetic_slip": 0,
+        "conceptual_error": 0,
+        "other": 0
+    }
+
+    total_errors = 0
+    for ex in exercises:
+        if ex.error_type in error_counts:
+            error_counts[ex.error_type] += 1
+            total_errors += 1
+        else:
+            error_counts["other"] += 1
+            total_errors += 1
+
+    # 3. Identify the primary (most frequent) error type
+    primary_error_type = None
+    max_count = 0
+    for err_type, count in error_counts.items():
+        if count > max_count:
+            max_count = count
+            primary_error_type = err_type
+
+    # 4. Generate highly tailored socratic metacognitive advice
+    advice_dict = {
+        "sign_error": {
+            "es": "¡Cuidado con los signos! Tiendes a omitir los signos negativos al distribuir o simplificar. Intenta escribir un paso intermedio para verificarlos antes de continuar.",
+            "en": "Watch your signs! You tend to drop negative signs during distribution or simplification. Try writing an intermediate step to double-check before moving on."
+        },
+        "distribution_error": {
+            "es": "¡Recuerda distribuir a todos! Cuando multiplicas un término por un paréntesis, asegúrate de multiplicarlo por cada elemento interior sin saltarte ninguno.",
+            "en": "Remember to distribute to everyone! When multiplying a term by a parenthesis, make sure you multiply it by every single element inside without skipping."
+        },
+        "order_of_operations": {
+            "es": "¡El orden importa! Recuerda la jerarquía PEMDAS: primero paréntesis, exponentes, luego multiplicación y división, y al final sumas y restas.",
+            "en": "Order matters! Remember PEMDAS hierarchy: parentheses first, then exponents, followed by multiplication and division, and lastly addition and subtraction."
+        },
+        "exponent_rule": {
+            "es": "Repasa las leyes de exponentes. Recuerda que al multiplicar bases iguales los exponentes se suman, y al elevar a otra potencia se multiplican.",
+            "en": "Review exponent laws. Remember that when multiplying equal bases you add exponents, and when raising to another power you multiply."
+        },
+        "cancellation_error": {
+            "es": "¡Cuidado al cancelar términos! Solo puedes cancelar factores comunes en productos multiplicativos, nunca términos individuales en sumas o restas.",
+            "en": "Careful when cancelling terms! You can only cancel common factors in multiplicative products, never individual terms in additions or subtractions."
+        },
+        "arithmetic_slip": {
+            "es": "Pequeño desliz aritmético. Tu lógica algebraica es excelente, pero a veces fallas en cálculos básicos. ¡Tómate un segundo extra para sumar y restar con calma!",
+            "en": "Small arithmetic slip. Your algebraic logic is excellent, but basic calculations sometimes trip you up. Take an extra second to add and subtract carefully!"
+        },
+        "conceptual_error": {
+            "es": "Dudas conceptuales. Parece que hay pequeñas dudas en las reglas básicas del tema. ¡Te sugerimos repasar la teoría interactiva antes de tu próximo reto!",
+            "en": "Conceptual doubt. There seems to be doubt regarding the core rules of this topic. We recommend reviewing the interactive theory before your next try!"
+        },
+        "other": {
+            "es": "¡Tu mente matemática está afilada! Sigue practicando con constancia para mantener tu racha activa y desbloquear nuevos logros.",
+            "en": "Your mathematical mind is sharp! Keep practicing consistently to maintain your active streak and unlock new achievements."
+        }
+    }
+
+    advice = advice_dict.get(primary_error_type or "other", advice_dict["other"])
+
+    # 5. Format translation labels for the chart
+    labels_es = {
+        "sign_error": "Error de Signo",
+        "distribution_error": "Error de Distribución",
+        "order_of_operations": "Orden de Operaciones",
+        "exponent_rule": "Regla de Exponentes",
+        "cancellation_error": "Cancelación Inválida",
+        "arithmetic_slip": "Error Aritmético",
+        "conceptual_error": "Error Conceptual",
+        "other": "Otro Error"
+    }
+
+    labels_en = {
+        "sign_error": "Sign Error",
+        "distribution_error": "Distribution Error",
+        "order_of_operations": "Order of Operations",
+        "exponent_rule": "Exponent Rule",
+        "cancellation_error": "Invalid Cancellation",
+        "arithmetic_slip": "Arithmetic Slip",
+        "conceptual_error": "Conceptual Error",
+        "other": "Other Error"
+    }
+
+    diagnostics = [
+        ErrorDiagnosticItem(
+            error_type=err_type,
+            label_es=labels_es[err_type],
+            label_en=labels_en[err_type],
+            count=count
+        )
+        for err_type, count in error_counts.items()
+    ]
+
+    return ErrorDiagnosticsResponse(
+        total_errors=total_errors,
+        primary_error_type=primary_error_type,
+        advice_es=advice["es"],
+        advice_en=advice["en"],
+        diagnostics=diagnostics
+    )

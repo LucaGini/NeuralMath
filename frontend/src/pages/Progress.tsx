@@ -5,6 +5,7 @@ import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
 import { BarChart2, Award, Zap, Brain, Sparkles, BookOpen, Clock, Activity, Target, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 
 interface SkillMasteryItem {
   skill: string;
@@ -16,13 +17,29 @@ interface SkillMasteryItem {
   avg_time_ms?: number;
 }
 
+interface ErrorDiagnosticItem {
+  error_type: string;
+  label_es: string;
+  label_en: string;
+  count: number;
+}
+
+interface ErrorDiagnostics {
+  total_errors: number;
+  primary_error_type: string | null;
+  advice_es: string;
+  advice_en: string;
+  diagnostics: ErrorDiagnosticItem[];
+}
+
 export const Progress: React.FC = () => {
   const [skills, setSkills] = useState<SkillMasteryItem[]>([]);
   const [recommendedTopic, setRecommendedTopic] = useState<{ topic_id: number; skill: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [diagnostics, setDiagnostics] = useState<ErrorDiagnostics | null>(null);
   const navigate = useNavigate();
-  const { language, t } = useApp();
+  const { language, theme, t } = useApp();
 
   useEffect(() => {
     const fetchProgressData = async () => {
@@ -32,6 +49,9 @@ export const Progress: React.FC = () => {
 
         const recRes = await api.get("/sessions/skills/recommended-topic");
         setRecommendedTopic(recRes.data);
+
+        const diagRes = await api.get("/sessions/errors/diagnostics");
+        setDiagnostics(diagRes.data);
       } catch (err) {
         console.error("Error fetching progress data:", err);
       } finally {
@@ -102,6 +122,13 @@ export const Progress: React.FC = () => {
   const totalPages = Math.ceil(skills.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedSkills = skills.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Map diagnostics data for Recharts Radar
+  const diagnosticsChartData = diagnostics?.diagnostics.map((item) => ({
+    subject: language === "es" ? item.label_es : item.label_en,
+    A: item.count,
+    fullMark: Math.max(...(diagnostics?.diagnostics.map((d) => d.count) || [5])),
+  })) || [];
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-16 transition-colors duration-200">
@@ -209,6 +236,93 @@ export const Progress: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Metacognitive Diagnostics Heatmap (Sprint 7 / Option 1) */}
+            {diagnostics && diagnostics.total_errors > 0 && (
+              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 md:p-8 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-colors duration-200">
+                <div className="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <h2 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-2 mb-6">
+                  <Brain className="w-5 h-5 text-mathPurple-500 animate-pulse" />
+                  {language === "es" ? "Mapa de Calor de Errores" : "Cognitive Error Heatmap"}
+                </h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                  {/* Radar Chart Column */}
+                  <div className="md:col-span-5 h-64 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="75%" data={diagnosticsChartData}>
+                        <PolarGrid stroke={theme === "dark" ? "#1e293b" : "#cbd5e1"} />
+                        <PolarAngleAxis 
+                          dataKey="subject" 
+                          stroke="#64748b" 
+                          fontSize={9}
+                          tick={{ fill: theme === "dark" ? "#94a3b8" : "#475569", fontWeight: "bold" }}
+                        />
+                        <PolarRadiusAxis 
+                          angle={30} 
+                          domain={[0, 'auto']} 
+                          stroke="#64748b"
+                          fontSize={8}
+                        />
+                        <Radar 
+                          name="Errores" 
+                          dataKey="A" 
+                          stroke="#8b5cf6" 
+                          fill="#8b5cf6" 
+                          fillOpacity={0.25} 
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Metacognitive Advice Advisor Column */}
+                  <div className="md:col-span-7 space-y-4">
+                    <div className="bg-gradient-to-r from-mathPurple-600/10 to-indigo-650/10 border border-mathPurple-500/20 p-6 rounded-2xl relative text-left">
+                      <div className="absolute -top-3 left-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-0.5 rounded-full flex items-center gap-1.5 transition-colors">
+                        <Sparkles className="w-3.5 h-3.5 text-mathPurple-500 animate-pulse" />
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                          MetacognitiveAdvisor
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-2 mt-2">
+                        <span className="text-xs font-bold text-mathPurple-700 dark:text-mathPurple-300 block">
+                          {language === "es" 
+                            ? `¡Detectamos un patrón de error! De tus últimos ${diagnostics.total_errors} descuidos:` 
+                            : `Error pattern detected! From your last ${diagnostics.total_errors} slips:`}
+                        </span>
+                        <p className="text-slate-650 dark:text-slate-350 text-sm md:text-base leading-relaxed italic font-medium">
+                          "{language === "es" ? diagnostics.advice_es : diagnostics.advice_en}"
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-snug">
+                      {language === "es"
+                        ? "* Este diagnóstico es generado en tiempo real analizando la taxonomía algebraica de tus respuestas incorrectas evaluadas por la IA."
+                        : "* This diagnostic is calculated in real-time by analyzing the algebraic taxonomy of your incorrect answers checked by the AI."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {diagnostics && diagnostics.total_errors === 0 && (
+              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 md:p-8 rounded-3xl shadow-sm relative overflow-hidden transition-colors duration-200 text-center space-y-4">
+                <div className="w-16 h-16 bg-green-500/10 border border-green-500/20 text-green-500 rounded-2xl flex items-center justify-center text-3xl mx-auto animate-bounce">
+                  🏆
+                </div>
+                <h3 className="text-base font-black text-slate-800 dark:text-white">
+                  {language === "es" ? "¡Precisión Algebraica Impecable!" : "Impeccable Algebraic Accuracy!"}
+                </h3>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-405 max-w-md mx-auto leading-relaxed font-medium">
+                  {language === "es"
+                    ? "No hemos registrado ningún patrón de error conceptual o de cálculo en tus entrenamientos recientes. ¡Tu mente está sumamente afilada y lista para mayores desafíos!"
+                    : "We haven't logged any algebraic misconception or calculation slips in your recent practice sessions. Your mind is fully sharp and ready for higher challenges!"}
+                </p>
+              </div>
+            )}
 
             {/* Mastery Grid Section */}
             <div className="space-y-4">
