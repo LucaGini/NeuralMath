@@ -4,7 +4,7 @@ import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { useApp } from "../services/AppContext";
 import { badgesConfig } from "../services/translations";
-import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { VoiceService } from "../services/voice";
 import { SoundEffects } from "../services/SoundEffects";
@@ -247,9 +247,9 @@ export const Session: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-100 p-6 transition-colors duration-200">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500 mb-4"></div>
-        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b13] retro-grid text-cyan-400 font-cyber p-6">
+        <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#00f0ff] drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]" />
+        <span className="tracking-widest uppercase text-xs animate-pulse">
           {loadingMsg}
         </span>
       </div>
@@ -261,24 +261,24 @@ export const Session: React.FC = () => {
     const hasNewBadges = completedSummary.newly_unlocked && completedSummary.newly_unlocked.length > 0;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 relative overflow-hidden transition-colors duration-200">
+      <div className="min-h-screen flex items-center justify-center bg-[#070b13] retro-grid p-6 relative overflow-hidden">
         {/* Background ambient glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center space-y-6 transition-colors duration-200"
+          className="w-full max-w-lg glass border border-[#00f0ff]/30 p-8 rounded-2xl shadow-2xl relative z-10 text-center space-y-6 scanline font-cyber"
         >
           <div>
-            <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-widest block mb-1">
-              {language === "es" ? "Desafío Completado" : "Challenge Completed"}
+            <span className="text-[10px] text-[#00f0ff] font-extrabold uppercase tracking-widest block mb-1">
+              {language === "es" ? "DESAFÍO COMPLETADO" : "CHALLENGE COMPLETED"}
             </span>
-            <h2 className="text-3xl font-black text-slate-800 dark:text-white">{topicName}</h2>
+            <h2 className="text-2xl font-black text-white font-display uppercase tracking-tight">{topicName}</h2>
           </div>
 
-          {/* New Badges Celebratory Notification Banners */}
+          {/* Newly unlocked achievements / badges */}
           {hasNewBadges && (
             <div className="space-y-3">
               {completedSummary.newly_unlocked.map((badge) => {
@@ -288,19 +288,19 @@ export const Session: React.FC = () => {
                     key={badge.badge_key}
                     initial={{ y: -10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="p-4 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-2 border-amber-400/30 rounded-2xl flex items-center gap-3.5 text-left shadow-lg shadow-amber-400/5 animate-pulse"
+                    className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center gap-3.5 text-left shadow-lg"
                   >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border border-amber-400 bg-gradient-to-tr ${config.color}`}>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl border border-amber-550 bg-gradient-to-tr ${config.color} shrink-0`}>
                       {config.emoji}
                     </div>
                     <div>
-                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest block">
+                      <span className="text-[9px] text-amber-450 font-black uppercase tracking-widest block font-cyber">
                         {t.new_badge}
                       </span>
-                      <span className="text-sm font-bold text-slate-800 dark:text-white block mt-0.5">
+                      <span className="text-sm font-bold text-white block mt-0.5 font-display">
                         {language === "es" ? badge.title_es : badge.title_en}
                       </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-tight">
+                      <span className="text-[10px] text-slate-400 block mt-0.5 leading-tight font-body">
                         {language === "es" ? badge.desc_es : badge.desc_en}
                       </span>
                     </div>
@@ -312,52 +312,52 @@ export const Session: React.FC = () => {
 
           {/* Gamified Stat badges */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 dark:bg-[#161c2c] border border-slate-200 dark:border-slate-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
+            <div className="bg-[#0e1424] border border-slate-800 p-5 rounded-xl flex flex-col items-center justify-center transition-all">
               <Trophy className="w-8 h-8 text-yellow-500 mb-2 animate-bounce" />
-              <span className="text-2xl font-black text-slate-800 dark:text-white">
+              <span className="text-2xl font-black text-white font-cyber">
                 {completedSummary.score} / {completedSummary.total_questions}
               </span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-1">
+              <span className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1.5 font-cyber">
                 {language === "es" ? "Aciertos" : "Correct"}
               </span>
             </div>
             
-            <div className="bg-slate-50 dark:bg-[#161c2c] border border-slate-200 dark:border-slate-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
-              <Flame className="w-8 h-8 text-orange-500 mb-2" />
-              <span className="text-2xl font-black text-slate-800 dark:text-white">
+            <div className="bg-[#0e1424] border border-slate-800 p-5 rounded-xl flex flex-col items-center justify-center transition-all">
+              <Flame className="w-8 h-8 text-orange-500 mb-2 animate-pulse" />
+              <span className="text-2xl font-black text-white font-cyber">
                 {completedSummary.streak_days} {language === "es" ? "Días" : "Days"}
               </span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-1">
+              <span className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1.5 font-cyber">
                 {t.active_streak}
               </span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-mathPurple-600/10 to-indigo-600/10 border border-mathPurple-500/20 py-4 px-6 rounded-2xl flex items-center justify-between">
-            <span className="text-sm font-bold text-mathPurple-700 dark:text-mathPurple-300">
+          <div className="bg-cyan-500/10 border border-[#00f0ff]/30 py-4 px-6 rounded-xl flex items-center justify-between">
+            <span className="text-xs font-bold text-[#00f0ff] uppercase tracking-wider font-cyber">
               {language === "es" ? "Puntos de Experiencia:" : "Experience Points:"}
             </span>
-            <span className="text-xl font-black text-green-600 dark:text-green-400">
+            <span className="text-lg font-black text-[#00ff66] font-cyber">
               +{completedSummary.xp_earned} XP
             </span>
           </div>
 
           {/* Motivator Agent Box */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl relative text-left transition-colors">
-            <div className="absolute -top-3.5 left-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-0.5 rounded-full flex items-center gap-1.5 transition-colors">
-              <Sparkles className="w-3.5 h-3.5 text-mathPurple-500 dark:text-mathPurple-400 animate-pulse" />
-              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+          <div className="bg-[#0a0f1d] border border-slate-800 p-6 rounded-xl relative text-left shadow-inner">
+            <div className="absolute -top-3.5 left-6 bg-[#070b13] border border-slate-800 px-3 py-0.5 rounded-full flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#00f0ff] animate-pulse" />
+              <span className="text-[9px] font-bold text-[#00f0ff] uppercase tracking-widest font-cyber">
                 MotivatorAgent
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 text-sm italic leading-relaxed mt-2">
+            <p className="text-slate-300 text-xs italic leading-relaxed mt-2 font-body font-medium">
               "{completedSummary.motivation_message}"
             </p>
           </div>
 
           <button
             onClick={() => navigate("/dashboard")}
-            className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-mathPurple-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className="w-full btn-tactile-cyan py-4 font-cyber text-sm uppercase tracking-widest font-extrabold flex items-center justify-center gap-2"
           >
             {t.finish}
           </button>
@@ -370,9 +370,9 @@ export const Session: React.FC = () => {
   const progressPercent = ((currentIndex + (evaluation ? 1 : 0)) / exercises.length) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
-      {/* Top Bar with Duolingo Progress */}
-      <header className="border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-[#0c1220] px-6 py-4 flex items-center justify-between gap-6 transition-colors">
+    <div className="min-h-screen bg-[#070b13] text-[#f1f5f9] flex flex-col justify-between retro-grid relative overflow-x-hidden">
+      {/* Top Bar with Gamified Progress */}
+      <header className="glass border-b border-slate-800 bg-[#0c1220]/75 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-6 shadow-md relative overflow-hidden scanline">
         <button
           onClick={() => {
             if (
@@ -385,73 +385,73 @@ export const Session: React.FC = () => {
               navigate("/topics");
             }
           }}
-          className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors"
+          className="btn-tactile-slate p-2.5 rounded-lg flex items-center justify-center border-slate-800 text-cyan-400 hover:text-white"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
         {/* Progress Bar */}
-        <div className="flex-1 max-w-xl bg-slate-200 dark:bg-slate-800 h-3.5 rounded-full overflow-hidden relative">
+        <div className="flex-1 max-w-xl bg-slate-950 border border-slate-800/80 h-3 rounded-full overflow-hidden relative shadow-inner">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            className="bg-gradient-to-r from-mathPurple-500 to-indigo-500 h-full rounded-full"
+            className="bg-gradient-to-r from-cyan-400 via-teal-400 to-[#00f0ff] h-full rounded-full glow-cyan shadow-[0_0_10px_#00f0ff]"
           />
         </div>
 
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl transition-colors">
+        <span className="text-xs font-bold font-cyber text-[#00f0ff] bg-slate-950/60 border border-slate-800 px-3.5 py-1.5 rounded-lg">
           {currentIndex + 1} / {exercises.length}
         </span>
       </header>
 
       {/* Main Core Question Section */}
-      <main className="flex-1 flex items-center justify-center p-6">
+      <main className="flex-1 flex items-center justify-center p-6 relative">
         <motion.div
           key={currentIndex}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-2xl bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-colors"
+          className="w-full max-w-2xl glass border border-slate-800 p-8 rounded-2xl shadow-2xl hover:border-[#00f0ff]/30 transition-all duration-300 glow-cyan space-y-6 tech-brackets scanline relative overflow-hidden"
         >
           <div>
-            <span className="text-[10px] text-mathPurple-750 dark:text-mathPurple-400 font-bold uppercase tracking-widest bg-mathPurple-500/10 border border-mathPurple-500/20 px-3 py-1 rounded-full">
-              {language === "es" ? "Reto" : "Challenge"} {currentIndex + 1} — {activeExercise?.difficulty_level || "Medio"}
+            <span className="text-[10px] text-[#00f0ff] font-extrabold uppercase tracking-widest bg-cyan-500/10 border border-cyan-500/30 px-3.5 py-1.5 rounded-lg font-cyber">
+              {language === "es" ? "RETO" : "CHALLENGE"} {currentIndex + 1} — {activeExercise?.difficulty_level.toUpperCase() || "MEDIUM"}
             </span>
           </div>
 
-          <div className="prose dark:prose-invert text-lg md:text-xl text-slate-800 dark:text-slate-100 font-medium py-4">
+          <div className="prose dark:prose-invert text-lg md:text-xl text-white font-bold py-4 font-display leading-relaxed">
             <MathRenderer text={activeExercise?.question || ""} />
           </div>
 
-          {/* If Teach-Back Alby Task, render Alby's Robot Misconception Card here! */}
+          {/* If Teach-Back Alby Task, render Alby's holographic classmate console */}
           {activeExercise?.protege_answer && activeExercise?.protege_explanation && (
-            <div className="bg-slate-50 dark:bg-slate-900/40 border border-mathPurple-500/30 p-6 rounded-2xl space-y-4 relative overflow-hidden transition-colors shadow-inner">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+            <div className="border border-cyan-500/20 bg-[#090e1a]/95 p-6 rounded-xl space-y-4 relative overflow-hidden shadow-inner scanline">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-xl pointer-events-none" />
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-mathPurple-100 dark:bg-mathPurple-950/40 rounded-xl flex items-center justify-center text-3xl animate-bounce">
+                <div className="w-12 h-12 bg-cyan-950/30 border border-cyan-500/30 rounded-xl flex items-center justify-center text-3xl animate-pulse">
                   🤖
                 </div>
                 <div>
-                  <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
-                    Compañero Virtual
+                  <span className="text-[10px] text-[#00f0ff] font-extrabold uppercase tracking-widest block font-cyber">
+                    {language === "es" ? "COMPAÑERO VIRTUAL" : "VIRTUAL CLASSMATE"}
                   </span>
-                  <h4 className="font-extrabold text-slate-850 dark:text-white text-base">Alby cometió un error</h4>
+                  <h4 className="font-extrabold font-cyber text-white text-base tracking-wide">ALBY_v1.0.3</h4>
                 </div>
               </div>
               
-              <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl space-y-2">
-                <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
-                  Su respuesta final:
+              <div className="bg-[#050810] border border-cyan-500/10 p-4 rounded-lg space-y-2">
+                <span className="text-[9px] font-extrabold font-cyber text-cyan-400 uppercase tracking-widest block">
+                  {language === "es" ? "Respuesta de Alby:" : "Alby's Answer:"}
                 </span>
-                <div className="text-base font-bold text-slate-800 dark:text-white">
+                <div className="text-sm font-extrabold text-white font-cyber bg-[#070b13] border border-cyan-500/20 p-2.5 rounded-md">
                   <MathRenderer text={activeExercise.protege_answer || ""} />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                  Su razonamiento:
+                <span className="text-[9px] font-extrabold font-cyber text-slate-500 uppercase tracking-widest block">
+                  {language === "es" ? "Razonamiento de Alby:" : "Alby's Reasoning:"}
                 </span>
-                <p className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed italic">
+                <p className="text-slate-300 text-xs leading-relaxed italic font-body font-medium bg-[#050810]/50 p-3 rounded-lg border border-slate-900/60">
                   <MathRenderer text={activeExercise.protege_explanation || ""} />
                 </p>
               </div>
@@ -462,8 +462,8 @@ export const Session: React.FC = () => {
             {activeExercise?.protege_answer ? (
               /* === TEACH BACK TUTOR REVIEW TEXTAREA === */
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                  ✍️ {language === "es" ? "Tu explicación correctora para Alby:" : "Your corrective explanation for Alby:"}
+                <label className="text-xs font-bold font-cyber text-[#00f0ff] uppercase tracking-wider block">
+                  ✍️ {language === "es" ? "Tu corrección / explicación para Alby:" : "Your corrective feedback for Alby:"}
                 </label>
                 <textarea
                   value={userAnswer}
@@ -472,7 +472,7 @@ export const Session: React.FC = () => {
                   }}
                   placeholder={language === "es" ? "Escríbele una explicación a Alby indicando qué error cometió y cómo llegar a la solución correcta..." : "Write Alby an explanation showing his error and how to reach the correct answer..."}
                   rows={4}
-                  className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-sm"
+                  className="w-full bg-[#0a0f1d] border border-slate-800 rounded-xl px-5 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-[#00f0ff] transition-all text-sm font-body focus:ring-4 focus:ring-cyan-500/10"
                   disabled={!!evaluation}
                   required
                   autoFocus
@@ -482,31 +482,34 @@ export const Session: React.FC = () => {
               <>
                 {/* === MULTIPLE CHOICE === */}
                 {activeExercise?.exercise_type === "multiple_choice" && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {activeExercise.choices?.map((choice, idx) => (
-                      <motion.button
-                        key={idx}
-                        type="button"
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        disabled={!!evaluation}
-                        onClick={() => !evaluation && setSelectedChoice(choice)}
-                        className={`p-4 rounded-2xl border text-left text-sm font-semibold transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px]
-                          ${selectedChoice === choice
-                            ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/20"
-                            : "bg-slate-50 dark:bg-[#161c2c]/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:border-slate-350 hover:bg-slate-100/40"
-                          }
-                          ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
-                        `}
-                      >
-                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
-                          {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
-                        </span>
-                        <div className="flex-1 flex items-center">
-                          <MathRenderer text={choice} />
-                        </div>
-                      </motion.button>
-                    ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4">
+                    {activeExercise.choices?.map((choice, idx) => {
+                      const isSelected = selectedChoice === choice;
+                      return (
+                        <motion.button
+                          key={idx}
+                          type="button"
+                          whileHover={{ scale: 1.01 }}
+                          whileTap={{ scale: 0.99 }}
+                          disabled={!!evaluation}
+                          onClick={() => !evaluation && setSelectedChoice(choice)}
+                          className={`p-4 rounded-xl text-left text-sm transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px] w-full
+                            ${isSelected
+                              ? "btn-tactile-cyan"
+                              : "btn-tactile-slate"
+                            }
+                            ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
+                          `}
+                        >
+                          <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 font-cyber ${isSelected ? 'text-[#070b13]' : 'text-slate-500'}`}>
+                            {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
+                          </span>
+                          <div className="flex-1 flex items-center font-display font-bold">
+                            <MathRenderer text={choice} />
+                          </div>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -519,7 +522,7 @@ export const Session: React.FC = () => {
                       if (!evaluation) setUserAnswer(e.target.value);
                     }}
                     placeholder={t.fill_missing}
-                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border-2 border-dashed border-mathPurple-400/40 focus:border-mathPurple-500 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base text-center font-bold"
+                    className="w-full bg-[#0a0f1d] border border-slate-800 focus:border-[#00f0ff] rounded-xl px-5 py-4 text-white placeholder-slate-600 focus:outline-none transition-colors text-base text-center font-cyber font-bold focus:ring-4 focus:ring-cyan-500/10"
                     disabled={!!evaluation}
                     required
                     autoFocus
@@ -535,7 +538,7 @@ export const Session: React.FC = () => {
                       if (!evaluation) setUserAnswer(e.target.value);
                     }}
                     placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
-                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
+                    className="w-full bg-[#0a0f1d] border border-slate-800 rounded-xl px-5 py-4 text-white placeholder-slate-600 focus:outline-none focus:border-[#00f0ff] transition-colors text-base font-cyber text-center focus:ring-4 focus:ring-cyan-500/10"
                     disabled={!!evaluation}
                     required
                     autoFocus
@@ -548,7 +551,7 @@ export const Session: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting || (activeExercise?.exercise_type === "multiple_choice" ? !selectedChoice : !userAnswer.trim())}
-                className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none"
+                className="w-full btn-tactile-magenta py-4 font-cyber text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
                 {submitting 
                   ? (language === "es" ? "Evaluando respuesta..." : "Checking answer...") 
@@ -565,9 +568,9 @@ export const Session: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-2xl bg-blue-500/5 border border-blue-400/20 text-blue-700 dark:text-blue-300 text-sm leading-relaxed"
+                  className="p-4 rounded-xl bg-[#0a0f1d] border border-cyan-500/20 text-[#00f0ff] text-xs font-cyber leading-relaxed shadow-inner"
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-wider block mb-1 text-blue-500">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest block mb-1.5 text-cyan-400">
                     💡 {language === "es" ? `Pista ${hintLevel}/4` : `Hint ${hintLevel}/4`}
                   </span>
                   <MathRenderer text={currentHint} />
@@ -577,7 +580,7 @@ export const Session: React.FC = () => {
                 type="button"
                 onClick={handleRequestHint}
                 disabled={hintLevel >= 4 || loadingHint}
-                className="text-xs font-bold text-slate-450 dark:text-slate-500 hover:text-mathPurple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="text-xs font-bold font-cyber text-slate-500 hover:text-[#00f0ff] uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 {hintLevel === 0
                   ? (language === "es" ? "💡 ¿Necesitas una pista? (−5 XP)" : "💡 Need a hint? (−5 XP)")
@@ -585,7 +588,7 @@ export const Session: React.FC = () => {
                     ? (language === "es" ? `💡 Pista más específica (−5 XP adicionales)` : `💡 More specific hint (−5 more XP)`)
                     : (language === "es" ? "✨ Máximo de pistas alcanzado" : "✨ Maximum hints reached")
                 }
-                {loadingHint && <span className="animate-spin rounded-full h-3 h-3 border-t-2 border-mathPurple-500" />}
+                {loadingHint && <span className="animate-spin rounded-full h-3 w-3 border-t-2 border-[#00f0ff]" />}
               </button>
             </div>
           )}
@@ -597,14 +600,14 @@ export const Session: React.FC = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className={`border rounded-2xl p-5 text-left relative overflow-hidden transition-colors ${
+                className={`border rounded-xl p-5 text-left relative overflow-hidden transition-colors font-cyber scanline ${
                   evaluation.is_correct
-                    ? "bg-green-500/5 border-green-500/35 text-green-700 dark:text-green-300"
-                    : "bg-amber-500/5 border-amber-500/35 text-amber-700 dark:text-amber-300"
+                    ? "bg-[#081a14]/95 border-emerald-500/35 text-emerald-350 shadow-md shadow-emerald-500/5"
+                    : "bg-[#1a1208]/95 border-amber-500/35 text-amber-300 shadow-md shadow-amber-500/5"
                 }`}
               >
                 {!evaluation.is_correct && evaluation.error_type && (
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-450 text-[10px] font-black uppercase tracking-wider mb-3">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-black uppercase tracking-widest mb-3">
                     🏷️ {language === "es" ? errorTypeLabelsEs[evaluation.error_type] : errorTypeLabelsEn[evaluation.error_type]}
                   </div>
                 )}
@@ -613,13 +616,13 @@ export const Session: React.FC = () => {
                   <div className="flex items-center gap-2">
                     {evaluation.is_correct ? (
                       <>
-                        <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400" />
-                        <span>{language === "es" ? "¡Respuesta Correcta!" : "Correct Answer!"}</span>
+                        <CheckCircle2 className="w-5 h-5 text-[#00ff66] animate-bounce" />
+                        <span className="font-extrabold uppercase tracking-widest text-xs">{language === "es" ? "¡Respuesta Correcta!" : "Correct Answer!"}</span>
                       </>
                     ) : (
                       <>
-                        <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400" />
-                        <span>{language === "es" ? "Intento Completado" : "Attempt Logged"}</span>
+                        <AlertCircle className="w-5 h-5 text-amber-550" />
+                        <span className="font-extrabold uppercase tracking-widest text-xs">{language === "es" ? "Intento Completado" : "Attempt Logged"}</span>
                       </>
                     )}
                   </div>
@@ -635,45 +638,42 @@ export const Session: React.FC = () => {
                         VoiceService.speak(evaluation.explanation, language, () => setIsSpeaking(false));
                       }
                     }}
-                    title={isSpeaking ? (language === "es" ? "Detener voz" : "Stop voice") : (language === "es" ? "Escuchar explicación" : "Listen to explanation")}
-                    className={`p-1.5 rounded-lg border flex items-center justify-center gap-1 transition-all text-xs font-semibold shrink-0 ${
+                    className={`p-1.5 rounded-lg border flex items-center justify-center gap-1.5 transition-all text-xs font-bold uppercase tracking-wider shrink-0 ${
                       isSpeaking
-                        ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                        ? "bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500/20"
                         : evaluation.is_correct
-                          ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-450 hover:bg-green-500/20"
-                          : "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-450 hover:bg-amber-500/20"
+                          ? "bg-[#081a14] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                          : "bg-[#1a1208] border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
                     }`}
                   >
                     {isSpeaking ? (
                       <>
-                        <VolumeX className="w-3.5 h-3.5 animate-pulse" />
-                        <span>{language === "es" ? "Silenciar" : "Mute"}</span>
+                        <VolumeX className="w-3.5 h-3.5" />
                       </>
                     ) : (
                       <>
                         <Volume2 className="w-3.5 h-3.5" />
-                        <span>{language === "es" ? "Escuchar" : "Listen"}</span>
                       </>
                     )}
                   </button>
                 </div>
                 
                 {!evaluation.is_correct && evaluation.misconception && (
-                  <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 text-xs text-amber-750 dark:text-amber-400 mb-4 font-semibold">
+                  <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/15 text-xs text-amber-400 mb-4 font-body font-semibold leading-relaxed shadow-sm">
                     💡 {evaluation.misconception}
                   </div>
                 )}
 
-                <div className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed prose dark:prose-invert">
+                <div className="text-slate-300 text-sm leading-relaxed prose dark:prose-invert font-body">
                   <MathRenderer text={evaluation.explanation} />
                 </div>
 
                 <button
                   onClick={handleContinue}
-                  className={`w-full mt-5 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm ${
+                  className={`w-full mt-5 font-cyber text-xs uppercase tracking-widest font-extrabold py-3.5 rounded-xl flex items-center justify-center gap-2 ${
                     evaluation.is_correct
-                      ? "bg-green-600 hover:bg-green-500 text-white"
-                      : "bg-amber-600 hover:bg-amber-500 text-white"
+                      ? "btn-tactile-cyan bg-[#00ff66] border-[#00cc52] text-[#070b13]"
+                      : "btn-tactile-magenta"
                   }`}
                 >
                   {t.next}
@@ -686,7 +686,7 @@ export const Session: React.FC = () => {
       </main>
       
       {/* Bottom decorative banner */}
-      <footer className="py-4 text-center text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest bg-white dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-900 transition-colors">
+      <footer className="py-4 text-center text-[10px] text-slate-550 uppercase tracking-widest bg-slate-950/80 border-t border-slate-900 font-cyber">
         NeuralMath Interactive Learning Loop
       </footer>
     </div>

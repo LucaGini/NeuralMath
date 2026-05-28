@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
-import { avatars, badgesConfig, Locale } from "../services/translations";
-import { Flame, Trophy, Calendar, ChevronRight, GraduationCap, Award, Lock, Sparkles, User as UserIcon } from "lucide-react";
+import { avatars, badgesConfig } from "../services/translations";
+import { Flame, Trophy, Calendar, ChevronRight, GraduationCap, Award, Lock, Sparkles } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -111,8 +111,13 @@ export const Dashboard: React.FC = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500"></div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cyberBg text-cyberCyan font-cyber p-6 scanline">
+        <div className="relative w-16 h-16 border-2 border-cyberCyan/40 tech-brackets animate-pulse flex items-center justify-center mb-4">
+          <GraduationCap className="w-8 h-8 text-cyberCyan animate-bounce" />
+        </div>
+        <span className="text-xs uppercase tracking-widest animate-pulse font-bold">
+          [ SYSTEM CHECK: COMPILING TELEMETRY LADDER... ]
+        </span>
       </div>
     );
   }
@@ -135,239 +140,295 @@ export const Dashboard: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
-      {/* Central Navigation Bar */}
-      <Navbar />
+    <div className="min-h-screen bg-cyberBg text-slate-200 pb-16 transition-colors duration-300 retro-grid relative">
+      {/* Background sweep lines */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#070b13] via-[#0b101c] to-[#070b13] pointer-events-none z-0 opacity-80" />
 
-      {/* Main Container */}
-      <div className="max-w-6xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Profile Card & Achievements Left Column */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* User Profile Card */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+      <div className="relative z-10">
+        {/* Central Navigation Bar */}
+        <Navbar />
+
+        {/* Main Container */}
+        <div className="max-w-6xl mx-auto px-4 md:px-6 mt-8">
+          
+          {/* Hero Welcoming Banner with Sci-fi Telemetry corners */}
+          <div className="relative overflow-hidden rounded-2xl p-6 md:p-8 bg-[#0e1424] border-2 border-cyberCyan/20 tech-brackets shadow-2xl mb-8 glow-cyan">
+            <div className="absolute right-0 top-0 text-[10px] text-cyberCyan/40 font-cyber p-2 tracking-widest select-none pointer-events-none">
+              [ TERMINAL_ID: NM-982X ]
+            </div>
             
-            <div className="flex items-center gap-4">
-              {/* Interactive Avatar Container */}
-              <div 
-                onClick={() => setAvatarModalOpen(true)}
-                className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 border-2 border-mathPurple-500/30 hover:border-mathPurple-500 rounded-2xl flex items-center justify-center text-3xl cursor-pointer hover:scale-105 transition-all shadow-inner group relative"
-                title={t.change_avatar}
-              >
-                <span>{activeAvatar.emoji}</span>
-                <div className="absolute -bottom-1 -right-1 bg-mathPurple-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Sparkles className="w-2.5 h-2.5" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 bg-[#070b13] border border-cyberCyan/35 text-cyberCyan px-3.5 py-1.5 rounded-xl text-xs font-cyber w-fit mb-3.5 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-cyberCyan animate-pulse" />
+                  <span>{language === "es" ? "¡Hola de nuevo, Cadete!" : "Welcome back, Cadet!"}</span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight text-white">
+                  {language === "es" ? `¡Hola, ${user.name}! 🦾` : `Hello, ${user.name}! 🦾`}
+                </h1>
+                <p className="text-sm text-slate-400 mt-2 max-w-xl leading-relaxed">
+                  {language === "es" 
+                    ? "El laboratorio de telemetría matemática está en línea. Pon a prueba tus habilidades de cálculo y lógica hoy con Alby." 
+                    : "The math telemetry lab is fully online. Challenge your calculus, algebra, and logic skills today with Alby."}
+                </p>
+              </div>
+              
+              {/* Gamified telemetry readouts */}
+              <div className="flex items-center gap-3">
+                <div className="bg-[#070b13] border border-cyberCyan/25 rounded-xl p-4 text-center min-w-[100px] shadow-[inset_0_0_10px_rgba(0,240,255,0.05)]">
+                  <span className="block text-3xl font-cyber font-black text-cyberCyan animate-pulse">{user.streak_days}</span>
+                  <span className="text-[9px] text-slate-400 uppercase font-cyber tracking-widest block mt-1">{t.streak}</span>
+                </div>
+                <div className="bg-[#070b13] border border-cyberMagenta/25 rounded-xl p-4 text-center min-w-[100px] shadow-[inset_0_0_10px_rgba(255,0,229,0.05)]">
+                  <span className="block text-3xl font-cyber font-black text-cyberMagenta">{user.xp_total}</span>
+                  <span className="text-[9px] text-slate-400 uppercase font-cyber tracking-widest block mt-1">XP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3-Column Bento Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            
+            {/* Profile Card & Achievements Left Column */}
+            <div className="lg:col-span-1 space-y-6">
+              
+              {/* Bento-style User Profile Card */}
+              <div className="glass bg-[#0e1424]/90 p-6 rounded-2xl relative overflow-hidden border border-cyberCyan/20 tech-brackets shadow-xl">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-cyberCyan/5 rounded-full blur-xl pointer-events-none" />
+                
+                <div className="flex items-center gap-4">
+                  {/* Interactive Avatar Container with neon corners */}
+                  <div 
+                    onClick={() => setAvatarModalOpen(true)}
+                    className="w-16 h-16 bg-[#070b13] border-2 border-cyberCyan/30 hover:border-cyberCyan rounded-xl flex items-center justify-center text-3xl cursor-pointer hover:scale-105 transition-all shadow-inner group relative"
+                    title={t.change_avatar}
+                  >
+                    <span className="group-hover:rotate-6 transition-transform">{activeAvatar.emoji}</span>
+                    <div className="absolute -bottom-1 -right-1 bg-cyberCyan text-[#070b13] rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Sparkles className="w-2.5 h-2.5" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-lg font-display font-black text-white flex items-center gap-1.5 leading-snug">
+                      {user.name}
+                    </h2>
+                    <div className="flex items-center gap-1.5 text-xs text-cyberCyan font-cyber font-semibold mt-1">
+                      <GraduationCap className="w-4 h-4 text-cyberCyan" />
+                      <span className="uppercase tracking-wider">
+                        {user.level === "Primary"
+                          ? t.primary
+                          : user.level === "Secondary"
+                          ? t.secondary
+                          : t.university}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-450 italic block mt-0.5 font-medium">
+                      {language === "es" ? activeAvatar.desc_es : activeAvatar.desc_en}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Start Practice Cyan Bevel tactile button */}
+                <button
+                  onClick={() => navigate("/topics")}
+                  className="w-full mt-6 btn-tactile-cyan font-cyber uppercase tracking-wider font-extrabold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 text-xs"
+                >
+                  {t.start_practice}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* Review Weak Spots Slate tactile button */}
+                <button
+                  onClick={() => navigate("/session/review")}
+                  className="w-full mt-3 btn-tactile-slate font-cyber uppercase tracking-wider font-extrabold py-3 rounded-xl flex items-center justify-center gap-2 text-xs"
+                >
+                  📋 {t.review_weak_spots}
+                  <ChevronRight className="w-4 h-4 text-cyberCyan/70" />
+                </button>
+
+                {/* AI Protégé (Teach Alby) Bento Widget - Holographic themed */}
+                <div className="mt-4 p-4 rounded-xl border border-cyberEmerald/20 bg-[#070b13]/60 flex flex-col gap-3 relative overflow-hidden group shadow-md hover:border-cyberEmerald/40 transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-cyberEmerald/5 rounded-full blur-xl group-hover:scale-125 transition-transform" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#0e1424] dark:bg-[#0e1424] border border-cyberEmerald/30 rounded-lg flex items-center justify-center text-xl shadow-inner animate-float-slow">
+                      🤖
+                    </div>
+                    <div>
+                      <h4 className="text-[9px] font-cyber font-extrabold text-cyberEmerald uppercase tracking-widest">
+                        [ AI PROTÉGÉ: ACTIVE ]
+                      </h4>
+                      <p className="text-[11px] text-slate-300 font-semibold mt-0.5">
+                        {language === "es" ? "¿Puedes enseñarle matemática a Alby?" : "Can you teach math to Alby?"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/session/teach-back")}
+                    className="w-full bg-[#182035] text-cyberEmerald border border-cyberEmerald/25 hover:border-cyberEmerald/55 hover:bg-[#1f2a47] font-cyber uppercase tracking-wider font-extrabold py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all active:translate-y-0.5 text-[10px]"
+                  >
+                    {language === "es" ? "Enseñar a Alby" : "Teach Alby"}
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
 
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
-                  {user.name}
-                </h2>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-mathPurple-500 dark:text-mathPurple-400" />
-                  <span>
-                    {user.level === "Primary"
-                      ? t.primary
-                      : user.level === "Secondary"
-                      ? t.secondary
-                      : t.university}
+              {/* Bento-style Achievements Gallery */}
+              <div className="glass bg-[#0e1424]/90 p-6 rounded-2xl border border-cyberCyan/20 tech-brackets shadow-xl">
+                <h3 className="text-sm font-display font-black uppercase tracking-wider text-white flex items-center gap-2 mb-1.5">
+                  <Award className="w-5 h-5 text-cyberMagenta" />
+                  {t.achievements}
+                </h3>
+                <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                  {t.achievements_sub}
+                </p>
+
+                <div className="space-y-3">
+                  {Object.entries(badgesConfig).map(([key, config]) => {
+                    const unlocked = isBadgeUnlocked(key);
+                    return (
+                      <div 
+                        key={key} 
+                        className={`flex items-center gap-3.5 p-3 rounded-xl border transition-all ${
+                          unlocked 
+                            ? "bg-[#070b13] border-cyberCyan/20 shadow-[inset_0_0_10px_rgba(0,240,255,0.02)]" 
+                            : "bg-[#070b13]/40 border-slate-900/60 opacity-50"
+                        }`}
+                      >
+                        {/* Badge Icon */}
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl border shadow-sm ${
+                          unlocked 
+                            ? "border-cyberMagenta/45 bg-[#0e1424]" 
+                            : "border-slate-800 bg-[#070b13]"
+                        }`}>
+                          {unlocked ? config.emoji : <Lock className="w-4 h-4 text-slate-600" />}
+                        </div>
+
+                        <div className="flex-1">
+                          <span className={`text-xs font-bold block ${unlocked ? "text-white" : "text-slate-500"}`}>
+                            {language === "es" ? config.title_es : config.title_en}
+                          </span>
+                          <span className="text-[10px] text-slate-450 block mt-0.5 leading-snug">
+                            {language === "es" 
+                              ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + (key === "perfect_score" ? "Obtén un 5/5" : key === "streak_3" ? "Racha de 3 días" : "Alcanza 500 XP")) 
+                              : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + (key === "perfect_score" ? "Get a 5/5 score" : key === "streak_3" ? "3 days streak" : "Reach 500 XP"))}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Analytics & Progression Curve Right Columns */}
+            <div className="lg:col-span-2 space-y-6">
+              
+              {/* Accuracy Progress Telemetry Panel with scanlines */}
+              <div className="glass bg-[#0e1424]/90 p-6 rounded-2xl border border-cyberCyan/20 tech-brackets shadow-xl glow-cyan scanline">
+                <div className="flex items-center justify-between mb-4 relative z-10">
+                  <h3 className="text-sm font-display font-black uppercase tracking-wider text-white">
+                    {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
+                  </h3>
+                  <span className="text-[9px] bg-cyberCyan/10 text-cyberCyan font-cyber font-black px-2.5 py-1 rounded-md border border-cyberCyan/30 uppercase tracking-widest animate-pulse">
+                    [ ACTIVE METRICS ]
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 italic block mt-0.5">
-                  {language === "es" ? activeAvatar.desc_es : activeAvatar.desc_en}
-                </span>
-              </div>
-            </div>
-
-            {/* Daily Streak & XP Stats */}
-            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
-              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
-                <Flame className="w-6 h-6 text-orange-500 mb-1" />
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.streak_days}</span>
-                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                  {t.streak} ({t.streak_days})
-                </span>
-              </div>
-              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
-                <Trophy className="w-6 h-6 text-yellow-500 mb-1" />
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.xp_total} XP</span>
-                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
-                  {t.xp}
-                </span>
-              </div>
-            </div>
-
-            {/* Start Practice button */}
-            <button
-              onClick={() => navigate("/topics")}
-              className="w-full mt-6 bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-mathPurple-600/10 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm"
-            >
-              {t.start_practice}
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            {/* Review Weak Spots button */}
-            <button
-              onClick={() => navigate("/session/review")}
-              className="w-full mt-3 border border-amber-500/30 hover:border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 text-amber-700 dark:text-amber-450 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow shadow-amber-500/5"
-            >
-              📋 {t.review_weak_spots}
-              <ChevronRight className="w-4 h-4 text-amber-600/80" />
-            </button>
-
-            {/* Teach Alby button */}
-            <button
-              onClick={() => navigate("/session/teach-back")}
-              className="w-full mt-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-emerald-600/10"
-            >
-              🤖 {language === "es" ? "Enseñar a Alby" : "Teach Alby"}
-              <ChevronRight className="w-4 h-4 text-emerald-100" />
-            </button>
-          </div>
-
-          {/* Gamified Achievements Gallery */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
-              <Award className="w-5 h-5 text-mathPurple-500" />
-              {t.achievements}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
-              {t.achievements_sub}
-            </p>
-
-            <div className="space-y-4">
-              {Object.entries(badgesConfig).map(([key, config]) => {
-                const unlocked = isBadgeUnlocked(key);
-                return (
-                  <div 
-                    key={key} 
-                    className={`flex items-center gap-4 p-3.5 rounded-2xl border transition-all ${
-                      unlocked 
-                        ? "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80" 
-                        : "bg-slate-100/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/60 opacity-60"
-                    }`}
-                  >
-                    {/* Badge Icon */}
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl border shadow-md bg-gradient-to-tr ${
-                      unlocked ? config.color : "from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 border-slate-300 dark:border-slate-800"
-                    }`}>
-                      {unlocked ? config.emoji : <Lock className="w-4 h-4 text-slate-400 dark:text-slate-600" />}
+                
+                <div className="h-64 flex flex-col justify-center relative z-10">
+                  {history.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#00f0ff" stopOpacity={0.25} />
+                            <stop offset="95%" stopColor="#00f0ff" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 240, 255, 0.08)" vertical={false} />
+                        <XAxis dataKey="date" stroke="#64748b" fontSize={9} fontFamily="'Share Tech Mono'" tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={9} fontFamily="'Share Tech Mono'" tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#070b13",
+                            borderColor: "rgba(0, 240, 255, 0.35)",
+                            borderRadius: "8px",
+                            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+                            color: "#ffffff",
+                            fontFamily: "'Share Tech Mono'",
+                            fontSize: "11px",
+                            border: "1.5px solid"
+                          }}
+                          labelFormatter={(label, items) => {
+                            if (items && items[0]) {
+                              return `Topic: ${items[0].payload.topicName}`;
+                            }
+                            return label;
+                          }}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey={language === "es" ? "Puntaje" : "Score"} 
+                          stroke="#00f0ff" 
+                          strokeWidth={3} 
+                          fillOpacity={1} 
+                          fill="url(#colorScore)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-6 border border-dashed border-cyberCyan/15 rounded-xl h-full bg-[#070b13]/55">
+                      <div className="text-4xl mb-2 animate-bounce">📈</div>
+                      <p className="text-sm font-cyber font-bold text-cyberCyan">
+                        [ NO PROGRESSION TELEMETRY DETECTED ]
+                      </p>
+                      <p className="text-xs text-slate-450 mt-1 max-w-[285px] leading-relaxed">
+                        {language === "es" 
+                          ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
+                          : "Complete your first math training session to visualize your accuracy learning curve here."}
+                      </p>
                     </div>
+                  )}
+                </div>
+              </div>
 
-                    <div className="flex-1">
-                      <span className={`text-xs font-bold block ${unlocked ? "text-slate-800 dark:text-white" : "text-slate-500 dark:text-slate-600"}`}>
-                        {language === "es" ? config.title_es : config.title_en}
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
-                        {language === "es" ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + (key === "perfect_score" ? "Obtén un 5/5" : key === "streak_3" ? "Racha de 3 días" : "Alcanza 500 XP")) : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + (key === "perfect_score" ? "Get a 5/5 score" : key === "streak_3" ? "3 days streak" : "Reach 500 XP"))}
-                      </span>
+              {/* Recent Sessions list */}
+              <div className="glass bg-[#0e1424]/90 p-6 rounded-2xl border border-cyberCyan/20 tech-brackets shadow-xl">
+                <h3 className="text-sm font-display font-black uppercase tracking-wider text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-cyberCyan" />
+                  {t.history}
+                </h3>
+                
+                <div className="space-y-3">
+                  {history.map((record) => (
+                    <div
+                      key={record.id}
+                      className="flex items-center justify-between p-4 bg-[#070b13]/60 border border-cyberCyan/10 rounded-xl hover:border-cyberCyan/35 transition-all duration-200"
+                    >
+                      <div>
+                        <span className="text-[9px] text-cyberCyan font-cyber font-bold uppercase tracking-widest block">
+                          [ {record.topic.area} ]
+                        </span>
+                        <span className="font-extrabold text-white text-sm block mt-0.5">{record.topic.name}</span>
+                      </div>
+                      <div className="text-right font-cyber">
+                        <span className="text-xs font-bold text-slate-350 block">
+                          {record.score} / 5
+                        </span>
+                        <span className="text-[11px] text-cyberEmerald font-black block mt-0.5">
+                          +{record.xp_earned} XP
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Analytics & Progression Curve Right Columns */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Accuracy Progress chart */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
-              {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
-            </h3>
-            <div className="h-64 flex flex-col justify-center">
-              {history.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
-                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
-                        borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
-                        borderRadius: "16px",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        color: theme === "dark" ? "#f8fafc" : "#0f172a",
-                        fontSize: "12px",
-                        border: "1px solid"
-                      }}
-                      labelFormatter={(label, items) => {
-                        if (items && items[0]) {
-                          return items[0].payload.topicName;
-                        }
-                        return label;
-                      }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey={language === "es" ? "Puntaje" : "Score"} 
-                      stroke="#8b5cf6" 
-                      strokeWidth={2.5} 
-                      fillOpacity={1} 
-                      fill="url(#colorScore)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl h-full transition-colors duration-200">
-                  <div className="text-4xl mb-2">📈</div>
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {language === "es" ? "¡Gráfico de Progreso Vacío!" : "No Progression Data Yet!"}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
-                    {language === "es" 
-                      ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
-                      : "Complete your first math training session to visualize your accuracy learning curve here."}
-                  </p>
+                  ))}
+                  {history.length === 0 && (
+                    <div className="text-center py-8 text-slate-500 font-cyber text-xs">
+                      [ NO DATA RECORDED IN REGISTRY ]
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent sessions */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-mathPurple-500" />
-              {t.history}
-            </h3>
-            
-            <div className="space-y-3">
-              {history.map((record) => (
-                <div
-                  key={record.id}
-                  className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl hover:border-slate-300 dark:hover:border-slate-700/60 transition-all duration-150"
-                >
-                  <div>
-                    <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
-                      {record.topic.area}
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-white text-sm">{record.topic.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
-                      {record.score} / 5 {language === "es" ? "correctas" : "correct"}
-                    </span>
-                    <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
-                      +{record.xp_earned} XP
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {history.length === 0 && (
-                <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
-                  {t.history_empty}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
@@ -376,18 +437,22 @@ export const Dashboard: React.FC = () => {
       {/* Modern Avatar Selection Pop-up Modal */}
       <AnimatePresence>
         {avatarModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/80 backdrop-blur-sm scanline">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+              className="w-full max-w-lg bg-[#0e1424] border-2 border-cyberCyan/40 rounded-2xl p-6 shadow-2xl relative"
             >
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-mathPurple-500" />
+              <div className="absolute right-0 top-0 text-[8px] text-cyberCyan/40 font-cyber p-2 tracking-widest">
+                [ AUTH_AVATAR: CONSOLE ]
+              </div>
+              
+              <h3 className="text-lg font-display font-black text-white mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-cyberMagenta" />
                 {t.select_avatar}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              <p className="text-xs text-slate-400 mb-5 leading-relaxed">
                 {language === "es" ? "Elige el rostro de las matemáticas que te acompañará en tu aprendizaje." : "Choose the mathematician figure to guide your daily training loop."}
               </p>
 
@@ -396,16 +461,16 @@ export const Dashboard: React.FC = () => {
                   <div
                     key={item.id}
                     onClick={() => !updatingAvatar && handleAvatarChange(item.id)}
-                    className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer hover:scale-[1.01] transition-all ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:scale-[1.01] transition-all ${
                       user.avatar_id === item.id 
-                        ? "bg-mathPurple-50 dark:bg-mathPurple-950/20 border-mathPurple-500 text-mathPurple-900 dark:text-mathPurple-300"
-                        : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                        ? "bg-cyberCyan/10 border-cyberCyan text-white"
+                        : "bg-[#070b13]/60 border-slate-800 text-slate-450 hover:border-cyberCyan/45"
                     }`}
                   >
                     <span className="text-3xl">{item.emoji}</span>
                     <div>
                       <span className="text-xs font-bold block">{item.name}</span>
-                      <span className="text-[9px] opacity-70 block mt-0.5">
+                      <span className="text-[9px] opacity-70 block mt-0.5 leading-snug">
                         {language === "es" ? item.desc_es : item.desc_en}
                       </span>
                     </div>
@@ -413,11 +478,11 @@ export const Dashboard: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-900">
                 <button
                   disabled={updatingAvatar}
                   onClick={() => setAvatarModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50 transition-colors"
+                  className="px-5 py-2.5 rounded-xl bg-[#182035] text-cyberCyan border border-cyberCyan/20 hover:border-cyberCyan/45 hover:bg-[#202b47] font-cyber uppercase tracking-wider font-bold transition-all text-xs"
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
                 </button>
