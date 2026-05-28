@@ -4,7 +4,7 @@ import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
 import { useApp } from "../services/AppContext";
 import { badgesConfig } from "../services/translations";
-import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, CheckCircle2, AlertCircle, Play, ChevronRight, Trophy, Flame, Sparkles, Award, Volume2, VolumeX, Mic, MicOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { VoiceService } from "../services/voice";
 import { SoundEffects } from "../services/SoundEffects";
@@ -100,6 +100,94 @@ export const Session: React.FC = () => {
   const [sessionType, setSessionType] = useState<string>("practice");
   const [secondsLeft, setSecondsLeft] = useState<number>(30);
   const [timeIndicator, setTimeIndicator] = useState<{ text: string; isPositive: boolean } | null>(null);
+
+  // Voice Input (Speech Recognition) states
+  const [isListening, setIsListening] = useState(false);
+  const [activeRecognition, setActiveRecognition] = useState<any>(null);
+  const startTextRef = React.useRef("");
+
+  const isRecognitionSupported = !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+
+  // Cleanup voice recording on unmount
+  useEffect(() => {
+    return () => {
+      if (activeRecognition) {
+        try {
+          activeRecognition.abort();
+        } catch (e) {}
+      }
+    };
+  }, [activeRecognition]);
+
+  const toggleListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showAlert(language === "es" ? "Reconocimiento de voz no soportado en este navegador." : "Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    if (isListening && activeRecognition) {
+      try {
+        activeRecognition.stop();
+      } catch (err) {}
+      setIsListening(false);
+      setActiveRecognition(null);
+    } else {
+      startTextRef.current = userAnswer;
+      try {
+        const rec = new SpeechRecognition();
+        rec.continuous = true;
+        rec.interimResults = false;
+        rec.lang = language === "es" ? "es-ES" : "en-US";
+
+        rec.onresult = (event: any) => {
+          let sessionTranscript = "";
+          for (let i = 0; i < event.results.length; ++i) {
+            sessionTranscript += event.results[i][0].transcript;
+          }
+          setUserAnswer(() => {
+            const base = startTextRef.current.trim();
+            return base ? `${base} ${sessionTranscript.trim()}` : sessionTranscript.trim();
+          });
+        };
+
+        rec.onerror = (e: any) => {
+          console.error("Speech recognition error:", e);
+          setIsListening(false);
+          setActiveRecognition(null);
+          
+          let msg = "";
+          if (e.error === "not-allowed") {
+            msg = language === "es"
+              ? "Permiso de micrófono denegado o bloqueado. Por favor, permite el acceso al micrófono en la barra de direcciones de tu navegador y recarga la página."
+              : "Microphone permission denied or blocked. Please allow microphone access in your browser's address bar and reload the page.";
+          } else if (e.error === "network") {
+            msg = language === "es"
+              ? "El motor de reconocimiento de voz del navegador no puede comunicarse con los servidores de transcripción de Google/Microsoft en este momento. No te preocupes, puedes seguir escribiendo tu respuesta normalmente."
+              : "The browser's speech recognition engine cannot communicate with the Google/Microsoft cloud transcription servers right now. Don't worry, you can continue typing your answer normally.";
+          } else if (e.error === "no-speech") {
+            return; // Ignore silence timeouts
+          } else {
+            msg = language === "es"
+              ? `No se pudo escuchar: ${e.error}`
+              : `Could not listen: ${e.error}`;
+          }
+          showAlert(msg);
+        };
+
+        rec.onend = () => {
+          setIsListening(false);
+          setActiveRecognition(null);
+        };
+
+        rec.start();
+        setIsListening(true);
+        setActiveRecognition(rec);
+      } catch (err) {
+        console.error("Failed to start speech recognition:", err);
+      }
+    }
+  };
 
   useEffect(() => {
     // Reset timer when question changes
@@ -239,6 +327,12 @@ export const Session: React.FC = () => {
         misconception: res.data.misconception,
       });
 
+      // Automatically play Alby's voice explanation in Teach-Back mode
+      if (sessionType === "teach_back" && res.data.explanation) {
+        setIsSpeaking(true);
+        VoiceService.speak(res.data.explanation, language, () => setIsSpeaking(false));
+      }
+
       if (res.data.is_correct) {
         SoundEffects.playCorrect();
         if (sessionType === "speed_run") {
@@ -274,6 +368,14 @@ export const Session: React.FC = () => {
     setSelectedChoice(null);
     setHintLevel(0);
     setCurrentHint(null);
+
+    // Stop recording when moving to next question
+    if (isListening && activeRecognition) {
+      try {
+        activeRecognition.stop();
+      } catch (e) {}
+      setIsListening(false);
+    }
 
     if (currentIndex < exercises.length - 1) {
       setCurrentIndex((prev) => prev + 1);
@@ -544,9 +646,35 @@ export const Session: React.FC = () => {
             {activeExercise?.protege_answer ? (
               /* === TEACH BACK TUTOR REVIEW TEXTAREA === */
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
-                  ✍️ {language === "es" ? "Tu explicación correctora para Alby:" : "Your corrective explanation for Alby:"}
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                    ✍️ {language === "es" ? "Tu explicación correctora para Alby:" : "Your corrective explanation for Alby:"}
+                  </label>
+                  {isRecognitionSupported && (
+                    <button
+                      type="button"
+                      onClick={toggleListening}
+                      disabled={!!evaluation}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold transition-all ${
+                        isListening
+                          ? "bg-red-500/10 border-red-500/30 text-red-500 dark:text-red-400 animate-pulse hover:bg-red-500/20"
+                          : "bg-mathPurple-500/10 border-mathPurple-500/20 text-mathPurple-600 dark:text-mathPurple-400 hover:bg-mathPurple-500/20"
+                      } ${evaluation ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                    >
+                      {isListening ? (
+                        <>
+                          <MicOff className="w-3.5 h-3.5" />
+                          <span>{language === "es" ? "Parar de hablar" : "Stop talking"}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-3.5 h-3.5" />
+                          <span>{language === "es" ? "Explicar por voz" : "Explain by voice"}</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
                 <textarea
                   value={userAnswer}
                   onChange={(e) => {
@@ -610,18 +738,38 @@ export const Session: React.FC = () => {
 
                 {/* === FREE TEXT === */}
                 {(!activeExercise?.exercise_type || activeExercise.exercise_type === "free_text") && (
-                  <input
-                    type="text"
-                    value={userAnswer}
-                    onChange={(e) => {
-                      if (!evaluation) setUserAnswer(e.target.value);
-                    }}
-                    placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
-                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
-                    disabled={!!evaluation}
-                    required
-                    autoFocus
-                  />
+                  <div className="relative w-full flex items-center">
+                    <input
+                      type="text"
+                      value={userAnswer}
+                      onChange={(e) => {
+                        if (!evaluation) setUserAnswer(e.target.value);
+                      }}
+                      placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
+                      className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl pl-5 pr-14 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
+                      disabled={!!evaluation}
+                      required
+                      autoFocus
+                    />
+                    {isRecognitionSupported && !evaluation && (
+                      <button
+                        type="button"
+                        onClick={toggleListening}
+                        className={`absolute right-4 p-2 rounded-full border transition-all ${
+                          isListening
+                            ? "bg-red-500/10 border-red-500/30 text-red-500 dark:text-red-400 animate-pulse hover:bg-red-500/20"
+                            : "bg-slate-100 dark:bg-[#1f293d] border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+                        }`}
+                        title={language === "es" ? "Responder por voz" : "Answer by voice"}
+                      >
+                        {isListening ? (
+                          <MicOff className="w-4 h-4" />
+                        ) : (
+                          <Mic className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 )}
               </>
             )}
