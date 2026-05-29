@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.core.security import get_password_hash, verify_password, create_access_token, ALGORITHM
 from app.core.config import settings
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, Token, TokenPayload
+from app.schemas.user import UserCreate, UserResponse, Token, TokenPayload, UserUpdate
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -93,4 +93,26 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def read_user_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@router.put("/me", response_model=UserResponse)
+def update_user_me(
+    update_data: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if update_data.name is not None:
+        current_user.name = update_data.name
+    if update_data.level is not None:
+        current_user.level = update_data.level
+    if update_data.password is not None and update_data.password.strip() != "":
+        if current_user.email == "estudiante@neuralmath.edu":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No está permitido cambiar la contraseña del usuario de demostración."
+            )
+        current_user.password_hash = get_password_hash(update_data.password)
+    
+    db.commit()
+    db.refresh(current_user)
     return current_user

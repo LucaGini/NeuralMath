@@ -66,6 +66,12 @@ export const Navbar: React.FC<NavbarProps> = () => {
           >
             {t.progress}
           </button>
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+          >
+            {language === "es" ? "Perfil" : "Profile"}
+          </button>
         </div>
       )}
 
