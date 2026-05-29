@@ -29,6 +29,9 @@ def run_migrations():
         "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS protege_explanation TEXT;",
         "ALTER TABLE exercises ADD COLUMN IF NOT EXISTS student_review TEXT;",
 
+        # Subtopics Support
+        "ALTER TABLE topics ADD COLUMN IF NOT EXISTS subtopics JSON;",
+
         # Alby's Journal Entries
         """
         CREATE TABLE IF NOT EXISTS alby_journal_entries (

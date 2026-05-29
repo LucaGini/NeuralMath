@@ -17,4 +17,5 @@ class AgentState(TypedDict):
     theme: Optional[str]
     session_type: Optional[str]
     exercise_count: Optional[int]
+    subtopic_name: Optional[str]
 

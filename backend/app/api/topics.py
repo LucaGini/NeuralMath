@@ -6,15 +6,20 @@ from app.models.user import User
 from app.api.auth import get_current_user
 from agents.graph import math_tutor_graph
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/topics", tags=["topics"])
+
+class SubtopicResponse(BaseModel):
+    name: str
+    description: str
 
 class TopicResponse(BaseModel):
     id: int
     name: str
     area: str
     level: str
+    subtopics: Optional[List[SubtopicResponse]] = None
 
     class Config:
         from_attributes = True
@@ -47,7 +52,7 @@ def get_topic_by_id(topic_id: int, db: Session = Depends(get_db), current_user: 
     return topic
 
 @router.post("/{topic_id}/explain", response_model=ExplanationResponse)
-def explain_topic(topic_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def explain_topic(topic_id: int, subtopic: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Invokes the TopicAgent to generate an in-depth, level-adapted explanation.
     """
@@ -60,6 +65,7 @@ def explain_topic(topic_id: int, db: Session = Depends(get_db), current_user: Us
         "user_level": current_user.level,
         "topic_name": topic.name,
         "topic_area": topic.area,
+        "subtopic_name": subtopic,
         "explanation": None,
         "exercises": None,
         "user_answers": None,

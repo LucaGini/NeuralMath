@@ -32,6 +32,7 @@ class StartSessionRequest(BaseModel):
     topic_id: int
     theme: Optional[str] = "standard"
     exercise_count: Optional[int] = 5
+    subtopic: Optional[str] = None
 
 class ExerciseResponse(BaseModel):
     id: int
@@ -173,6 +174,7 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
         "user_level": current_user.level,
         "topic_name": topic.name,
         "topic_area": topic.area,
+        "subtopic_name": req.subtopic,
         "explanation": None,
         "exercises": None,
         "user_answers": None,

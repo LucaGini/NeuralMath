@@ -127,6 +127,7 @@ export const Session: React.FC = () => {
           : "ExerciseAgent generating challenges..."
       );
       try {
+        const subtopicParam = searchParams.get("subtopic") || undefined;
         const res = isTeachBack
           ? await api.post("/sessions/teach-back/start")
           : isReview
@@ -137,6 +138,7 @@ export const Session: React.FC = () => {
                   topic_id: parseInt(topicId || "0"),
                   theme: chosenTheme,
                   exercise_count: parseInt(exerciseCountParam),
+                  subtopic: subtopicParam,
                 });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);
@@ -496,10 +498,15 @@ export const Session: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-2xl bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-colors"
         >
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] text-mathPurple-750 dark:text-mathPurple-400 font-bold uppercase tracking-widest bg-mathPurple-500/10 border border-mathPurple-500/20 px-3 py-1 rounded-full">
               {language === "es" ? "Reto" : "Challenge"} {currentIndex + 1} — {activeExercise?.difficulty_level || "Medio"}
             </span>
+            {searchParams.get("subtopic") && (
+              <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+                🎯 {searchParams.get("subtopic")}
+              </span>
+            )}
           </div>
 
           <div className="prose dark:prose-invert text-lg md:text-xl text-slate-800 dark:text-slate-100 font-medium py-4">

@@ -8,20 +8,28 @@ import { ArrowLeft, BookOpen, GraduationCap, Play, HelpCircle, Loader2, Volume2,
 import { motion, AnimatePresence } from "framer-motion";
 import { VoiceService } from "../services/voice";
 
+interface Subtopic {
+  name: string;
+  description: string;
+}
+
 interface Topic {
   id: number;
   name: string;
   area: string;
   level: string;
+  subtopics?: Subtopic[];
 }
 
 export const TopicSelection: React.FC = () => {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedSubtopic, setSelectedSubtopic] = useState<Subtopic | null>(null);
   const [explanation, setExplanation] = useState<string>("");
   const [user, setUser] = useState<any>(null);
   const [loadingTopics, setLoadingTopics] = useState(true);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [subtopicExplanationLoading, setSubtopicExplanationLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [themeModalOpen, setThemeModalOpen] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<number>(5);
@@ -101,6 +109,7 @@ export const TopicSelection: React.FC = () => {
     VoiceService.stop();
     setIsSpeaking(false);
     setSelectedTopic(topic);
+    setSelectedSubtopic(null);
     setExplanation("");
     setLoadingExplanation(true);
     try {
@@ -118,6 +127,28 @@ export const TopicSelection: React.FC = () => {
     }
   };
 
+  const handleSelectSubtopic = async (sub: Subtopic) => {
+    if (!selectedTopic) return;
+    VoiceService.stop();
+    setIsSpeaking(false);
+    setSelectedSubtopic(sub);
+    setExplanation("");
+    setSubtopicExplanationLoading(true);
+    try {
+      const res = await api.post(`/topics/${selectedTopic.id}/explain?subtopic=${encodeURIComponent(sub.name)}`);
+      setExplanation(res.data.explanation);
+    } catch (err) {
+      console.error("Error fetching subtopic explanation:", err);
+      setExplanation(
+        language === "es"
+          ? "Disculpa, tuvimos un problema al cargar la explicación del subtema. Por favor reinténtalo."
+          : "Sorry, we had a problem loading the subtopic explanation. Please try again."
+      );
+    } finally {
+      setSubtopicExplanationLoading(false);
+    }
+  };
+
   const handleStartSession = () => {
     if (selectedTopic) {
       setThemeModalOpen(true);
@@ -127,7 +158,8 @@ export const TopicSelection: React.FC = () => {
   const handleStartWithTheme = (themeChosen: string) => {
     if (selectedTopic) {
       setThemeModalOpen(false);
-      navigate(`/session/${selectedTopic.id}?theme=${themeChosen}&exercise_count=${selectedDuration}`);
+      const subtopicQuery = selectedSubtopic ? `&subtopic=${encodeURIComponent(selectedSubtopic.name)}` : '';
+      navigate(`/session/${selectedTopic.id}?theme=${themeChosen}&exercise_count=${selectedDuration}${subtopicQuery}`);
     }
   };
 
@@ -277,9 +309,58 @@ export const TopicSelection: React.FC = () => {
                       </button>
                     </div>
 
-                    <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
-                      <MathRenderer text={explanation} />
-                    </div>
+                    {/* Subtopics Selector */}
+                    {selectedTopic.subtopics && selectedTopic.subtopics.length > 0 && (
+                      <div className="mb-6 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-2xl">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mb-2.5">
+                          {language === "es" ? "Subtemas de Enfoque (Opcional)" : "Focus Subtopics (Optional)"}
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleSelectTopic(selectedTopic)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                              !selectedSubtopic
+                                ? "bg-mathPurple-600 text-white border-mathPurple-600 shadow-md shadow-mathPurple-500/10"
+                                : "bg-white dark:bg-[#0f172a] text-slate-655 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                            }`}
+                          >
+                            {language === "es" ? "✨ Todo el Tema" : "✨ Complete Topic"}
+                          </button>
+                          {selectedTopic.subtopics.map((sub) => (
+                            <button
+                              key={sub.name}
+                              onClick={() => handleSelectSubtopic(sub)}
+                              title={sub.description}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                                selectedSubtopic?.name === sub.name
+                                  ? "bg-mathPurple-500 text-white border-mathPurple-500 shadow-md shadow-mathPurple-500/10"
+                                  : "bg-white dark:bg-[#0f172a] text-slate-655 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                              }`}
+                            >
+                              {sub.name}
+                            </button>
+                          ))}
+                        </div>
+                        {selectedSubtopic && (
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 italic">
+                            🎯 {selectedSubtopic.description}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {subtopicExplanationLoading ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <Loader2 className="w-8 h-8 text-mathPurple-500 animate-spin mb-3" />
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                          {language === "es" ? "TopicAgent enfocando lección..." : "TopicAgent focusing lesson..."}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+                        <MathRenderer text={explanation} />
+                      </div>
+                    )}
 
                     <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                       <div>

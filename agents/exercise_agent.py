@@ -15,6 +15,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
     level = state.get("user_level", "Primary")
     topic = state.get("topic_name", "Algebra")
     area = state.get("topic_area", "Algebra")
+    subtopic = state.get("subtopic_name", "")
     theme = state.get("theme", "standard")
     exercise_count = state.get("exercise_count", 5) or 5
     
@@ -50,8 +51,13 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         "Ensure the questions escalate in complexity. Do not include any explanation or markdown wrappers outside of the JSON block."
     )
 
+    if subtopic:
+        prompt_topic_desc = f"specifically for the subtopic '{subtopic}' of the main topic '{topic}' in the area of '{area}'"
+    else:
+        prompt_topic_desc = f"for the topic '{topic}' in the area of '{area}'"
+
     prompt = (
-        f"Generate exactly {exercise_count} unique exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
+        f"Generate exactly {exercise_count} unique exercises {prompt_topic_desc} at the '{level}' level.\n"
         f"Narrative Quest Theme: '{theme}'. If theme is NOT 'standard', wrap all questions in a continuous, exciting Spanish storyline matching this theme.\n"
         f"The student's performance history is: '{perf_history}'. Adjust the average starting difficulty accordingly.\n"
         f"Session Seed: {session_seed}. Ensure questions are randomized and different from previous sessions.\n"
