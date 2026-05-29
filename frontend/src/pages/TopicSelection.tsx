@@ -24,6 +24,7 @@ export const TopicSelection: React.FC = () => {
   const [loadingExplanation, setLoadingExplanation] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [themeModalOpen, setThemeModalOpen] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState<number>(5);
   const navigate = useNavigate();
   const { t, language } = useApp();
 
@@ -126,7 +127,7 @@ export const TopicSelection: React.FC = () => {
   const handleStartWithTheme = (themeChosen: string) => {
     if (selectedTopic) {
       setThemeModalOpen(false);
-      navigate(`/session/${selectedTopic.id}?theme=${themeChosen}`);
+      navigate(`/session/${selectedTopic.id}?theme=${themeChosen}&exercise_count=${selectedDuration}`);
     }
   };
 
@@ -325,6 +326,33 @@ export const TopicSelection: React.FC = () => {
                   ? "NeuralMath genera una misión y una historia continua con tus ejercicios. Elige el tema que prefieras:"
                   : "NeuralMath generates a dynamic narrative quest matching your math problems. Choose your adventure theme:"}
               </p>
+
+              {/* Session Duration Selector */}
+              <div className="mb-5 bg-slate-50/50 dark:bg-slate-900/10 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2.5 uppercase tracking-wider">
+                  ⏱️ {language === "es" ? "Duración de la Sesión" : "Session Duration"}
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { val: 3, label_es: "3 ej. (Rápida)", label_en: "3 ex. (Quick)" },
+                    { val: 5, label_es: "5 ej. (Estándar)", label_en: "5 ex. (Standard)" },
+                    { val: 10, label_es: "10 ej. (Maratón)", label_en: "10 ex. (Marathon)" }
+                  ].map((d) => (
+                    <button
+                      key={d.val}
+                      type="button"
+                      onClick={() => setSelectedDuration(d.val)}
+                      className={`py-2 px-3 rounded-xl border text-[11px] font-extrabold transition-all duration-150 ${
+                        selectedDuration === d.val
+                          ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/15"
+                          : "bg-white dark:bg-slate-950/20 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      {language === "es" ? d.label_es : d.label_en}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-1">
                 {adventureThemes.map((themeItem) => (

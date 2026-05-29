@@ -9,13 +9,14 @@ logger = logging.getLogger(__name__)
 
 def exercise_node(state: AgentState) -> Dict[str, Any]:
     """
-    ExerciseAgent Node. Generates 3 to 5 math problems of increasing difficulty,
+    ExerciseAgent Node. Generates adapted math problems of increasing difficulty,
     adapted to the user's level and math topic. Returns structured JSON.
     """
     level = state.get("user_level", "Primary")
     topic = state.get("topic_name", "Algebra")
     area = state.get("topic_area", "Algebra")
     theme = state.get("theme", "standard")
+    exercise_count = state.get("exercise_count", 5) or 5
     
     # We can also receive a custom prompt segment about performance if supplied
     perf_history = state.get("session_summary", {}).get("recent_performance", "No historical sessions yet.")
@@ -25,7 +26,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
 
     system_instruction = (
         "You are 'ExerciseAgent', a specialized math problem generator in the NeuralMath platform.\n"
-        "Your goal is to generate exactly 3 to 5 exercises of increasing difficulty for the given topic and level.\n"
+        f"Your goal is to generate exactly {exercise_count} exercises of increasing difficulty for the given topic and level.\n"
         "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
         "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display)\n"
         "- 'correct_answer': a brief, single correct answer string (e.g., '3' or '(x-2)(x-3)' or '1/2')\n"
@@ -36,7 +37,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
         "NARRATIVE QUEST THEMES (CRITICAL):\n"
         "If a specific narrative 'theme' is provided (other than 'standard', such as 'space' for Space Odyssey, 'fantasy' for Fantasy Realm, 'sports' for Sports Championship):\n"
-        "1. You MUST generate a continuous, immersive narrative storyline across the 3 to 5 exercises. Each exercise represents a step in their quest/mission.\n"
+        f"1. You MUST generate a continuous, immersive narrative storyline across the {exercise_count} exercises. Each exercise represents a step in their quest/mission.\n"
         "2. For each exercise, write a compelling, LaTeX-safe story paragraph in Spanish preceding the mathematical problem inside the 'question' field. The math problem must be the logical challenge required to solve that plot point (e.g. calculating matrix determinant to avoid an asteroid, solving a quadratic equation to cast a fire spell, calculating percentages to score a perfect goal).\n"
         "3. Keep the tone exciting, engaging, and age-appropriate for the student's level.\n\n"
         "EXERCISE TYPE SELECTION RULES:\n"
@@ -50,7 +51,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
     )
 
     prompt = (
-        f"Generate unique exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
+        f"Generate exactly {exercise_count} unique exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
         f"Narrative Quest Theme: '{theme}'. If theme is NOT 'standard', wrap all questions in a continuous, exciting Spanish storyline matching this theme.\n"
         f"The student's performance history is: '{perf_history}'. Adjust the average starting difficulty accordingly.\n"
         f"Session Seed: {session_seed}. Ensure questions are randomized and different from previous sessions.\n"

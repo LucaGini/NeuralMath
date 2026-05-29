@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../services/api";
 import { useApp } from "../services/AppContext";
-import { LogIn, Sparkles, BookOpen, Eye, EyeOff } from "lucide-react";
+import { LogIn, Sparkles, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
 export const Login: React.FC = () => {
@@ -50,8 +50,12 @@ export const Login: React.FC = () => {
         className="w-full max-w-md bg-white dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 transition-colors duration-200"
       >
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-tr from-mathPurple-600 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg shadow-mathPurple-500/20 mb-4">
-            <BookOpen className="w-9 h-9 text-white" />
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-1 shadow-lg shadow-mathPurple-500/10 border border-slate-200/40 overflow-hidden hover:scale-105 transition-transform duration-300 mb-4">
+            <img 
+              src="/logo.png" 
+              alt="NeuralMath Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-slate-200 dark:to-mathPurple-300 dark:bg-clip-text">
             NeuralMath

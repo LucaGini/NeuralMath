@@ -75,6 +75,7 @@ export const Session: React.FC = () => {
   const navigate = useNavigate();
   const { t, language, theme, showAlert, showConfirm } = useApp();
   const chosenTheme = searchParams.get("theme") || "standard";
+  const exerciseCountParam = searchParams.get("exercise_count") || "5";
 
   const [loading, setLoading] = useState(true);
   const [loadingMsg, setLoadingMsg] = useState("");
@@ -135,6 +136,7 @@ export const Session: React.FC = () => {
               : await api.post("/sessions/start", {
                   topic_id: parseInt(topicId || "0"),
                   theme: chosenTheme,
+                  exercise_count: parseInt(exerciseCountParam),
                 });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);

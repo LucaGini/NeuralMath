@@ -16,3 +16,5 @@ class AgentState(TypedDict):
     hint: Optional[str]
     theme: Optional[str]
     session_type: Optional[str]
+    exercise_count: Optional[int]
+

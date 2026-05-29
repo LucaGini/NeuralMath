@@ -31,6 +31,7 @@ class AlbyJournalResponse(BaseModel):
 class StartSessionRequest(BaseModel):
     topic_id: int
     theme: Optional[str] = "standard"
+    exercise_count: Optional[int] = 5
 
 class ExerciseResponse(BaseModel):
     id: int
@@ -180,7 +181,8 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
         "motivation_message": None,
         "target_node": "exercise",
         "theme": req.theme or "standard",
-        "session_type": "practice"
+        "session_type": "practice",
+        "exercise_count": req.exercise_count or 5
     }
     
     try:

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../services/AppContext";
-import { BookOpen, LogOut, Sun, Moon, Globe } from "lucide-react";
+import { LogOut, Sun, Moon, Globe } from "lucide-react";
 
 interface NavbarProps {
   showBack?: boolean;
@@ -28,8 +28,12 @@ export const Navbar: React.FC<NavbarProps> = () => {
         className="flex items-center gap-3 cursor-pointer select-none"
         onClick={() => navigate("/dashboard")}
       >
-        <div className="w-10 h-10 bg-gradient-to-tr from-mathPurple-600 to-indigo-500 rounded-xl flex items-center justify-center shadow shadow-mathPurple-500/20">
-          <BookOpen className="w-5 h-5 text-white" />
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-0.5 shadow-md shadow-mathPurple-500/10 border border-slate-200/50 overflow-hidden hover:scale-105 transition-transform duration-200">
+          <img 
+            src="/logo.png" 
+            alt="NeuralMath Logo" 
+            className="w-full h-full object-contain"
+          />
         </div>
         <div>
           <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white block">
