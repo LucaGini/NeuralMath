@@ -9,18 +9,19 @@ logger = logging.getLogger(__name__)
 
 def protege_node(state: AgentState) -> Dict[str, Any]:
     """
-    ProtegeAgent Node. Generates exactly 3 math exercises for a given topic and level,
+    ProtegeAgent Node. Generates dynamic math exercises for a given topic and level,
     complete with Alby's incorrect answer (containing a subtle misconception) and Alby's flawed step-by-step reasoning.
     """
     level = state.get("user_level", "Primary")
     topic = state.get("topic_name", "Algebra")
     area = state.get("topic_area", "Algebra")
+    exercise_count = state.get("exercise_count", 3) or 3
     
     session_seed = int(time.time())
 
     system_instruction = (
         "You are 'ProtegeAgent', a virtual math-student peer who is learning but often makes common mathematical slips.\n"
-        "Your goal is to generate exactly 3 math exercises for the given topic and level.\n"
+        f"Your goal is to generate exactly {exercise_count} math exercises for the given topic and level.\n"
         "However, for EACH exercise, you must write a flawed solution that contains a subtle, typical algebraic or conceptual misconception.\n"
         "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
         "- 'question': the problem description (LaTeX inside single $)\n"
@@ -34,7 +35,7 @@ def protege_node(state: AgentState) -> Dict[str, Any]:
     )
 
     prompt = (
-        f"Generate 3 Alby-style flawed exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
+        f"Generate exactly {exercise_count} Alby-style flawed exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
         f"Session Seed: {session_seed}.\n\n"
         "Format the output strictly as a JSON object, e.g.:\n"
         '{\n  "exercises": [\n    {\n      "question": "Simplifica $2(x + 3) - 4$",\n      "correct_answer": "2x + 2",\n      "protege_answer": "2x + 2",\n      "protege_explanation": "¡Hola! Yo distribuí el 2 multiplicándolo por la x y luego por el 3 para obtener $2x + 6$. Luego le resté 4 y me dio $2x + 2$. ¡Creo que es genial!",\n      "difficulty_level": "Fácil",\n      "order_index": 0,\n      "skill_tags": ["algebraic_simplification", "distribution"]\n    },\n    {\n      "question": "Resuelve el sistema de ecuaciones: $x + y = 10$ y $x - y = 2$. Escribe el valor de $x$",\n      "correct_answer": "6",\n      "protege_answer": "4",\n      "protege_explanation": "¡Hola! Yo resté las dos ecuaciones y me dio que $2y = 8$, por lo tanto $y = 4$. Pensé que x también debía ser 4. ¿Es correcto?",\n      "difficulty_level": "Medio",\n      "order_index": 1,\n      "skill_tags": ["system_of_equations"]\n    }\n  ]\n}'

@@ -35,7 +35,9 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
             "1. The student is the teacher here. They are reviewing Alby's flawed calculations.\n"
             "2. Ensure the student's final mathematical statement/answer is correct for the original 'Exercise Question'.\n"
             "3. If they are correct, celebrate Alby's learning: e.g. '¡Excelente explicación! Alby te agradece mucho. Ahora entiende que...'\n"
-            "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'True Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question' step-by-step first. If you find that the 'True Correct Answer' passed from the database is mathematically incorrect for the 'Exercise Question', do NOT mention it or use it. Instead, use your own calculated correct solution as the absolute source of truth to evaluate the student's review, and make sure your explanation never cites the incorrect database value."
+            "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'True Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question' step-by-step first. If you find that the 'True Correct Answer' passed from the database is mathematically incorrect for the 'Exercise Question', do NOT mention it or use it. Instead, use your own calculated correct solution as the absolute source of truth to evaluate the student's review, and make sure your explanation never cites the incorrect database value.\n"
+            "5. NO LENIENCY / STRICTOR VERIFICATION (CRITICAL): Never be lenient with incorrect math values, intermediate calculations, or final expressions in the student's tutoring correction. If the student claims a mathematically incorrect value or equation is correct, you MUST mark 'is_correct' as False. E.g., if they input 'y=46/8' for a system whose true solution is 'y=9/7', they are absolutely INCORRECT because $9/7 \\approx 1.28$ while $46/8 = 5.75$. You must physically double check and calculate every decimal/fraction equivalence. Do not let hallucinated or wrong mathematics pass as correct under any circumstance.\n"
+            "6. EMPOWERING FEEDBACK FOR MISTAKES: If the student's correction is incorrect or contains wrong math, set 'is_correct' to False. Start with supportive encouragement in Spanish, but clearly point out their mathematical error (e.g., showing them that $9/7$ does not equal $46/8$), explain the correct step-by-step resolution so they understand their mistake, and guide them on how to explain it correctly to Alby."
         )
 
         prompt = (
@@ -49,6 +51,7 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
             "2. Check if the 'True Correct Answer in DB' is mathematically correct. If it has a typo, ignore it and use your own calculated solution as the only source of truth.\n"
             "3. Review Alby's error.\n"
             "4. Assess the student's correction. Did they correctly identify Alby's mistake and explain the correct resolution mathematically?\n"
+            "5. CRITICAL: Strictly verify if the student's proposed solution/math is actually correct. Calculate the numerical value of any expressions or fractions they wrote. For example, if they wrote 'y=46/8' when the true solution is 'y=9/7', they are mathematically WRONG because 46/8 != 9/7. In such cases, you MUST set 'is_correct' to False.\n"
             "Analyze and return a JSON object with 'is_correct' and 'explanation'."
         )
     else:

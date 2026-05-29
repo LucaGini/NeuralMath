@@ -41,6 +41,13 @@ interface SessionRecord {
   };
 }
 
+interface Topic {
+  id: number;
+  name: string;
+  level: string;
+  area: string;
+}
+
 export const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [history, setHistory] = useState<SessionRecord[]>([]);
@@ -50,6 +57,12 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [updatingAvatar, setUpdatingAvatar] = useState(false);
+  
+  // Alby Teach-Back Customization states
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [albyModalOpen, setAlbyModalOpen] = useState(false);
+  const [selectedAlbyTopics, setSelectedAlbyTopics] = useState<number[]>([]);
+  const [albyDuration, setAlbyDuration] = useState(3);
   
   const navigate = useNavigate();
   const { language, theme, t } = useApp();
@@ -92,6 +105,14 @@ export const Dashboard: React.FC = () => {
           setJournal(journalRes.data);
         } catch (err) {
           console.error("Error fetching Alby's Journal:", err);
+        }
+
+        // Fetch Topics for Alby
+        try {
+          const topicsRes = await api.get("/topics");
+          setTopics(topicsRes.data);
+        } catch (err) {
+          console.error("Error fetching topics for Alby:", err);
         }
       } catch (err) {
         console.error("Dashboard validation failed, redirecting to login:", err);
@@ -242,7 +263,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Teach Alby button */}
             <button
-              onClick={() => navigate("/session/teach-back")}
+              onClick={() => setAlbyModalOpen(true)}
               className="w-full mt-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-emerald-600/10"
             >
               🤖 {language === "es" ? "Enseñar a Alby" : "Teach Alby"}
@@ -487,7 +508,7 @@ export const Dashboard: React.FC = () => {
                       : "Teach your companion robot Alby by correctly resolving corrective feedback tasks in 'Teach Alby' mode."}
                   </p>
                   <button
-                    onClick={() => navigate("/session/teach-back")}
+                    onClick={() => setAlbyModalOpen(true)}
                     className="mt-4 text-xs font-bold text-emerald-500 hover:underline uppercase tracking-wider"
                   >
                     {language === "es" ? "Comenzar Tutoría" : "Start Tutoring"}
@@ -576,6 +597,124 @@ export const Dashboard: React.FC = () => {
                   className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50 transition-colors"
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {albyModalOpen && user && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+            >
+              <div className="flex items-center gap-3.5 border-b border-slate-100 dark:border-slate-800/80 pb-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-3xl animate-bounce">
+                  🤖
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                    {language === "es" ? "Enseñar a Alby" : "Tutoring Alby"}
+                  </h3>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-450 uppercase tracking-widest font-black block">
+                    {language === "es" ? `Alineado a nivel: ${user.level === "Primary" ? "Primaria" : user.level === "Secondary" ? "Secundaria" : "Universidad"}` : `Level: ${user.level}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Subtitle description */}
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+                {language === "es" 
+                  ? "Alby es tu compañero robótico que está aprendiendo. Ayúdale a encontrar y corregir sus deslices matemáticos. Selecciona qué temas quieres repasar con él."
+                  : "Alby is your learning robot companion. Help him identify and socratic-correct his math slips. Select the topics you want to practice with him."}
+              </p>
+
+              {/* Topics Selection Checklist */}
+              <div className="space-y-3 mb-6">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {language === "es" ? "Selecciona Temas de Enfoque" : "Select Focus Topics"}
+                </label>
+                <div className="max-h-48 overflow-y-auto pr-1 space-y-2 border border-slate-100 dark:border-slate-800/60 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-900/10">
+                  {topics
+                    .filter((t) => t.level.toLowerCase() === user.level.toLowerCase())
+                    .map((tItem) => {
+                      const isSelected = selectedAlbyTopics.includes(tItem.id);
+                      return (
+                        <div
+                          key={tItem.id}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedAlbyTopics(selectedAlbyTopics.filter((id) => id !== tItem.id));
+                            } else {
+                              setSelectedAlbyTopics([...selectedAlbyTopics, tItem.id]);
+                            }
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:scale-[1.005] active:scale-[0.995] transition-all text-xs font-semibold ${
+                            isSelected
+                              ? "bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500 text-emerald-800 dark:text-emerald-450"
+                              : "bg-white dark:bg-[#0f172a] border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            readOnly
+                            className="rounded text-emerald-600 focus:ring-emerald-500 w-3.5 h-3.5 accent-emerald-500 cursor-pointer pointer-events-none"
+                          />
+                          <span>{tItem.name}</span>
+                        </div>
+                      );
+                    })}
+                  {topics.filter((t) => t.level.toLowerCase() === user.level.toLowerCase()).length === 0 && (
+                    <p className="text-xs text-slate-450 dark:text-slate-500 italic py-2 text-center">
+                      {language === "es" ? "Cargando temas disponibles..." : "Loading available topics..."}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Number of exercises picker */}
+              <div className="space-y-3 mb-6">
+                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {language === "es" ? "Cantidad de Desafíos" : "Number of Challenges"}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[3, 5, 10].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setAlbyDuration(num)}
+                      className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                        albyDuration === num
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10"
+                          : "bg-white dark:bg-[#0f172a] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      {num} {language === "es" ? "Ejercicios" : "Problems"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  onClick={() => setAlbyModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 transition-colors"
+                >
+                  {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+                <button
+                  onClick={() => {
+                    setAlbyModalOpen(false);
+                    const topicIdsQuery = selectedAlbyTopics.length > 0 ? `&topics=${selectedAlbyTopics.join(",")}` : "";
+                    navigate(`/session/teach-back?exercise_count=${albyDuration}${topicIdsQuery}`);
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                >
+                  {language === "es" ? "Iniciar Tutoría 🚀" : "Start Tutoring 🚀"}
                 </button>
               </div>
             </motion.div>

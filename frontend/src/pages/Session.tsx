@@ -128,8 +128,15 @@ export const Session: React.FC = () => {
       );
       try {
         const subtopicParam = searchParams.get("subtopic") || undefined;
+        const albyTopicsParam = searchParams.get("topics");
+        const albyTopics = albyTopicsParam ? albyTopicsParam.split(",").map(id => parseInt(id)) : undefined;
+        const exerciseCountParamVal = searchParams.get("exercise_count") ? parseInt(searchParams.get("exercise_count")!) : 3;
+
         const res = isTeachBack
-          ? await api.post("/sessions/teach-back/start")
+          ? await api.post("/sessions/teach-back/start", {
+              topic_ids: albyTopics,
+              exercise_count: exerciseCountParamVal
+            })
           : isReview
             ? await api.post("/sessions/review/start")
             : isSpeedRun

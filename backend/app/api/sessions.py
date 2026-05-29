@@ -34,6 +34,10 @@ class StartSessionRequest(BaseModel):
     exercise_count: Optional[int] = 5
     subtopic: Optional[str] = None
 
+class StartTeachBackRequest(BaseModel):
+    topic_ids: Optional[List[int]] = None
+    exercise_count: Optional[int] = 3
+
 class ExerciseResponse(BaseModel):
     id: int
     question: str
@@ -758,21 +762,43 @@ def start_review_session(db: Session = Depends(get_db), current_user: User = Dep
         )
 
 @router.post("/teach-back/start", response_model=StartSessionResponse)
-def start_teach_back_session(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """
     Starts an AI Protégé ("Teach-Back") session where the user socratically corrects Alby's flawed steps.
-    Targets the user's weakest skill topic or falls back to their level.
+    Targets specific user-selected topics or their weakest skill topic, matching their level.
     """
-    rec = get_recommended_topic(db, current_user)
-    topic_id = rec.get("topic_id", 1)
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    import random
+    topic = None
+    
+    # 1. Resolve selected topic from requested list
+    if req.topic_ids:
+        chosen_ids = list(req.topic_ids)
+        random.shuffle(chosen_ids)
+        for t_id in chosen_ids:
+            t = db.query(Topic).filter(Topic.id == t_id).first()
+            # Strict level alignment check
+            if t and t.level.lower() == current_user.level.lower():
+                topic = t
+                break
+                
+    # Fallback to recommended topic if none found or chosen
+    if not topic:
+        rec = get_recommended_topic(db, current_user)
+        topic_id = rec.get("topic_id", 1)
+        topic = db.query(Topic).filter(Topic.id == topic_id).first()
+        
+    # Final level-aligned fallback if recommended topic level is mismatched
+    if topic and topic.level.lower() != current_user.level.lower():
+        topic = db.query(Topic).filter(Topic.level == current_user.level).first()
+        
+    # Absolute default fallback
     if not topic:
         topic = db.query(Topic).first()
         
     if not topic:
         raise HTTPException(status_code=404, detail="No math topics found to start teach-back session")
 
-    # 1. Invoke ProtegeAgent via LangGraph
+    # 2. Invoke ProtegeAgent via LangGraph
     state_input = {
         "user_level": current_user.level,
         "topic_name": topic.name,
@@ -782,13 +808,14 @@ def start_teach_back_session(db: Session = Depends(get_db), current_user: User =
         "user_answers": None,
         "evaluations": None,
         "session_summary": {
-            "recent_performance": f"Teach-Back session targeting: {rec.get('skill', 'general')}",
+            "recent_performance": f"Teach-Back session targeting: {topic.name}",
             "session_type": "teach_back"
         },
         "motivation_message": None,
         "target_node": "protege",
         "theme": "standard",
-        "session_type": "teach_back"
+        "session_type": "teach_back",
+        "exercise_count": req.exercise_count or 3
     }
 
     try:
