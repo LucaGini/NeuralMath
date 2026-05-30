@@ -20,3 +20,7 @@ class Session(Base):
     user = relationship("User", backref="sessions")
     topic = relationship("Topic", backref="sessions")
     exercises = relationship("Exercise", back_populates="session", cascade="all, delete-orphan")
+
+    @property
+    def total_exercises(self) -> int:
+        return len(self.exercises)

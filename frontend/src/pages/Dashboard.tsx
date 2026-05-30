@@ -32,6 +32,7 @@ interface User {
 interface SessionRecord {
   id: number;
   score: number;
+  total_exercises: number;
   xp_earned: number;
   created_at: string;
   completed_at: string;
@@ -84,6 +85,7 @@ export const Dashboard: React.FC = () => {
             {
               id: 101,
               score: 5,
+              total_exercises: 5,
               xp_earned: 150,
               created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
               completed_at: new Date(Date.now() - 86400000 * 2).toISOString(),
@@ -92,6 +94,7 @@ export const Dashboard: React.FC = () => {
             {
               id: 102,
               score: 4,
+              total_exercises: 5,
               xp_earned: 80,
               created_at: new Date(Date.now() - 86400000).toISOString(),
               completed_at: new Date(Date.now() - 86400000).toISOString(),
@@ -430,7 +433,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
-                          {record.score} / 5 {language === "es" ? "correctas" : "correct"}
+                          {record.score} / {record.total_exercises || 5} {language === "es" ? "correctas" : "correct"}
                         </span>
                         <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
                           +{record.xp_earned} XP

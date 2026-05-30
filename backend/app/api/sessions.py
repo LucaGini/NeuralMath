@@ -117,6 +117,7 @@ class TopicHistoryResponse(BaseModel):
 class SessionHistoryResponse(BaseModel):
     id: int
     score: int
+    total_exercises: int
     xp_earned: int
     created_at: datetime
     completed_at: Optional[datetime] = None
