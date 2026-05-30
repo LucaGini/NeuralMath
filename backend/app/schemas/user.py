@@ -25,6 +25,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     xp_total: int
+    alby_xp: int
     streak_days: int
     avatar_id: str
     last_active_at: Optional[datetime] = None

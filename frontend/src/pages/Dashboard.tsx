@@ -4,7 +4,7 @@ import api from "../services/api";
 import { Navbar } from "../components/Navbar";
 import { useApp } from "../services/AppContext";
 import { avatars, badgesConfig, Locale } from "../services/translations";
-import { Flame, Trophy, Calendar, ChevronRight, ChevronLeft, GraduationCap, Award, Lock, Sparkles, User as UserIcon } from "lucide-react";
+import { Flame, Trophy, Calendar, ChevronRight, ChevronLeft, GraduationCap, Award, Lock, Sparkles, User as UserIcon, CheckCircle2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,6 +27,7 @@ interface User {
   streak_days: number;
   avatar_id: string;
   achievements: UserAchievement[];
+  alby_xp?: number;
 }
 
 interface SessionRecord {
@@ -64,6 +65,10 @@ export const Dashboard: React.FC = () => {
   const [albyModalOpen, setAlbyModalOpen] = useState(false);
   const [selectedAlbyTopics, setSelectedAlbyTopics] = useState<number[]>([]);
   const [albyDuration, setAlbyDuration] = useState(3);
+  
+  // Daily Cosmic Quest status states
+  const [dailyCompleted, setDailyCompleted] = useState(false);
+  const [dailyXpEarned, setDailyXpEarned] = useState(0);
   
   const navigate = useNavigate();
   const { language, theme, t } = useApp();
@@ -117,6 +122,15 @@ export const Dashboard: React.FC = () => {
         } catch (err) {
           console.error("Error fetching topics for Alby:", err);
         }
+
+        // Fetch daily challenge status
+        try {
+          const dailyRes = await api.get("/sessions/daily-challenge/status");
+          setDailyCompleted(dailyRes.data.completed);
+          setDailyXpEarned(dailyRes.data.xp_earned);
+        } catch (err) {
+          console.error("Error fetching daily challenge status:", err);
+        }
       } catch (err) {
         console.error("Dashboard validation failed, redirecting to login:", err);
         localStorage.removeItem("token");
@@ -158,6 +172,51 @@ export const Dashboard: React.FC = () => {
   const isBadgeUnlocked = (key: string) => {
     return user.achievements.some((a) => a.badge_key === key);
   };
+
+  // Alby level and accessory calculations
+  const albyXp = user.alby_xp || 0;
+  const albyLevel = Math.floor(albyXp / 100) + 1;
+  const albyXpInLevel = albyXp % 100;
+
+  const getAlbyAvatar = (level: number) => {
+    if (level === 1) return { emoji: "🤖", name: language === "es" ? "Alby Novato" : "Rookie Alby" };
+    if (level === 2) return { emoji: "🎓🤖", name: language === "es" ? "Alby Erudito" : "Scholarly Alby" };
+    if (level === 3) return { emoji: "🕶️🤖", name: language === "es" ? "Alby Gafas Cósmicas" : "Space Visor Alby" };
+    if (level === 4) return { emoji: "⚡🤖", name: language === "es" ? "Alby Hechicero" : "Math Wizard Alby" };
+    return { emoji: "🌌🤖", name: language === "es" ? "Alby Supremo" : "Cosmic Alby" };
+  };
+
+  const albyInfo = getAlbyAvatar(albyLevel);
+
+  // 7-Day Cosmic Quest calculations
+  const daysOfWeek = language === "es"
+    ? ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  const getDayPlanets = () => {
+    return ["🪐", "☄️", "🌍", "🌕", "🌞", "🌟", "🌌"];
+  };
+
+  const getWeekDaysInfo = () => {
+    const today = new Date();
+    const currentDayOfWeek = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    const todayIndex = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+
+    return daysOfWeek.map((name, index) => {
+      const isToday = index === todayIndex;
+      const isPast = index < todayIndex;
+      const isFuture = index > todayIndex;
+      return {
+        name,
+        emoji: getDayPlanets()[index],
+        isToday,
+        isPast,
+        isFuture,
+      };
+    });
+  };
+
+  const weekDays = getWeekDaysInfo();
 
   const recentHistory = [...history].slice(0, 10).reverse();
   const chartData = recentHistory.map((record) => ({
@@ -264,10 +323,58 @@ export const Dashboard: React.FC = () => {
               <ChevronRight className="w-4 h-4 text-amber-600/80" />
             </button>
 
-            {/* Teach Alby button */}
+          </div>
+
+          {/* Alby Affinity & Level Card */}
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl" />
+            
+            <div className="flex items-center gap-4">
+              {/* Dynamic Avatar display with hover effect */}
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-center text-3xl shadow-inner relative group">
+                <span className="group-hover:scale-110 transition-transform duration-200">{albyInfo.emoji}</span>
+                {/* Neon heart affinity meter badge */}
+                <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-1 text-[10px] animate-pulse border border-rose-400">
+                  ❤️
+                </span>
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-slate-800 dark:text-white text-sm">
+                    Alby ({albyInfo.name})
+                  </h4>
+                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Nivel {albyLevel}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {language === "es" 
+                    ? "¡Tu compañero robótico de aprendizaje!" 
+                    : "Your robotic learning companion!"}
+                </p>
+              </div>
+            </div>
+
+            {/* Progress Bar towards next level */}
+            <div className="mt-5 space-y-1.5">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                <span>XP: {albyXpInLevel} / 100</span>
+                <span>{language === "es" ? "Siguiente Nivel" : "Next Level"}</span>
+              </div>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-850/40 relative shadow-inner">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${albyXpInLevel}%` }}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full"
+                />
+              </div>
+            </div>
+
+            {/* Button to Teach Alby */}
             <button
               onClick={() => setAlbyModalOpen(true)}
-              className="w-full mt-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-emerald-600/10"
+              className="w-full mt-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm shadow-lg shadow-emerald-600/10"
             >
               🤖 {language === "es" ? "Enseñar a Alby" : "Teach Alby"}
               <ChevronRight className="w-4 h-4 text-emerald-100" />
@@ -320,6 +427,87 @@ export const Dashboard: React.FC = () => {
 
         {/* Analytics & Progression Curve Right Columns */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Cosmic Quest Daily Calendar Row */}
+          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-orange-500/20 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-all duration-200">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 dark:bg-orange-500/10 rounded-full blur-2xl animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl" />
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="text-left">
+                <span className="text-[10px] text-orange-600 dark:text-orange-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 animate-spin text-orange-500" />
+                  {language === "es" ? "Desafío Cósmico Especial" : "Special Cosmic Challenge"}
+                </span>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white mt-1">
+                  {language === "es" ? "⚔️ Misión Diaria: Boss Fight" : "⚔️ Daily Quest: Boss Fight"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md leading-relaxed">
+                  {language === "es"
+                    ? "Un único problema matemático de alta dificultad adaptado a tu nivel académico. ¡Completarlo hoy te otorga un súper bono de +100 XP y potencia el nivel de Alby!"
+                    : "A single high-difficulty math problem custom-tailored to your level. Completing it grants a massive +100 XP bonus and empowers Alby!"}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {dailyCompleted ? (
+                  <div className="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 px-5 py-3 rounded-2xl flex items-center gap-2 shadow-inner">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 animate-bounce" />
+                    <div className="text-left">
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest block">
+                        {language === "es" ? "Completado" : "Completed"}
+                      </span>
+                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-350 block">
+                        +{dailyXpEarned || 100} XP {language === "es" ? "Ganados" : "Earned"}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => navigate("/session/daily-challenge")}
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-black px-6 py-3.5 rounded-2xl shadow-lg shadow-orange-550/20 hover:scale-[1.02] active:scale-[0.98] transition-all text-xs uppercase tracking-wider flex items-center gap-2"
+                  >
+                    {language === "es" ? "Iniciar Boss Fight ⚔️" : "Start Boss Fight ⚔️"}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Calendar Row with Planetary Nodes */}
+            <div className="grid grid-cols-7 gap-2 md:gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
+              {weekDays.map((day, idx) => {
+                const isToday = day.isToday;
+                const isCompleted = (isToday && dailyCompleted) || day.isPast;
+                
+                return (
+                  <div key={idx} className="flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-2.5">
+                      {day.name}
+                    </span>
+                    
+                    <div 
+                      className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xl relative transition-all duration-300 border shadow-inner ${
+                        isToday
+                          ? dailyCompleted
+                            ? "bg-gradient-to-tr from-emerald-500 to-teal-500 border-emerald-400 shadow-emerald-500/20 text-white scale-105"
+                            : "bg-slate-50 dark:bg-slate-900 border-cyan-500 ring-2 ring-cyan-500/30 animate-pulse text-slate-800 dark:text-white scale-105 shadow-cyan-500/10"
+                          : isCompleted
+                            ? "bg-emerald-500/5 dark:bg-emerald-955/40 border-emerald-200/20 dark:border-emerald-800/80 text-emerald-600 dark:text-emerald-400"
+                            : "bg-slate-100 dark:bg-slate-950/60 border-slate-200 dark:border-slate-900 text-slate-400 dark:text-slate-600"
+                      }`}
+                      title={day.name}
+                    >
+                      {isCompleted ? "✓" : day.emoji}
+                      
+                      {isToday && !dailyCompleted && (
+                        <div className="absolute -inset-1 rounded-full border border-cyan-400/40 animate-ping pointer-events-none" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Tab Selection Navigation */}
           <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
             <button

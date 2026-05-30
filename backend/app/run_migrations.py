@@ -42,7 +42,10 @@ def run_migrations():
             entry_text TEXT NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
         );
-        """
+        """,
+        
+        # Alby's XP & Level Evolution
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS alby_xp INTEGER DEFAULT 0 NOT NULL;"
     ]
     
     with engine.begin() as conn:

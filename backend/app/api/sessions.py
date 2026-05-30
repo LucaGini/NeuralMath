@@ -137,6 +137,137 @@ def get_session_history(db: Session = Depends(get_db), current_user: User = Depe
     ).order_by(MathSession.completed_at.desc()).all()
     return sessions
 
+class DailyChallengeStatusResponse(BaseModel):
+    completed: bool
+    xp_earned: int
+
+@router.get("/daily-challenge/status", response_model=DailyChallengeStatusResponse)
+def get_daily_challenge_status(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from datetime import datetime, time
+    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    
+    completed_session = db.query(MathSession).filter(
+        MathSession.user_id == current_user.id,
+        MathSession.session_type == "daily_challenge",
+        MathSession.completed_at >= today_start
+    ).first()
+    
+    return {
+        "completed": completed_session is not None,
+        "xp_earned": completed_session.xp_earned if completed_session else 0
+    }
+
+@router.post("/daily-challenge/start", response_model=StartSessionResponse)
+def start_daily_challenge(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from datetime import datetime, time
+    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    
+    # 1. Verify if already completed today
+    completed_session = db.query(MathSession).filter(
+        MathSession.user_id == current_user.id,
+        MathSession.session_type == "daily_challenge",
+        MathSession.completed_at >= today_start
+    ).first()
+    
+    if completed_session:
+        raise HTTPException(
+            status_code=400,
+            detail="Ya has completado el desafío diario de hoy. ¡Vuelve mañana para el próximo!"
+        )
+        
+    # 2. Pick a level-appropriate topic
+    topics = db.query(Topic).filter(Topic.level.ilike(current_user.level)).all()
+    if not topics:
+        raise HTTPException(status_code=400, detail="No se encontraron temas para tu nivel académico.")
+    
+    import random
+    topic = random.choice(topics)
+    
+    # 3. Invoke ExerciseAgent via LangGraph to generate 1 high-difficulty exercise
+    state_input = {
+        "user_level": current_user.level,
+        "topic_name": topic.name,
+        "topic_area": topic.area,
+        "subtopic_name": None,
+        "explanation": None,
+        "exercises": None,
+        "user_answers": None,
+        "evaluations": None,
+        "session_summary": {"recent_performance": "Desafío diario - Combate de jefe matemático de alta dificultad."},
+        "motivation_message": None,
+        "target_node": "exercise",
+        "theme": "boss_fight",
+        "session_type": "daily_challenge",
+        "exercise_count": 1
+    }
+    
+    try:
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"daily_{current_user.id}_{datetime.utcnow().date()}"}})
+        exercises_data = res.get("exercises", [])
+        
+        if not exercises_data:
+            raise HTTPException(status_code=500, detail="El agente falló al generar el desafío diario.")
+            
+        # Ensure only 1 exercise is generated and mark it hard
+        exercises_data = exercises_data[:1]
+        exercises_data[0]["difficulty_level"] = "Difícil"
+        
+        # 4. Create Session DB record
+        new_session = MathSession(
+            user_id=current_user.id,
+            topic_id=topic.id,
+            score=0,
+            xp_earned=0,
+            theme="boss_fight",
+            session_type="daily_challenge"
+        )
+        db.add(new_session)
+        db.commit()
+        db.refresh(new_session)
+        
+        # 5. Create Exercise DB records
+        created_exercises = []
+        for ex in exercises_data:
+            db_ex = Exercise(
+                session_id=new_session.id,
+                question=ex.get("question"),
+                correct_answer=ex.get("correct_answer"),
+                difficulty_level="Difícil",
+                order_index=ex.get("order_index", 0),
+                exercise_type=ex.get("exercise_type", "free_text"),
+                choices=ex.get("choices", None),
+                skill_tags=ex.get("skill_tags", None)
+            )
+            db.add(db_ex)
+            created_exercises.append(db_ex)
+            
+        db.commit()
+        
+        return {
+            "session_id": new_session.id,
+            "topic_name": f"Desafío Diario ⚔️: {topic.name}",
+            "level": current_user.level,
+            "session_type": "daily_challenge",
+            "exercises": [
+                ExerciseResponse(
+                    id=e.id,
+                    question=e.question,
+                    difficulty_level=e.difficulty_level,
+                    order_index=e.order_index,
+                    exercise_type=e.exercise_type,
+                    choices=e.choices,
+                    protege_answer=e.protege_answer,
+                    protege_explanation=e.protege_explanation
+                ) for e in created_exercises
+            ]
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error starting daily challenge: {str(e)}"
+        )
+
 def calculate_streak(user: User, db: Session):
     """
     Calculates and updates user's daily learning streak.
@@ -338,6 +469,7 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
 
         # Alby's Journal trigger (Teach-Back MET diary)
         if is_teach_back and is_correct:
+            current_user.alby_xp += 25
             concept = "conceptos matemáticos"
             if exercise.skill_tags:
                 try:
@@ -417,6 +549,8 @@ def complete_session(session_id: int, db: Session = Depends(get_db), current_use
     # Socratic hint ladder penalty: −5 XP per hint level requested (Sprint 3)
     hint_penalty = sum((e.hint_level_used or 0) * 5 for e in exercises)
     xp_earned = max(0, xp_earned - hint_penalty)
+    if session_record.session_type == "daily_challenge":
+        xp_earned += 100
         
     # Update session details
     session_record.score = correct_count

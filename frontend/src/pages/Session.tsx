@@ -121,6 +121,7 @@ export const Session: React.FC = () => {
       const isReview = topicId === "review";
       const isTeachBack = topicId === "teach-back";
       const isSpeedRun = topicId === "speed-run";
+      const isDailyChallenge = topicId === "daily-challenge";
       setLoadingMsg(
         language === "es" 
           ? "ExerciseAgent generando retos..." 
@@ -141,12 +142,14 @@ export const Session: React.FC = () => {
             ? await api.post("/sessions/review/start")
             : isSpeedRun
               ? await api.post("/sessions/speed-run/start")
-              : await api.post("/sessions/start", {
-                  topic_id: parseInt(topicId || "0"),
-                  theme: chosenTheme,
-                  exercise_count: parseInt(exerciseCountParam),
-                  subtopic: subtopicParam,
-                });
+              : isDailyChallenge
+                ? await api.post("/sessions/daily-challenge/start")
+                : await api.post("/sessions/start", {
+                    topic_id: parseInt(topicId || "0"),
+                    theme: chosenTheme,
+                    exercise_count: parseInt(exerciseCountParam),
+                    subtopic: subtopicParam,
+                  });
         setSessionId(res.data.session_id);
         setTopicName(res.data.topic_name);
         setExercises(res.data.exercises);
@@ -330,6 +333,8 @@ export const Session: React.FC = () => {
     );
   }
 
+  const isDailyChallenge = sessionType === "daily_challenge" || chosenTheme === "boss_fight";
+
   // End of Session Summary screen
   if (completedSummary) {
     const hasNewBadges = completedSummary.newly_unlocked && completedSummary.newly_unlocked.length > 0;
@@ -337,17 +342,35 @@ export const Session: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 relative overflow-hidden transition-colors duration-200">
         {/* Background ambient glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        {isDailyChallenge ? (
+          <>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-650/10 rounded-full blur-3xl" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+          </>
+        )}
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center space-y-6 transition-colors duration-200"
+          className={`w-full max-w-lg bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center space-y-6 transition-all duration-300 border ${
+            isDailyChallenge 
+              ? "border-orange-500/40 ring-4 ring-orange-500/10 dark:ring-orange-500/5 shadow-orange-550/10" 
+              : "border-slate-200 dark:border-slate-800"
+          }`}
         >
           <div>
-            <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-widest block mb-1">
-              {language === "es" ? "Desafío Completado" : "Challenge Completed"}
+            <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${
+              isDailyChallenge ? "text-orange-600 dark:text-orange-400" : "text-mathPurple-600 dark:text-mathPurple-400"
+            }`}>
+              {isDailyChallenge 
+                ? (language === "es" ? "¡DESAFÍO DIARIO CONQUISTADO! ⚔️" : "DAILY QUEST CONQUERED! ⚔️")
+                : (language === "es" ? "Desafío Completado" : "Challenge Completed")
+              }
             </span>
             <h2 className="text-3xl font-black text-slate-800 dark:text-white">{topicName}</h2>
           </div>
@@ -407,8 +430,14 @@ export const Session: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-mathPurple-600/10 to-indigo-600/10 border border-mathPurple-500/20 py-4 px-6 rounded-2xl flex items-center justify-between">
-            <span className="text-sm font-bold text-mathPurple-700 dark:text-mathPurple-300">
+          <div className={`py-4 px-6 rounded-2xl flex items-center justify-between border ${
+            isDailyChallenge 
+              ? "bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/25" 
+              : "bg-gradient-to-r from-mathPurple-600/10 to-indigo-600/10 border-mathPurple-500/20"
+          }`}>
+            <span className={`text-sm font-bold ${
+              isDailyChallenge ? "text-orange-700 dark:text-orange-355" : "text-mathPurple-700 dark:text-mathPurple-300"
+            }`}>
               {language === "es" ? "Puntos de Experiencia:" : "Experience Points:"}
             </span>
             <span className="text-xl font-black text-green-600 dark:text-green-400">
@@ -417,9 +446,15 @@ export const Session: React.FC = () => {
           </div>
 
           {/* Motivator Agent Box */}
-          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl relative text-left transition-colors">
+          <div className={`p-6 rounded-2xl relative text-left transition-colors border ${
+            isDailyChallenge 
+              ? "bg-slate-50 dark:bg-slate-900/60 border-orange-500/20" 
+              : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+          }`}>
             <div className="absolute -top-3.5 left-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-0.5 rounded-full flex items-center gap-1.5 transition-colors">
-              <Sparkles className="w-3.5 h-3.5 text-mathPurple-500 dark:text-mathPurple-400 animate-pulse" />
+              <Sparkles className={`w-3.5 h-3.5 animate-pulse ${
+                isDailyChallenge ? "text-orange-500" : "text-mathPurple-500 dark:text-mathPurple-400"
+              }`} />
               <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                 MotivatorAgent
               </span>
@@ -431,7 +466,11 @@ export const Session: React.FC = () => {
 
           <button
             onClick={() => navigate("/dashboard")}
-            className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl shadow-lg shadow-mathPurple-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            className={`w-full font-bold py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] ${
+              isDailyChallenge
+                ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-orange-550/20"
+                : "bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white shadow-mathPurple-600/20"
+            }`}
           >
             {t.finish}
           </button>
@@ -466,7 +505,7 @@ export const Session: React.FC = () => {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            className="bg-gradient-to-r from-mathPurple-500 to-indigo-500 h-full rounded-full"
+            className={isDailyChallenge ? "bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full" : "bg-gradient-to-r from-mathPurple-500 to-indigo-500 h-full rounded-full"}
           />
         </div>
 
@@ -498,16 +537,33 @@ export const Session: React.FC = () => {
       </header>
 
       {/* Main Core Question Section */}
-      <main className="flex-1 flex items-center justify-center p-6">
+      <main className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
+        {isDailyChallenge && (
+          <>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-650/5 rounded-full blur-3xl" />
+          </>
+        )}
         <motion.div
           key={currentIndex}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-2xl bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800/80 p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-colors"
+          className={`w-full max-w-2xl bg-white dark:bg-[#0c1220] p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-all duration-300 border ${
+            isDailyChallenge 
+              ? "border-orange-500/40 ring-4 ring-orange-500/10 dark:ring-orange-550/5 shadow-orange-500/10" 
+              : "border-slate-200 dark:border-slate-800/80"
+          }`}
         >
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] text-mathPurple-750 dark:text-mathPurple-400 font-bold uppercase tracking-widest bg-mathPurple-500/10 border border-mathPurple-500/20 px-3 py-1 rounded-full">
-              {language === "es" ? "Reto" : "Challenge"} {currentIndex + 1} — {activeExercise?.difficulty_level || "Medio"}
+            <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
+              isDailyChallenge
+                ? "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20"
+                : "text-mathPurple-750 dark:text-mathPurple-400 bg-mathPurple-500/10 border-mathPurple-500/20"
+            }`}>
+              {isDailyChallenge
+                ? (language === "es" ? "COMBATE DE JEFE ⚔️" : "BOSS FIGHT ⚔️")
+                : (language === "es" ? "Reto" : "Challenge") + ` ${currentIndex + 1} — ${activeExercise?.difficulty_level || "Medio"}`
+              }
             </span>
             {searchParams.get("subtopic") && (
               <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
@@ -646,7 +702,11 @@ export const Session: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting || (activeExercise?.exercise_type === "multiple_choice" ? !selectedChoice : !userAnswer.trim())}
-                className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none"
+                className={`w-full font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none ${
+                  isDailyChallenge
+                    ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg shadow-orange-500/20"
+                    : "bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white shadow-lg shadow-mathPurple-600/10"
+                }`}
               >
                 {submitting 
                   ? (language === "es" ? "Evaluando respuesta..." : "Checking answer...") 
@@ -770,8 +830,12 @@ export const Session: React.FC = () => {
                   onClick={handleContinue}
                   className={`w-full mt-5 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm ${
                     evaluation.is_correct
-                      ? "bg-green-600 hover:bg-green-500 text-white"
-                      : "bg-amber-600 hover:bg-amber-500 text-white"
+                      ? isDailyChallenge
+                        ? "bg-orange-655 hover:bg-orange-550 bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-550/15"
+                        : "bg-green-600 hover:bg-green-500 text-white"
+                      : isDailyChallenge
+                        ? "bg-red-655 hover:bg-red-550 bg-gradient-to-r from-red-600 to-orange-650 text-white shadow-lg shadow-red-550/15"
+                        : "bg-amber-600 hover:bg-amber-500 text-white"
                   }`}
                 >
                   {t.next}
