@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
@@ -102,6 +102,141 @@ export const Session: React.FC = () => {
   const [secondsLeft, setSecondsLeft] = useState<number>(30);
   const [timeIndicator, setTimeIndicator] = useState<{ text: string; isPositive: boolean } | null>(null);
 
+  // === INTERACTIVE WHITEBOARD SCRATCHPAD STATES & HANDLERS ===
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [canvasUsedExercises, setCanvasUsedExercises] = useState<number[]>([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [lineWidth] = useState(3);
+  const [drawColor, setDrawColor] = useState("#a855f7"); // Violet accent default
+  const [isEraser, setIsEraser] = useState(false);
+  const [showScratchpad, setShowScratchpad] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+
+  const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    
+    let clientX, clientY;
+    if ("touches" in e) {
+      if (e.touches.length === 0) return null;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const x = ((clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((clientY - rect.top) / rect.height) * canvas.height;
+    return { x, y };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if ("touches" in e) {
+      e.preventDefault();
+    }
+    const coords = getCoordinates(e);
+    if (!coords) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    // Save current frame state to undo history
+    setHistory((prev) => [...prev, canvas.toDataURL()]);
+
+    // Record that the canvas was used for the current exercise
+    setCanvasUsedExercises((prev) => {
+      if (!prev.includes(currentIndex)) {
+        return [...prev, currentIndex];
+      }
+      return prev;
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(coords.x, coords.y);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    
+    if (isEraser) {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+      ctx.lineWidth = lineWidth * 6; // Eraser is slightly thicker
+    } else {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = lineWidth;
+    }
+    
+    ctx.stroke();
+    setIsDrawing(true);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    if ("touches" in e) {
+      e.preventDefault();
+    }
+    const coords = getCoordinates(e);
+    if (!coords) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const handleUndo = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || history.length === 0) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    const newHistory = [...history];
+    const previousStateDataUrl = newHistory.pop();
+    setHistory(newHistory);
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (previousStateDataUrl) {
+      const img = new Image();
+      img.src = previousStateDataUrl;
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+      };
+    }
+  };
+
+  const handleClear = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    setHistory((prev) => [...prev, canvas.toDataURL()]);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // Auto-clear scratchpad when changing exercises
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    setHistory([]);
+  }, [currentIndex]);
+
   useEffect(() => {
     // Reset timer when question changes
     setQuestionStartTime(Date.now());
@@ -177,7 +312,7 @@ export const Session: React.FC = () => {
         : "Time's up! Evaluating final performance..."
     );
     try {
-      const res = await api.post(`/sessions/${sessionId}/complete`);
+      const res = await api.post(`/sessions/${sessionId}/complete?canvas_exercises=${canvasUsedExercises.length}`);
       setCompletedSummary(res.data);
       SoundEffects.playTriumph();
       if (res.data.score === res.data.total_questions || (res.data.newly_unlocked && res.data.newly_unlocked.length > 0)) {
@@ -300,7 +435,7 @@ export const Session: React.FC = () => {
           : "Evaluating final performance..."
       );
       try {
-        const res = await api.post(`/sessions/${sessionId}/complete`);
+        const res = await api.post(`/sessions/${sessionId}/complete?canvas_exercises=${canvasUsedExercises.length}`);
         setCompletedSummary(res.data);
 
         SoundEffects.playTriumph();
@@ -554,27 +689,148 @@ export const Session: React.FC = () => {
               : "border-slate-200 dark:border-slate-800/80"
           }`}
         >
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
-              isDailyChallenge
-                ? "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20"
-                : "text-mathPurple-750 dark:text-mathPurple-400 bg-mathPurple-500/10 border-mathPurple-500/20"
-            }`}>
-              {isDailyChallenge
-                ? (language === "es" ? "COMBATE DE JEFE ⚔️" : "BOSS FIGHT ⚔️")
-                : (language === "es" ? "Reto" : "Challenge") + ` ${currentIndex + 1} — ${activeExercise?.difficulty_level || "Medio"}`
-              }
-            </span>
-            {searchParams.get("subtopic") && (
-              <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
-                🎯 {searchParams.get("subtopic")}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
+                isDailyChallenge
+                  ? "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20"
+                  : "text-mathPurple-750 dark:text-mathPurple-400 bg-mathPurple-500/10 border-mathPurple-500/20"
+              }`}>
+                {isDailyChallenge
+                  ? (language === "es" ? "COMBATE DE JEFE ⚔️" : "BOSS FIGHT ⚔️")
+                  : (language === "es" ? "Reto" : "Challenge") + ` ${currentIndex + 1} — ${activeExercise?.difficulty_level || "Medio"}`
+                }
               </span>
-            )}
+              {searchParams.get("subtopic") && (
+                <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold uppercase tracking-widest bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full">
+                  🎯 {searchParams.get("subtopic")}
+                </span>
+              )}
+            </div>
+
+            {/* Whiteboard scratchpad toggle button */}
+            <button
+              type="button"
+              onClick={() => setShowScratchpad(!showScratchpad)}
+              className={`text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                showScratchpad
+                  ? "bg-red-500/10 border-red-500/30 text-red-650 dark:text-red-400 hover:bg-red-500/20"
+                  : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850 text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400"
+              }`}
+            >
+              <span>{showScratchpad ? "❌" : "✏️"}</span>
+              <span>{showScratchpad ? (language === "es" ? "Cerrar Pizarra" : "Close Board") : (language === "es" ? "Pizarra para Rayar" : "Scratchpad")}</span>
+            </button>
           </div>
 
           <div className="prose dark:prose-invert text-lg md:text-xl text-slate-800 dark:text-slate-100 font-medium py-4">
             <MathRenderer text={activeExercise?.question || ""} />
           </div>
+
+          {/* WHITEBOARD CANVAS COMPONENT */}
+          <AnimatePresence>
+            {showScratchpad && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-3 overflow-hidden"
+              >
+                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-3 flex-wrap">
+                  {/* Color Palette */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-450 dark:text-slate-500 mr-1 uppercase tracking-wider">
+                      {language === "es" ? "Color:" : "Color:"}
+                    </span>
+                    {[
+                      { hex: "#a855f7", label: "Violeta" }, // purple
+                      { hex: "#3b82f6", label: "Azul" },   // blue
+                      { hex: "#10b981", label: "Menta" },  // emerald
+                      { hex: "#ef4444", label: "Rojo" },   // red
+                      { hex: theme === "dark" ? "#f1f5f9" : "#0f172a", label: theme === "dark" ? "Blanco" : "Negro" }
+                    ].map((cOpt) => (
+                      <button
+                        key={cOpt.hex}
+                        type="button"
+                        onClick={() => {
+                          setDrawColor(cOpt.hex);
+                          setIsEraser(false);
+                        }}
+                        style={{ backgroundColor: cOpt.hex }}
+                        className={`w-6 h-6 rounded-full border transition-all ${
+                          drawColor === cOpt.hex && !isEraser
+                            ? "ring-2 ring-offset-2 ring-mathPurple-500 border-white"
+                            : "border-slate-350 dark:border-slate-750"
+                        }`}
+                        title={cOpt.label}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Eraser and Utility Tools */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      key="eraser-btn"
+                      type="button"
+                      onClick={() => setIsEraser(!isEraser)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                        isEraser
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
+                          : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-550 hover:text-slate-700 dark:hover:text-slate-300"
+                      }`}
+                      title={language === "es" ? "Borrador" : "Eraser"}
+                    >
+                      <span>🧽</span>
+                      <span>{language === "es" ? "Borrador" : "Eraser"}</span>
+                    </button>
+
+                    <button
+                      key="undo-btn"
+                      type="button"
+                      onClick={handleUndo}
+                      disabled={history.length === 0}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                      title={language === "es" ? "Deshacer" : "Undo"}
+                    >
+                      <span>↩️</span>
+                      <span>{language === "es" ? "Deshacer" : "Undo"}</span>
+                    </button>
+
+                    <button
+                      key="clear-btn"
+                      type="button"
+                      onClick={handleClear}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-950 border border-red-200 dark:border-red-950/30 text-red-500 hover:bg-red-500/5 transition-all flex items-center gap-1.5"
+                      title={language === "es" ? "Limpiar Todo" : "Clear All"}
+                    >
+                      <span>🗑️</span>
+                      <span>{language === "es" ? "Limpiar" : "Clear"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-850 rounded-2xl overflow-hidden bg-slate-50 dark:bg-[#070b14]/50 shadow-inner">
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={250}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                    className="w-full h-[250px] block cursor-crosshair touch-none"
+                  />
+                  {/* Floating helpful watermark */}
+                  <div className="absolute bottom-2.5 right-3.5 text-[10px] font-bold text-slate-350 dark:text-slate-600 pointer-events-none select-none uppercase tracking-widest">
+                    ✏️ {language === "es" ? "Lienzo de Operaciones" : "Scratch Workspace"}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* If Teach-Back Alby Task, render Alby's Robot Misconception Card here! */}
           {activeExercise?.protege_answer && activeExercise?.protege_explanation && (

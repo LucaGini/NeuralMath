@@ -234,10 +234,73 @@ export interface BadgeConfig {
   color: string;
   title_es: string;
   title_en: string;
+  desc_es: string;
+  desc_en: string;
 }
 
 export const badgesConfig: Record<string, BadgeConfig> = {
-  perfect_score: { emoji: "🏆", color: "from-yellow-400 to-amber-600 border-amber-400 shadow-amber-500/20", title_es: "Prodigio Matemático", title_en: "Math Prodigy" },
-  streak_3: { emoji: "🔥", color: "from-orange-500 to-red-600 border-red-500 shadow-red-500/20", title_es: "Guerrero Diario", title_en: "Daily Warrior" },
-  xp_500: { emoji: "👑", color: "from-purple-500 to-indigo-600 border-indigo-500 shadow-indigo-500/20", title_es: "Gran Maestro", title_en: "Grandmaster" }
+  perfect_score: { 
+    emoji: "🏆", 
+    color: "from-yellow-400 to-amber-600 border-amber-400 shadow-amber-500/20", 
+    title_es: "Prodigio Matemático", 
+    title_en: "Math Prodigy",
+    desc_es: "Resolviste correctamente todos los ejercicios de una sesión.",
+    desc_en: "Solved all exercises correctly in a single session."
+  },
+  streak_3: { 
+    emoji: "🔥", 
+    color: "from-orange-500 to-red-600 border-red-500 shadow-red-500/20", 
+    title_es: "Guerrero Diario", 
+    title_en: "Daily Warrior",
+    desc_es: "Mantuviste una racha de aprendizaje de 3 días consecutivos.",
+    desc_en: "Maintained an active learning streak of 3 consecutive days."
+  },
+  xp_500: { 
+    emoji: "👑", 
+    color: "from-purple-500 to-indigo-600 border-indigo-500 shadow-indigo-500/20", 
+    title_es: "Gran Maestro", 
+    title_en: "Grandmaster",
+    desc_es: "Alcanzaste un total acumulado de 500 XP.",
+    desc_en: "Accumulated a lifetime total of 500 XP."
+  },
+  cosmic_conqueror: { 
+    emoji: "🌌", 
+    color: "from-blue-600 to-indigo-850 border-indigo-600 shadow-indigo-500/20", 
+    title_es: "Cazador del Cosmos", 
+    title_en: "Cosmic Conqueror",
+    desc_es: "Completaste una Misión Cósmica Diaria en el mapa planetario.",
+    desc_en: "Completed a Daily Cosmic Quest on the planetary map."
+  },
+  robot_mentor: { 
+    emoji: "⚙️", 
+    color: "from-slate-400 to-cyan-600 border-cyan-400 shadow-cyan-500/20", 
+    title_es: "Mentor de Acero", 
+    title_en: "Robot Mentor",
+    desc_es: "Lograste que Alby evolucione y alcance el Nivel 5.",
+    desc_en: "Helped Alby evolve and reach Level 5."
+  },
+  master_sketcher: { 
+    emoji: "🎨", 
+    color: "from-pink-500 to-orange-500 border-pink-400 shadow-pink-500/20", 
+    title_es: "Lienzo Infinito", 
+    title_en: "Infinite Canvas",
+    desc_es: "Utilizaste la pizarra de dibujo interactiva en al menos 3 ejercicios de una sesión.",
+    desc_en: "Used the interactive sketchpad on at least 3 exercises in a single session."
+  },
+  streak_7: { 
+    emoji: "💎", 
+    color: "from-cyan-450 to-blue-600 border-blue-500 shadow-cyan-500/20", 
+    title_es: "Disciplina de Acero", 
+    title_en: "Steel Discipline",
+    desc_es: "Mantuviste una racha de aprendizaje de 7 días consecutivos.",
+    desc_en: "Maintained an active learning streak of 7 consecutive days."
+  },
+  polymath_scholar: { 
+    emoji: "📖", 
+    color: "from-emerald-400 to-teal-650 border-emerald-500 shadow-emerald-500/20", 
+    title_es: "Erudito Polimático", 
+    title_en: "Polymath Scholar",
+    desc_es: "Completaste al menos una sesión de estudio en 3 temas matemáticos diferentes.",
+    desc_en: "Completed at least one study session in 3 different math topics."
+  }
 };

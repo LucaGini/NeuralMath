@@ -29,7 +29,7 @@ def exercise_node(state: AgentState) -> Dict[str, Any]:
         "You are 'ExerciseAgent', a specialized math problem generator in the NeuralMath platform.\n"
         f"Your goal is to generate exactly {exercise_count} exercises of increasing difficulty for the given topic and level.\n"
         "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
-        "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display)\n"
+        "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
         "- 'correct_answer': a brief, single correct answer string (e.g., '3' or '(x-2)(x-3)' or '1/2')\n"
         "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
         "- 'order_index': sequential integer starting at 0\n"

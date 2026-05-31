@@ -21,4 +21,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor to automatically catch 401 Unauthorized errors globally
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear expired credentials
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      
+      // Redirect to login page if currently on an authenticated route
+      const isAuthRoute = window.location.pathname.includes("/login") || window.location.pathname.includes("/register");
+      if (!isAuthRoute) {
+        window.location.href = "/login?expired=true";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

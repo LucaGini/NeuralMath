@@ -3,6 +3,7 @@ from sqlalchemy import cast, String
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 import json
+import uuid
 from app.core.database import get_db
 from app.models.user import User
 from app.models.topic import Topic
@@ -324,7 +325,8 @@ def start_session(req: StartSessionRequest, db: Session = Depends(get_db), curre
     }
     
     try:
-        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"exercise_{topic.id}_{current_user.id}"}})
+        unique_id = uuid.uuid4().hex[:8]
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"exercise_{topic.id}_{current_user.id}_{unique_id}"}})
         exercises_data = res.get("exercises", [])
         
         if not exercises_data:
@@ -528,7 +530,7 @@ def submit_answer(req: AnswerSubmissionRequest, db: Session = Depends(get_db), c
         )
 
 @router.post("/{session_id}/complete", response_model=CompleteSessionResponse)
-def complete_session(session_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def complete_session(session_id: int, canvas_exercises: int = 0, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     session_record = db.query(MathSession).filter(MathSession.id == session_id).first()
     if not session_record or session_record.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Unauthorized access to this session")
@@ -640,6 +642,106 @@ def complete_session(session_id: int, db: Session = Depends(get_db), current_use
                     title_en="Grandmaster",
                     desc_es="Alcanzaste un total acumulado de 500 XP.",
                     desc_en="Accumulated a lifetime total of 500 XP."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 4. Cazador del Cosmos (cosmic_conqueror)
+        if session_record.session_type == "daily_challenge":
+            badge_key = "cosmic_conqueror"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Cazador del Cosmos",
+                    title_en="Cosmic Conqueror",
+                    desc_es="Completaste una Misión Cósmica Diaria en el mapa planetario.",
+                    desc_en="Completed a Daily Cosmic Quest on the planetary map."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 5. Mentor de Acero (robot_mentor)
+        alby_level = (current_user.alby_xp // 100) + 1
+        if alby_level >= 5:
+            badge_key = "robot_mentor"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Mentor de Acero",
+                    title_en="Robot Mentor",
+                    desc_es="Lograste que Alby evolucione y alcance el Nivel 5.",
+                    desc_en="Helped Alby evolve and reach Level 5."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 6. Lienzo Infinito (master_sketcher)
+        if canvas_exercises >= 3:
+            badge_key = "master_sketcher"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Lienzo Infinito",
+                    title_en="Infinite Canvas",
+                    desc_es="Utilizaste la pizarra de dibujo interactiva en al menos 3 ejercicios de una sesión.",
+                    desc_en="Used the interactive sketchpad on at least 3 exercises in a single session."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 7. Disciplina de Acero (streak_7)
+        if current_user.streak_days >= 7:
+            badge_key = "streak_7"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Disciplina de Acero",
+                    title_en="Steel Discipline",
+                    desc_es="Mantuviste una racha de aprendizaje de 7 días consecutivos.",
+                    desc_en="Maintained an active learning active learning streak of 7 consecutive days."
+                )
+                db.add(ach)
+                newly_unlocked.append(ach)
+
+        # 8. Erudito Polimático (polymath_scholar)
+        completed_topics = db.query(MathSession.topic_id).filter(
+            MathSession.user_id == current_user.id,
+            MathSession.completed_at.isnot(None)
+        ).distinct().all()
+        if len(completed_topics) >= 3:
+            badge_key = "polymath_scholar"
+            existing = db.query(Achievement).filter(
+                Achievement.user_id == current_user.id,
+                Achievement.badge_key == badge_key
+            ).first()
+            if not existing:
+                ach = Achievement(
+                    user_id=current_user.id,
+                    badge_key=badge_key,
+                    title_es="Erudito Polimático",
+                    title_en="Polymath Scholar",
+                    desc_es="Completaste al menos una sesión de estudio en 3 temas matemáticos diferentes.",
+                    desc_en="Completed at least one study session in 3 different math topics."
                 )
                 db.add(ach)
                 newly_unlocked.append(ach)
@@ -837,7 +939,8 @@ def start_review_session(db: Session = Depends(get_db), current_user: User = Dep
     }
 
     try:
-        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"review_{topic.id}_{current_user.id}"}})
+        unique_id = uuid.uuid4().hex[:8]
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"review_{topic.id}_{current_user.id}_{unique_id}"}})
         exercises_data = res.get("exercises", [])
         
         if not exercises_data:
@@ -954,7 +1057,8 @@ def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(g
     }
 
     try:
-        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"teachback_{topic.id}_{current_user.id}"}})
+        unique_id = uuid.uuid4().hex[:8]
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"teachback_{topic.id}_{current_user.id}_{unique_id}"}})
         exercises_data = res.get("exercises", [])
         
         if not exercises_data:
@@ -1061,7 +1165,8 @@ def start_speed_run_session(db: Session = Depends(get_db), current_user: User = 
     }
 
     try:
-        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"speedrun_{topic.id}_{current_user.id}"}})
+        unique_id = uuid.uuid4().hex[:8]
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"speedrun_{topic.id}_{current_user.id}_{unique_id}"}})
         exercises_data = res.get("exercises", [])
         
         if not exercises_data:

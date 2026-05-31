@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { Navbar } from "../components/Navbar";
+import { MathRenderer } from "../components/MathRenderer";
 import { useApp } from "../services/AppContext";
 import { avatars, badgesConfig, Locale } from "../services/translations";
 import { Flame, Trophy, Calendar, ChevronRight, ChevronLeft, GraduationCap, Award, Lock, Sparkles, User as UserIcon, CheckCircle2 } from "lucide-react";
@@ -49,6 +50,104 @@ interface Topic {
   level: string;
   area: string;
 }
+
+// --- Dynamic Vector SVG Alby Companion Character ---
+const AlbyAvatar: React.FC<{ level: number }> = ({ level }) => {
+  let eyeColor = "#10b981"; // Default glowing green
+  let visorColor = "";
+  let accessory = null;
+  
+  if (level === 1) {
+    eyeColor = "#3b82f6"; // Rookie blue
+    accessory = (
+      // Simple antenna
+      <path d="M24 10V2M20 2h8" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" />
+    );
+  } else if (level === 2) {
+    eyeColor = "#a855f7"; // Scholar violet
+    accessory = (
+      // Vector graduation hat
+      <g>
+        <path d="M10 11l14-6 14 6-14 6-14-6z" fill="#312e81" stroke="#4338ca" strokeWidth="1" />
+        <path d="M15 13.5v3.5c0 1.5 4 3 9 3s9-1.5 9-3.5v-3.5" fill="#1e1b4b" />
+        <path d="M31 11v6" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="31" cy="17" r="1.5" fill="#fbbf24" />
+      </g>
+    );
+  } else if (level === 3) {
+    eyeColor = "#f59e0b"; // Space Visor amber
+    visorColor = "#fbbf24";
+    accessory = (
+      // Cool neon shades
+      <g>
+        <path d="M24 10V2M21 2.5h6" stroke="#64748b" strokeWidth="2" strokeLinecap="round" />
+        <rect x="10" y="19" width="28" height="7" rx="3.5" fill="#f59e0b" />
+        <rect x="12" y="21" width="24" height="3" rx="1.5" fill="#fff" opacity="0.6" />
+      </g>
+    );
+  } else if (level === 4) {
+    eyeColor = "#ec4899"; // Math Wizard pink/red
+    accessory = (
+      // Wizard Hat
+      <g>
+        <path d="M12 11L24 1l12 10z" fill="#4d2c91" />
+        <path d="M7 11.5h34" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M18 7.5l6-5 2 4" stroke="#fbbf24" strokeWidth="1" strokeLinecap="round" />
+        <circle cx="24" cy="1" r="1.5" fill="#fbbf24" />
+      </g>
+    );
+  } else {
+    // Supreme Cosmic
+    eyeColor = "#06b6d4"; // Cyan
+    accessory = (
+      // Halo
+      <g>
+        <ellipse cx="24" cy="5" rx="15" ry="3.5" fill="none" stroke="#22d3ee" strokeWidth="2" className="animate-pulse" />
+        <path d="M24 9l-1.5-4 1.5-1.5 1.5 1.5-1.5 4z" fill="#e0f7fa" />
+      </g>
+    );
+  }
+
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="w-full h-full p-1 drop-shadow-md select-none pointer-events-none">
+      {/* Background / Accessories */}
+      {accessory}
+
+      {/* Head Body */}
+      <rect x="8" y="13" width="32" height="28" rx="8" fill="url(#alby-face-grad)" stroke="#475569" strokeWidth="2" />
+      
+      {/* Bolts / Side Ears */}
+      <rect x="4" y="22" width="4" height="10" rx="2" fill="#64748b" />
+      <rect x="40" y="22" width="4" height="10" rx="2" fill="#64748b" />
+
+      {/* Screen Box */}
+      <rect x="12" y="17" width="24" height="18" rx="5" fill="#0b0f19" stroke="#1e293b" strokeWidth="1.5" />
+
+      {/* Eyes or Visor */}
+      {visorColor ? (
+        // Visor rendering
+        null
+      ) : (
+        <g className="animate-pulse">
+          <circle cx="18" cy="25" r="3" fill={eyeColor} />
+          <circle cx="30" cy="25" r="3" fill={eyeColor} />
+          <circle cx="19.5" cy="23.5" r="0.75" fill="#fff" />
+          <circle cx="31.5" cy="23.5" r="0.75" fill="#fff" />
+        </g>
+      )}
+
+      {/* Socratic smiling mouth */}
+      <path d="M20 30c0 0 1.5 2 4 2s4-2 4-2" stroke="#475569" strokeWidth="2" strokeLinecap="round" />
+
+      <defs>
+        <linearGradient id="alby-face-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={level === 5 ? "#1e1b4b" : "#64748b"} />
+          <stop offset="100%" stopColor={level === 5 ? "#47106e" : "#334155"} />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
 
 export const Dashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -179,11 +278,11 @@ export const Dashboard: React.FC = () => {
   const albyXpInLevel = albyXp % 100;
 
   const getAlbyAvatar = (level: number) => {
-    if (level === 1) return { emoji: "🤖", name: language === "es" ? "Alby Novato" : "Rookie Alby" };
-    if (level === 2) return { emoji: "🎓🤖", name: language === "es" ? "Alby Erudito" : "Scholarly Alby" };
-    if (level === 3) return { emoji: "🕶️🤖", name: language === "es" ? "Alby Gafas Cósmicas" : "Space Visor Alby" };
-    if (level === 4) return { emoji: "⚡🤖", name: language === "es" ? "Alby Hechicero" : "Math Wizard Alby" };
-    return { emoji: "🌌🤖", name: language === "es" ? "Alby Supremo" : "Cosmic Alby" };
+    if (level === 1) return { name: language === "es" ? "Novato" : "Rookie" };
+    if (level === 2) return { name: language === "es" ? "Erudito" : "Scholarly" };
+    if (level === 3) return { name: language === "es" ? "Gafas Cósmicas" : "Space Visor" };
+    if (level === 4) return { name: language === "es" ? "Hechicero" : "Math Wizard" };
+    return { name: language === "es" ? "Supremo" : "Cosmic" };
   };
 
   const albyInfo = getAlbyAvatar(albyLevel);
@@ -331,12 +430,10 @@ export const Dashboard: React.FC = () => {
             
             <div className="flex items-center gap-4">
               {/* Dynamic Avatar display with hover effect */}
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-center text-3xl shadow-inner relative group">
-                <span className="group-hover:scale-110 transition-transform duration-200">{albyInfo.emoji}</span>
-                {/* Neon heart affinity meter badge */}
-                <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full p-1 text-[10px] animate-pulse border border-rose-400">
-                  ❤️
-                </span>
+              <div className="w-16 h-16 bg-slate-50 dark:bg-[#070b14]/50 border-2 border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-inner relative group p-1 transition-all duration-300 hover:border-emerald-500/40">
+                <div className="w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                  <AlbyAvatar level={albyLevel} />
+                </div>
               </div>
 
               <div className="flex-1">
@@ -415,7 +512,9 @@ export const Dashboard: React.FC = () => {
                         {language === "es" ? config.title_es : config.title_en}
                       </span>
                       <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
-                        {language === "es" ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + (key === "perfect_score" ? "Obtén un 5/5" : key === "streak_3" ? "Racha de 3 días" : "Alcanza 500 XP")) : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + (key === "perfect_score" ? "Get a 5/5 score" : key === "streak_3" ? "3 days streak" : "Reach 500 XP"))}
+                        {language === "es"
+                          ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + config.desc_es)
+                          : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + config.desc_en)}
                       </span>
                     </div>
                   </div>
@@ -728,9 +827,9 @@ export const Dashboard: React.FC = () => {
                             {new Date(entry.created_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" })}
                           </span>
                         </div>
-                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 italic leading-relaxed">
-                          "{entry.entry_text}"
-                        </p>
+                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 italic leading-relaxed">
+                          <MathRenderer text={`"${entry.entry_text}"`} />
+                        </div>
                       </div>
                     ))}
                   </div>

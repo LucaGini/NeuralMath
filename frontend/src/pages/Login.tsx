@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { useApp } from "../services/AppContext";
 import { LogIn, Sparkles, Eye, EyeOff } from "lucide-react";
@@ -13,6 +13,8 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { t, language } = useApp();
+  const [searchParams] = useSearchParams();
+  const isExpired = searchParams.get("expired") === "true";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +66,14 @@ export const Login: React.FC = () => {
             {language === "es" ? "Plataforma Inteligente de Matemáticas" : "AI-Powered Math Learning Platform"}
           </p>
         </div>
+
+        {isExpired && (
+          <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 px-4 py-3.5 rounded-2xl text-xs mb-6 text-center font-semibold leading-relaxed">
+            {language === "es"
+              ? "⚠️ Tu sesión ha expirado por seguridad o el servidor se ha reiniciado. Por favor, inicia sesión nuevamente para continuar acumulando XP."
+              : "⚠️ Your session has expired or the server restarted. Please log in again to continue earning XP."}
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-sm mb-6 text-center">
