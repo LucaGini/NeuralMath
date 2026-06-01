@@ -29,7 +29,6 @@ services:
       - .env
     volumes:
       - ./backend:/app
-      - ./agents:/app/agents
     depends_on:
       db:
         condition: service_healthy
