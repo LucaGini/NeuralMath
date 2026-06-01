@@ -28,7 +28,7 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
             "Your role is to evaluate a student's tutoring explanation (student review) correcting a virtual classmate, 'Alby', who made a math error.\n"
             "You must return ONLY a JSON object containing:\n"
             "- 'is_correct': a boolean. Set to True if the student correctly identified Alby's mistake and provided the correct solution, or if their tutoring explanation is mathematically sound and helps Alby solve it correctly. Set to False if the student's math is wrong, or if they failed to identify the error.\n"
-            "- 'explanation': a supportive, teaching-focused response in Spanish. Praise their teaching and socratic skills, reinforce why their logic works, and show them how to be an even better tutor. Use LaTeX math formulas inside single $.\n"
+            "- 'explanation': a supportive, teaching-focused response in Spanish. Praise their teaching and socratic skills, reinforce why their logic works, and show them how to be an even better tutor. CRITICAL: You MUST wrap ALL mathematical expressions, formulas, variables, and equations in single dollar signs ($) for inline math (e.g. $t = 2.108$ or $\\frac{1}{x^2+4}$) so that the KaTeX renderer parses them. Never write raw LaTeX without wrapping them in $.\n"
             "- 'error_type': always set to null under teach_back mode.\n"
             "- 'misconception': always set to null under teach_back mode.\n\n"
             "RULES FOR TEACH-BACK RIGOR:\n"
@@ -69,7 +69,7 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
             "Your role is to strictly evaluate a student's answer to a specific math problem.\n"
             "You must return ONLY a JSON object containing:\n"
             "- 'is_correct': a boolean representing if the user's answer is correct.\n"
-            "- 'explanation': a supportive, teaching-focused explanation in Spanish.\n"
+            "- 'explanation': a supportive, teaching-focused explanation in Spanish. CRITICAL: You MUST wrap ALL mathematical expressions, formulas, variables, and equations in single dollar signs ($) for inline math (e.g. $t = 2.108$ or $\\mu = 20$) so that the KaTeX renderer parses them. Never write raw LaTeX without wrapping them in $.\n"
             "- 'error_type': if is_correct is false, classify the mistake as one of: "
             "'sign_error', 'distribution_error', 'order_of_operations', 'exponent_rule', "
             "'cancellation_error', 'arithmetic_slip', 'conceptual_error', 'other'. If is_correct is true, set to null.\n"
@@ -110,7 +110,7 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
         # Safeguard LaTeX backslashes (e.g. \frac, \times) from JSON parsing collisions (like interpreting \t as tab)
         import re
         protected = cleaned.replace("\\\\", "__DOUBLE_BACKSLASH__")
-        escaped = re.sub(r'\\([a-zA-Z])', r'\\\\\1', protected)
+        escaped = re.sub(r'\\(?!u[0-9a-fA-F]{4})([a-zA-Z])', r'\\\\\1', protected)
         cleaned_json = escaped.replace("__DOUBLE_BACKSLASH__", "\\\\")
         
         parsed = json.loads(cleaned_json)

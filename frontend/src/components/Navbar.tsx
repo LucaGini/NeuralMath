@@ -36,9 +36,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
           />
         </div>
         <div>
-          <span className="text-xl font-bold tracking-tight text-slate-800 dark:text-white block">
-            NeuralMath
-          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl font-black tracking-tight text-slate-800 dark:text-white block">
+              NeuralMath
+            </span>
+            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold italic block select-none">
+              by Ing. Luca Gini
+            </span>
+          </div>
           <span className="text-[10px] text-mathPurple-500 dark:text-mathPurple-400 uppercase tracking-widest font-semibold block">
             {t.dashboard}
           </span>

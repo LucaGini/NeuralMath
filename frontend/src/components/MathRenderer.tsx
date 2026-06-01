@@ -30,11 +30,18 @@ const sanitizeMath = (math: string): string => {
 export const MathRenderer: React.FC<MathRendererProps> = ({ text }) => {
   if (!text) return null;
 
+  // Pre-process common LaTeX math delimiters to ensure standard KaTeX parsing
+  let cleanedText = text
+    .replace(/\\\\\[(.*?)\\\\\]/gs, '$$$$$1$$$$')
+    .replace(/\\\[(.*?)\\\]/gs, '$$$$$1$$$$')
+    .replace(/\\\\\((.*?)\\\\\)/gs, '$$1$')
+    .replace(/\\\((.*?)\\\)/gs, '$$1$');
+
   const blockMaths: string[] = [];
   const inlineMaths: string[] = [];
 
   // 1. Extract block math $$...$$ first to prevent markdown engines from corrupting math symbols
-  let processedText = text.replace(/\$\$(.*?)\$\$/gs, (match, mathContent) => {
+  let processedText = cleanedText.replace(/\$\$(.*?)\$\$/gs, (match, mathContent) => {
     blockMaths.push(mathContent);
     return `___BLOCK_MATH_${blockMaths.length - 1}___`;
   });
