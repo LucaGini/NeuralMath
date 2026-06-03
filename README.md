@@ -21,10 +21,12 @@ neuralmath-mvp/
 
 We compile a state-driven graph machine using LangGraph. The workflow can route executions directly to individual specialized nodes independently based on the user's progress:
 *   **TopicAgent**: Delivers deep, level-appropriate explanations complete with physical analogies.
-*   **ExerciseAgent**: Generates dynamic 5-problem exercises. It tracks historical performance to scale difficulty progressively.
+*   **ExerciseAgent**: Generates dynamic exercises matching the student's topic and level. It tracks historical performance to scale difficulty progressively.
 *   **EvaluatorAgent**: Analyzes the student's answer step-by-step, generating constructive explanations to turn errors into learning opportunities.
+*   **HintAgent**: Provides subtle, incremental, and socratic hints to help students find their own path to the solution without revealing the answer.
 *   **MotivatorAgent**: Provides daily encouragement, streaks, and XP congratulations.
 *   **ProtegeAgent**: Acts as Alby, a virtual peer student who solves exercises with subtle misconceptions, allowing students to learn by teaching.
+
 
 ---
 
