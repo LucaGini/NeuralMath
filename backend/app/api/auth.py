@@ -116,3 +116,24 @@ def update_user_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    new_password: str
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No se encontró ningún usuario con ese correo electrónico."
+        )
+    if user.email == "estudiante@neuralmath.edu":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No está permitido restablecer la contraseña del usuario de demostración."
+        )
+    user.password_hash = get_password_hash(data.new_password)
+    db.commit()
+    return {"message": "Contraseña restablecida con éxito."}

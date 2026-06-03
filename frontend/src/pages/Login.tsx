@@ -16,6 +16,18 @@ export const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isExpired = searchParams.get("expired") === "true";
 
+  // Socratic recovery states
+  const [recoveryModalOpen, setRecoveryModalOpen] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryMathAnswer, setRecoveryMathAnswer] = useState("");
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState("");
+  const [recoveryError, setRecoveryError] = useState("");
+  const [recoverySuccess, setRecoverySuccess] = useState("");
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
+  const [showRecoveryConfirmPassword, setShowRecoveryConfirmPassword] = useState(false);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -119,6 +131,24 @@ export const Login: React.FC = () => {
             </div>
           </div>
 
+          <div className="flex justify-end text-xs -mt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setRecoveryModalOpen(true);
+                setRecoveryEmail("");
+                setRecoveryMathAnswer("");
+                setRecoveryPassword("");
+                setRecoveryConfirmPassword("");
+                setRecoveryError("");
+                setRecoverySuccess("");
+              }}
+              className="text-mathPurple-600 dark:text-mathPurple-400 hover:underline hover:text-mathPurple-500 font-semibold focus:outline-none"
+            >
+              {language === "es" ? "¿Olvidaste tu contraseña?" : "Forgot your password?"}
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -152,6 +182,205 @@ export const Login: React.FC = () => {
           </Link>
         </p>
       </motion.div>
+
+      {/* Socratic Password Recovery Modal */}
+      {recoveryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative"
+          >
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+              🧮 {language === "es" ? "Recuperación Socrática" : "Socratic Password Reset"}
+            </h3>
+            <p className="text-xs text-slate-550 dark:text-slate-400 mb-4 leading-relaxed">
+              {language === "es"
+                ? "Para restablecer tu contraseña, demuestra tu destreza resolviendo el siguiente reto algebraico:"
+                : "To reset your password, prove your mathematical proficiency by solving the algebraic challenge below:"}
+            </p>
+
+            {recoveryError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-650 dark:text-red-400 p-3 rounded-2xl text-xs mb-4 text-center">
+                {recoveryError}
+              </div>
+            )}
+
+            {recoverySuccess && (
+              <div className="bg-green-500/10 border border-green-500/20 text-green-650 dark:text-green-400 p-3 rounded-2xl text-xs mb-4 text-center font-semibold">
+                {recoverySuccess}
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setRecoveryError("");
+                setRecoverySuccess("");
+
+                // 1. Math check
+                const cleanedAnswer = recoveryMathAnswer.trim();
+                if (cleanedAnswer !== "7") {
+                  setRecoveryError(
+                    language === "es"
+                      ? "Respuesta incorrecta. Tu mente matemática aún debe entrenarse para este restablecimiento."
+                      : "Incorrect answer. Your mathematical mind must train further for this reset."
+                  );
+                  return;
+                }
+
+                // 2. Password matching check
+                if (recoveryPassword.length < 6) {
+                  setRecoveryError(
+                    language === "es"
+                      ? "La nueva contraseña debe tener al menos 6 caracteres."
+                      : "New password must be at least 6 characters."
+                  );
+                  return;
+                }
+                if (recoveryPassword !== recoveryConfirmPassword) {
+                  setRecoveryError(
+                    language === "es"
+                      ? "Las contraseñas no coinciden."
+                      : "Passwords do not match."
+                  );
+                  return;
+                }
+
+                // 3. API Call
+                setRecoveryLoading(true);
+                try {
+                  await api.post("/auth/reset-password", {
+                    email: recoveryEmail,
+                    new_password: recoveryPassword
+                  });
+                  setRecoverySuccess(
+                    language === "es"
+                      ? "¡Contraseña restablecida con éxito! Redirigiendo..."
+                      : "Password reset successfully! Redirecting..."
+                  );
+                  setTimeout(() => {
+                    setRecoveryModalOpen(false);
+                  }, 2500);
+                } catch (err: any) {
+                  setRecoveryError(
+                    err.response?.data?.detail ||
+                    (language === "es"
+                      ? "Error al restablecer la contraseña. Verifica tu correo."
+                      : "Failed to reset password. Please verify your email.")
+                  );
+                } finally {
+                  setRecoveryLoading(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              {/* Email */}
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                  {t.email}
+                </label>
+                <input
+                  type="email"
+                  value={recoveryEmail}
+                  onChange={(e) => setRecoveryEmail(e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                  required
+                  disabled={recoveryLoading}
+                />
+              </div>
+
+              {/* Math Question */}
+              <div className="bg-mathPurple-500/5 dark:bg-mathPurple-500/10 border border-mathPurple-500/20 p-4 rounded-xl text-center">
+                <span className="text-xs text-slate-550 dark:text-slate-400 block mb-1">
+                  {language === "es" ? "Resolver para x:" : "Solve for x:"}
+                </span>
+                <span className="text-sm font-black text-mathPurple-600 dark:text-mathPurple-400 block tracking-wide">
+                  3x - 7 = 14
+                </span>
+                <input
+                  type="text"
+                  value={recoveryMathAnswer}
+                  onChange={(e) => setRecoveryMathAnswer(e.target.value)}
+                  placeholder={language === "es" ? "Introduce el valor de x" : "Enter value of x"}
+                  className="w-2/3 mx-auto mt-2 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                  required
+                  disabled={recoveryLoading}
+                />
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                  {language === "es" ? "Nueva Contraseña" : "New Password"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showRecoveryPassword ? "text" : "password"}
+                    value={recoveryPassword}
+                    onChange={(e) => setRecoveryPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-850 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                    required
+                    disabled={recoveryLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRecoveryPassword(!showRecoveryPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
+                  >
+                    {showRecoveryPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password */}
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                  {language === "es" ? "Confirmar Nueva Contraseña" : "Confirm New Password"}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showRecoveryConfirmPassword ? "text" : "password"}
+                    value={recoveryConfirmPassword}
+                    onChange={(e) => setRecoveryConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                    required
+                    disabled={recoveryLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRecoveryConfirmPassword(!showRecoveryConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
+                  >
+                    {showRecoveryConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRecoveryModalOpen(false)}
+                  className="w-1/2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                  disabled={recoveryLoading}
+                >
+                  {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 bg-mathPurple-600 hover:bg-mathPurple-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md transition-all disabled:opacity-50"
+                  disabled={recoveryLoading}
+                >
+                  {recoveryLoading ? (language === "es" ? "Procesando..." : "Processing...") : (language === "es" ? "Restablecer" : "Reset")}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };
