@@ -16,6 +16,10 @@ const sanitizeMath = (math: string): string => {
   // 2. Fix underscores "___" inside KaTeX causing subscript crash by replacing with escaped underscores inside \text
   sanitized = sanitized.replace(/_{2,}/g, (match) => `\\text{${match.split('').map(() => '\\_').join('')}}`);
 
+  // 3. Fix single underscores that are not used as subscripts (i.e. not preceded by an alphanumeric character, brace, or bracket)
+  // E.g. $_permute$ should become $\_permute$
+  sanitized = sanitized.replace(/(?<![a-zA-Z0-9}\)\]])_/g, '\\_');
+
   // 3. Fix row separators inside matrices: if there's a single backslash '\' instead of '\\' separating rows
   // E.g., \begin{pmatrix} 1 & 2 \ 3 & 4 \end{pmatrix} should become \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}
   sanitized = sanitized.replace(/\\begin{(matrix|pmatrix|bmatrix|vmatrix|cases)}(.*?)\\end{\1}/gs, (match, env, content) => {
