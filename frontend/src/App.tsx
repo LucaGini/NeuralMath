@@ -9,6 +9,7 @@ import { TopicSelection } from "./pages/TopicSelection";
 import { Session } from "./pages/Session";
 import { Progress } from "./pages/Progress";
 import { Profile } from "./pages/Profile";
+import { Analytics } from "@vercel/analytics/react";
 
 // Setup React Query client
 const queryClient = new QueryClient({
@@ -82,6 +83,7 @@ export const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Router>
+        <Analytics />
       </AppProvider>
     </QueryClientProvider>
   );
