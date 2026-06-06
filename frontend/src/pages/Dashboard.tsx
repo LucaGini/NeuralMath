@@ -627,7 +627,7 @@ export const Dashboard: React.FC = () => {
                   : "text-slate-400 hover:text-slate-700 dark:text-slate-450 dark:hover:text-slate-300"
               }`}
             >
-              <span>🤖📓 {language === "es" ? "La Bitácora de Alby" : "Alby's Journal"}</span>
+              <span>📓 {language === "es" ? "La Bitácora de Alby" : "Alby's Journal"}</span>
               {journal.length > 0 && (
                 <span className="bg-emerald-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
                   {journal.length}
