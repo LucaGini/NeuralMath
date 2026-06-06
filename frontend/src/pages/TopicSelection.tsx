@@ -201,7 +201,7 @@ export const TopicSelection: React.FC = () => {
                 onClick={() => handleSelectTopic(tItem)}
                 className={`text-left p-5 rounded-2xl border transition-all flex flex-col justify-between items-start gap-4 relative overflow-hidden ${
                   selectedTopic?.id === tItem.id
-                    ? "bg-mathPurple-50 dark:bg-mathPurple-600/10 border-mathPurple-500 shadow-md scale-[1.01]"
+                    ? "bg-mathPurple-50 dark:bg-mathPurple-600/10 border-mathPurple-500 shadow-md"
                     : "bg-white dark:bg-[#0c1220] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-[#12192a]/50"
                 }`}
               >
