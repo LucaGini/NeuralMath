@@ -41,3 +41,18 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* Mathematical grid sheet background pattern */
+.math-grid {
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.055) 1px, transparent 1px) !important;
+  background-size: 32px 32px !important;
+}
+
+.dark .math-grid {
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.065) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.065) 1px, transparent 1px) !important;
+}
+

@@ -111,7 +111,7 @@ export const Profile: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-800 dark:text-white transition-colors duration-200">
       <Navbar />
 
       {/* Main Container */}

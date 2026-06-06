@@ -131,7 +131,7 @@ export const Progress: React.FC = () => {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-16 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-700 dark:text-slate-200 pb-16 transition-colors duration-200">
       <Navbar />
 
       <main className="max-w-5xl mx-auto px-6 mt-8 space-y-8 w-full">

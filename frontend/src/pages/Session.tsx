@@ -618,7 +618,7 @@ export const Session: React.FC = () => {
   const progressPercent = ((currentIndex + (evaluation ? 1 : 0)) / exercises.length) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-700 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
       {/* Top Bar with Duolingo Progress */}
       <header className="border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-[#0c1220] px-6 py-4 flex items-center justify-between gap-6 transition-colors">
         <button

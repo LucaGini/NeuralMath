@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] p-4 relative overflow-hidden transition-colors duration-200">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] math-grid p-4 relative overflow-hidden transition-colors duration-200">
       {/* Background ambient glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
