@@ -5,6 +5,24 @@ import { useApp } from "../services/AppContext";
 import { LogIn, Sparkles, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
+interface MathChallenge {
+  equation: string;
+  answer: string;
+}
+
+const CHALLENGES: MathChallenge[] = [
+  { equation: "3x - 7 = 14", answer: "7" },
+  { equation: "2x + 5 = 15", answer: "5" },
+  { equation: "5x - 4 = 11", answer: "3" },
+  { equation: "4x + 6 = 22", answer: "4" },
+  { equation: "x / 2 + 3 = 8", answer: "10" },
+  { equation: "2x - 3 = 11", answer: "7" },
+  { equation: "3x + 4 = 19", answer: "5" },
+  { equation: "6x - 5 = 25", answer: "5" },
+  { equation: "x / 3 - 2 = 2", answer: "12" },
+  { equation: "4x - 8 = 12", answer: "5" }
+];
+
 export const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +46,12 @@ export const Login: React.FC = () => {
   const [recoveryLoading, setRecoveryLoading] = useState(false);
   const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
   const [showRecoveryConfirmPassword, setShowRecoveryConfirmPassword] = useState(false);
+  const [currentChallenge, setCurrentChallenge] = useState<MathChallenge>(CHALLENGES[0]);
+
+  const pickRandomChallenge = () => {
+    const randomIndex = Math.floor(Math.random() * CHALLENGES.length);
+    setCurrentChallenge(CHALLENGES[randomIndex]);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,6 +189,7 @@ export const Login: React.FC = () => {
                 setRecoveryConfirmPassword("");
                 setRecoveryError("");
                 setRecoverySuccess("");
+                pickRandomChallenge();
               }}
               className="text-mathPurple-600 dark:text-mathPurple-400 hover:underline hover:text-mathPurple-500 font-semibold focus:outline-none"
             >
@@ -243,7 +268,7 @@ export const Login: React.FC = () => {
 
                 // 1. Math check
                 const cleanedAnswer = recoveryMathAnswer.trim();
-                if (cleanedAnswer !== "7") {
+                if (cleanedAnswer !== currentChallenge.answer) {
                   setRecoveryError(
                     language === "es"
                       ? "Respuesta incorrecta. Tu mente matemática aún debe entrenarse para este restablecimiento."
@@ -320,7 +345,7 @@ export const Login: React.FC = () => {
                   {language === "es" ? "Resolver para x:" : "Solve for x:"}
                 </span>
                 <span className="text-sm font-black text-mathPurple-600 dark:text-mathPurple-400 block tracking-wide">
-                  3x - 7 = 14
+                  {currentChallenge.equation}
                 </span>
                 <input
                   type="text"

@@ -368,7 +368,7 @@ export const TopicSelection: React.FC = () => {
                           {language === "es" ? "¿Listo para resolver desafíos?" : "Ready to solve challenges?"}
                         </span>
                         <span className="text-xs font-bold text-mathPurple-600 dark:text-mathPurple-400 block">
-                          {language === "es" ? "5 ejercicios dinámicos te esperan" : "5 dynamic exercises await you"}
+                          {language === "es" ? "Ejercicios dinámicos te esperan" : "Dynamic exercises await you"}
                         </span>
                       </div>
                       <button

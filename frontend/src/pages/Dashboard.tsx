@@ -1004,7 +1004,7 @@ export const Dashboard: React.FC = () => {
                   }}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-500/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
                 >
-                  {language === "es" ? "Iniciar Tutoría 🚀" : "Start Tutoring 🚀"}
+                  {language === "es" ? "Iniciar Tutoría" : "Start Tutoring"}
                 </button>
               </div>
             </motion.div>
