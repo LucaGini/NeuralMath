@@ -15,12 +15,14 @@ export const Register: React.FC = () => {
   const [level, setLevel] = useState("Secondary");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showColdStartWarning, setShowColdStartWarning] = useState(false);
   const navigate = useNavigate();
   const { t, language } = useApp();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowColdStartWarning(false);
 
     if (password !== confirmPassword) {
       setError(language === "es" ? "Las contraseñas no coinciden." : "Passwords do not match.");
@@ -28,6 +30,10 @@ export const Register: React.FC = () => {
     }
 
     setLoading(true);
+    const timer = setTimeout(() => {
+      setShowColdStartWarning(true);
+    }, 4000);
+
     try {
       await api.post("/auth/register", {
         name,
@@ -35,14 +41,18 @@ export const Register: React.FC = () => {
         password,
         level,
       });
+      clearTimeout(timer);
       navigate("/login");
     } catch (err: any) {
+      clearTimeout(timer);
       setError(
         err.response?.data?.detail || 
         (language === "es" ? "Error al registrarse. Por favor intenta de nuevo." : "Failed to register. Please try again.")
       );
     } finally {
+      clearTimeout(timer);
       setLoading(false);
+      setShowColdStartWarning(false);
     }
   };
 
@@ -78,6 +88,18 @@ export const Register: React.FC = () => {
           <div className="bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-sm mb-6 text-center">
             {error}
           </div>
+        )}
+
+        {showColdStartWarning && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-3 rounded-2xl text-xs mb-6 text-center leading-relaxed font-semibold"
+          >
+            🚀 {language === "es"
+              ? "Despertando el servidor gratuito de Render... Esto puede demorar hasta 50 segundos en el primer intento."
+              : "Waking up the free Render server... This may take up to 50 seconds on the first attempt."}
+          </motion.div>
         )}
 
         <form onSubmit={handleRegister} className="space-y-5">
