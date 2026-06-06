@@ -155,6 +155,7 @@ export const Dashboard: React.FC = () => {
   const [journal, setJournal] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"history" | "journal">("history");
   const [historyPage, setHistoryPage] = useState(1);
+  const [journalPage, setJournalPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [updatingAvatar, setUpdatingAvatar] = useState(false);
@@ -329,6 +330,11 @@ export const Dashboard: React.FC = () => {
   const totalHistoryPages = Math.ceil(history.length / HISTORY_ITEMS_PER_PAGE);
   const startHistoryIndex = (historyPage - 1) * HISTORY_ITEMS_PER_PAGE;
   const paginatedHistory = history.slice(startHistoryIndex, startHistoryIndex + HISTORY_ITEMS_PER_PAGE);
+
+  const JOURNAL_ITEMS_PER_PAGE = 10;
+  const totalJournalPages = Math.ceil(journal.length / JOURNAL_ITEMS_PER_PAGE);
+  const startJournalIndex = (journalPage - 1) * JOURNAL_ITEMS_PER_PAGE;
+  const paginatedJournal = journal.slice(startJournalIndex, startJournalIndex + JOURNAL_ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
@@ -814,14 +820,14 @@ export const Dashboard: React.FC = () => {
                   </div>
 
                   <div className="pl-4 space-y-4 max-h-[500px] overflow-y-auto pr-1">
-                    {journal.map((entry, idx) => (
+                    {paginatedJournal.map((entry, idx) => (
                       <div
                         key={entry.id}
                         className="bg-amber-50/40 dark:bg-slate-900/60 border-l-4 border-amber-400 dark:border-emerald-500/80 p-4 rounded-r-2xl shadow-sm relative group hover:scale-[1.01] transition-transform duration-150"
                       >
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-[10px] text-amber-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
-                            {language === "es" ? `Lección Aprendida #${journal.length - idx}` : `Insight Taught #${journal.length - idx}`} — {entry.concept}
+                            {language === "es" ? `Lección Aprendida #${journal.length - (startJournalIndex + idx)}` : `Insight Taught #${journal.length - (startJournalIndex + idx)}`} — {entry.concept}
                           </span>
                           <span className="text-[9px] text-slate-400 dark:text-slate-500">
                             {new Date(entry.created_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" })}
@@ -833,6 +839,43 @@ export const Dashboard: React.FC = () => {
                       </div>
                     ))}
                   </div>
+
+                  {/* Elegant Pagination Controls */}
+                  {totalJournalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4 pl-4">
+                      <button
+                        onClick={() => setJournalPage((prev) => Math.max(1, prev - 1))}
+                        disabled={journalPage === 1}
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        title={language === "es" ? "Página anterior" : "Previous page"}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+
+                      {Array.from({ length: totalJournalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setJournalPage(page)}
+                          className={`w-8 h-8 rounded-xl border text-xs font-bold transition-all ${
+                            journalPage === page
+                              ? "bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10"
+                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-455 hover:text-slate-800 dark:hover:text-white"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => setJournalPage((prev) => Math.min(totalJournalPages, prev + 1))}
+                        disabled={journalPage === totalJournalPages}
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        title={language === "es" ? "Siguiente página" : "Next page"}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
