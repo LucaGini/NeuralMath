@@ -86,7 +86,11 @@ export const MathRenderer: React.FC<MathRendererProps> = ({ text }) => {
         inList = false;
       }
 
-      if (line.startsWith("### ")) {
+      if (line.startsWith("#### ")) {
+        line = line.substring(5).trim();
+        line = parseInlineMarkdown(line);
+        htmlLines.push(`<h4 class="text-xs font-extrabold text-slate-750 dark:text-slate-200 mt-4 mb-1.5 uppercase tracking-wide">${line}</h4>`);
+      } else if (line.startsWith("### ")) {
         line = line.substring(4).trim();
         line = parseInlineMarkdown(line);
         htmlLines.push(`<h3 class="text-sm font-black text-slate-800 dark:text-white mt-5 mb-2 uppercase tracking-wide">${line}</h3>`);
