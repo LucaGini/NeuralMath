@@ -31,6 +31,7 @@ def run_migrations():
 
         # Subtopics Support
         "ALTER TABLE topics ADD COLUMN IF NOT EXISTS subtopics JSON;",
+        "ALTER TABLE topics ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE NOT NULL;",
 
         # Alby's Journal Entries
         """
@@ -45,7 +46,11 @@ def run_migrations():
         """,
         
         # Alby's XP & Level Evolution
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS alby_xp INTEGER DEFAULT 0 NOT NULL;"
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS alby_xp INTEGER DEFAULT 0 NOT NULL;",
+
+        # Admin Console Columns
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE NOT NULL;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE NOT NULL;"
     ]
     
     with engine.begin() as conn:

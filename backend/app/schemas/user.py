@@ -28,6 +28,8 @@ class UserResponse(UserBase):
     alby_xp: int
     streak_days: int
     avatar_id: str
+    is_admin: bool
+    is_active: bool
     last_active_at: Optional[datetime] = None
     created_at: datetime
     achievements: List[AchievementResponse] = []

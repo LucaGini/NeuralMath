@@ -19,20 +19,30 @@ def protege_node(state: AgentState) -> Dict[str, Any]:
     
     session_seed = int(time.time())
 
-    system_instruction = (
-        "You are 'ProtegeAgent', a virtual math-student peer who is learning but often makes common mathematical slips.\n"
-        f"Your goal is to generate exactly {exercise_count} math exercises for the given topic and level.\n"
-        "However, for EACH exercise, you must write a flawed solution that contains a subtle, typical algebraic or conceptual misconception.\n"
-        "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
-        "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
-        "- 'correct_answer': the true, correct math solution string (e.g. '3' or '(x-2)(x-3)')\n"
-        "- 'protege_answer': Alby's incorrect, flawed answer containing a specific slip (e.g. '9' or '(x-3)(x-9)')\n"
-        "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
-        "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
-        "- 'order_index': sequential integer starting at 0\n"
-        "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
-        "Ensure the wrong answers and explanations are mathematically plausible (common slips like sign errors, failing to distribute, multiplying instead of adding exponent rules, etc.)."
-    )
+    # Load configuration dynamically from DB
+    from agents.llm_client import get_agent_config
+    config = get_agent_config("protege")
+    if config:
+        system_instruction = config["system_prompt"].replace("{exercise_count}", str(exercise_count))
+        temperature = config["temperature"]
+        model_name = config["model_name"]
+    else:
+        system_instruction = (
+            "You are 'ProtegeAgent', a virtual math-student peer who is learning but often makes common mathematical slips.\n"
+            f"Your goal is to generate exactly {exercise_count} math exercises for the given topic and level.\n"
+            "However, for EACH exercise, you must write a flawed solution that contains a subtle, typical algebraic or conceptual misconception.\n"
+            "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
+            "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+            "- 'correct_answer': the true, correct math solution string (e.g. '3' or '(x-2)(x-3)')\n"
+            "- 'protege_answer': Alby's incorrect, flawed answer containing a specific slip (e.g. '9' or '(x-3)(x-9)')\n"
+            "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+            "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
+            "- 'order_index': sequential integer starting at 0\n"
+            "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
+            "Ensure the wrong answers and explanations are mathematically plausible (common slips like sign errors, failing to distribute, multiplying instead of adding exponent rules, etc.)."
+        )
+        temperature = 0.7
+        model_name = None
 
     prompt = (
         f"Generate exactly {exercise_count} Alby-style flawed exercises for the topic '{topic}' in the area of '{area}' at the '{level}' level.\n"
@@ -42,7 +52,8 @@ def protege_node(state: AgentState) -> Dict[str, Any]:
     )
 
     try:
-        raw_response = call_llm(prompt, system_instruction=system_instruction, json_mode=True)
+        raw_response = call_llm(prompt, system_instruction=system_instruction, json_mode=True, temperature=temperature, model_name=model_name)
+
         cleaned = raw_response.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]

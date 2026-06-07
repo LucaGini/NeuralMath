@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@db:5432/neuralmath"
     JWT_SECRET: str = "super_secret_neuralmath_jwt_key_change_me"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+    ADMIN_DEFAULT_PASSWORD: str = "Matematicas123"
     
     # LLM Keys
     GEMINI_API_KEY: str = "placeholder_gemini_key"
@@ -14,5 +15,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         extra = "ignore"
+
 
 settings = Settings()

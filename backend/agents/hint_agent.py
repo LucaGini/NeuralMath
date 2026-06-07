@@ -22,16 +22,28 @@ def hint_node(state: AgentState) -> Dict[str, Any]:
         4: "Show all steps except the final numerical answer. The student must finish the last step.",
     }
 
-    system_instruction = (
-        "You are 'HintAgent', a Socratic math tutor in the NeuralMath platform.\n"
-        f"Your goal is to provide a helpful hint for the exercise at level {hint_level}.\n"
-        f"Level {hint_level} Hint Instruction: {level_instructions.get(hint_level, level_instructions[1])}\n"
-        "RULES:\n"
-        "1. NEVER reveal the exact final answer.\n"
-        "2. Keep the explanation brief, supportive, and focused on self-discovery.\n"
-        "3. Respond in Spanish.\n"
-        "4. Return ONLY a JSON object: {'hint': 'your hint text here'}"
-    )
+    # Load configuration dynamically from DB
+    from agents.llm_client import get_agent_config
+    config = get_agent_config("hint")
+    if config:
+        # Interpolate requested level instructions if needed, or use the prompt instructions
+        system_instruction = config["system_prompt"].replace("{hint_level}", str(hint_level))\
+                                                     .replace("{level_instruction}", level_instructions.get(hint_level, level_instructions[1]))
+        temperature = config["temperature"]
+        model_name = config["model_name"]
+    else:
+        system_instruction = (
+            "You are 'HintAgent', a Socratic math tutor in the NeuralMath platform.\n"
+            f"Your goal is to provide a helpful hint for the exercise at level {hint_level}.\n"
+            f"Level {hint_level} Hint Instruction: {level_instructions.get(hint_level, level_instructions[1])}\n"
+            "RULES:\n"
+            "1. NEVER reveal the exact final answer.\n"
+            "2. Keep the explanation brief, supportive, and focused on self-discovery.\n"
+            "3. Respond in Spanish.\n"
+            "4. Return ONLY a JSON object: {'hint': 'your hint text here'}"
+        )
+        temperature = 0.7
+        model_name = None
 
     prompt = (
         f"Exercise Question: {question}\n"
@@ -41,7 +53,8 @@ def hint_node(state: AgentState) -> Dict[str, Any]:
     )
 
     try:
-        raw_response = call_llm(prompt, system_instruction=system_instruction, json_mode=True)
+        raw_response = call_llm(prompt, system_instruction=system_instruction, json_mode=True, temperature=temperature, model_name=model_name)
+
         cleaned = raw_response.strip()
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]

@@ -1005,48 +1005,51 @@ def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(g
     Starts an AI Protégé ("Teach-Back") session where the user socratically corrects Alby's flawed steps.
     Targets specific user-selected topics or their weakest skill topic, matching their level.
     """
-    import random
-    topic = None
+    selected_topics = []
     
-    # 1. Resolve selected topic from requested list
+    # 1. Resolve selected topics from requested list matching user's level
     if req.topic_ids:
-        chosen_ids = list(req.topic_ids)
-        random.shuffle(chosen_ids)
-        for t_id in chosen_ids:
+        for t_id in req.topic_ids:
             t = db.query(Topic).filter(Topic.id == t_id).first()
-            # Strict level alignment check
             if t and t.level.lower() == current_user.level.lower():
-                topic = t
-                break
+                selected_topics.append(t)
                 
     # Fallback to recommended topic if none found or chosen
-    if not topic:
+    if not selected_topics:
         rec = get_recommended_topic(db, current_user)
         topic_id = rec.get("topic_id", 1)
         topic = db.query(Topic).filter(Topic.id == topic_id).first()
         
-    # Final level-aligned fallback if recommended topic level is mismatched
-    if topic and topic.level.lower() != current_user.level.lower():
-        topic = db.query(Topic).filter(Topic.level == current_user.level).first()
-        
-    # Absolute default fallback
-    if not topic:
-        topic = db.query(Topic).first()
-        
-    if not topic:
+        # Final level-aligned fallback if recommended topic level is mismatched
+        if topic and topic.level.lower() != current_user.level.lower():
+            topic = db.query(Topic).filter(Topic.level == current_user.level).first()
+            
+        # Absolute default fallback
+        if not topic:
+            topic = db.query(Topic).first()
+            
+        if topic:
+            selected_topics = [topic]
+            
+    if not selected_topics:
         raise HTTPException(status_code=404, detail="No math topics found to start teach-back session")
+
+    # Combine topic names and areas to present to ProtegeAgent
+    topic_names = ", ".join([t.name for t in selected_topics])
+    topic_areas = ", ".join(list(set([t.area for t in selected_topics])))
+    primary_topic = selected_topics[0]
 
     # 2. Invoke ProtegeAgent via LangGraph
     state_input = {
         "user_level": current_user.level,
-        "topic_name": topic.name,
-        "topic_area": topic.area,
+        "topic_name": topic_names,
+        "topic_area": topic_areas,
         "explanation": None,
         "exercises": None,
         "user_answers": None,
         "evaluations": None,
         "session_summary": {
-            "recent_performance": f"Teach-Back session targeting: {topic.name}",
+            "recent_performance": f"Teach-Back session targeting: {topic_names}",
             "session_type": "teach_back"
         },
         "motivation_message": None,
@@ -1058,7 +1061,7 @@ def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(g
 
     try:
         unique_id = uuid.uuid4().hex[:8]
-        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"teachback_{topic.id}_{current_user.id}_{unique_id}"}})
+        res = math_tutor_graph.invoke(state_input, {"configurable": {"thread_id": f"teachback_{primary_topic.id}_{current_user.id}_{unique_id}"}})
         exercises_data = res.get("exercises", [])
         
         if not exercises_data:
@@ -1067,7 +1070,7 @@ def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(g
         # Create MathSession for teach_back
         new_session = MathSession(
             user_id=current_user.id,
-            topic_id=topic.id,
+            topic_id=primary_topic.id,
             score=0,
             xp_earned=0,
             session_type="teach_back",
@@ -1098,7 +1101,7 @@ def start_teach_back_session(req: StartTeachBackRequest, db: Session = Depends(g
         
         return {
             "session_id": new_session.id,
-            "topic_name": f"Enseñar a Alby: {topic.name}",
+            "topic_name": f"Enseñar a Alby: {topic_names}",
             "level": current_user.level,
             "session_type": "teach_back",
             "exercises": [

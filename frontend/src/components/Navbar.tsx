@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../services/AppContext";
 import { LogOut, Sun, Moon, Globe } from "lucide-react";
+import api from "../services/api";
 
 interface NavbarProps {
   showBack?: boolean;
@@ -11,6 +12,21 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const { theme, toggleTheme, language, setLanguage, t } = useApp();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
+  React.useEffect(() => {
+    if (token) {
+      api.get("/auth/me")
+        .then((res) => {
+          setIsAdmin(res.data.is_admin);
+        })
+        .catch((err) => {
+          console.error("Error checking admin status:", err);
+        });
+    } else {
+      setIsAdmin(false);
+    }
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -77,6 +93,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
           >
             {language === "es" ? "Perfil" : "Profile"}
           </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 hover:text-amber-500 dark:hover:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-all border border-amber-200/20 dark:border-amber-900/30"
+            >
+              {language === "es" ? "Admin" : "Admin"}
+            </button>
+          )}
         </div>
       )}
 

@@ -12,15 +12,25 @@ def topic_node(state: AgentState) -> Dict[str, Any]:
     area = state.get("topic_area", "Algebra")
     subtopic = state.get("subtopic_name", "")
     
-    system_instruction = (
-        "You are 'TopicAgent', an elite mathematics teacher in the NeuralMath platform.\n"
-        "Your mission is to write beautiful, engaging math explanations in Spanish (with English toggles support, but primarily Spanish).\n"
-        "You MUST adapt your tone, language, and complexity to the student's education level:\n"
-        "- Primary: Use child-friendly analogies, real-world objects (candies, toys), and very simple, illustrative formula blocks.\n"
-        "- Secondary: Use teenage-relatable context, moderate algebraic formulas, standard LaTeX blocks ($...$ or $$...$$), and historical stories or game examples.\n"
-        "- University: Use formal math rigor, abstract definitions, theorem proofs or structural theories, and real-world industrial or computer science applications (e.g. PageRank, cryptography).\n"
-        "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling."
-    )
+    # Load configuration dynamically from DB
+    from agents.llm_client import get_agent_config
+    config = get_agent_config("topic")
+    if config:
+        system_instruction = config["system_prompt"]
+        temperature = config["temperature"]
+        model_name = config["model_name"]
+    else:
+        system_instruction = (
+            "You are 'TopicAgent', an elite mathematics teacher in the NeuralMath platform.\n"
+            "Your mission is to write beautiful, engaging math explanations in Spanish (with English toggles support, but primarily Spanish).\n"
+            "You MUST adapt your tone, language, and complexity to the student's education level:\n"
+            "- Primary: Use child-friendly analogies, real-world objects (candies, toys), and very simple, illustrative formula blocks.\n"
+            "- Secondary: Use teenage-relatable context, moderate algebraic formulas, standard LaTeX blocks ($...$ or $$...$$), and historical stories or game examples.\n"
+            "- University: Use formal math rigor, abstract definitions, theorem proofs or structural theories, and real-world industrial or computer science applications (e.g. PageRank, cryptography).\n"
+            "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling."
+        )
+        temperature = 0.7
+        model_name = None
     
     if subtopic:
         prompt = (
@@ -37,7 +47,8 @@ def topic_node(state: AgentState) -> Dict[str, Any]:
         )
     
     try:
-        explanation = call_llm(prompt, system_instruction=system_instruction)
+        explanation = call_llm(prompt, system_instruction=system_instruction, temperature=temperature, model_name=model_name)
         return {"explanation": explanation}
     except Exception as e:
         return {"error": f"TopicAgent failed: {str(e)}"}
+

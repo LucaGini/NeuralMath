@@ -40,7 +40,22 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     user = db.query(User).filter(User.id == int(user_id)).first()
     if user is None:
         raise credentials_exception
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="La cuenta está inactiva o ha sido desactivada por el administrador.",
+        )
     return user
+
+def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_admin:
+        import logging
+        logging.getLogger(__name__).warning(f"Unauthorized admin access attempt by user: {current_user.email}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso restringido únicamente a administradores.",
+        )
+    return current_user
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
@@ -60,7 +75,9 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
         name=user_in.name,
         email=user_in.email,
         password_hash=hashed_password,
-        level=user_in.level
+        level=user_in.level,
+        is_admin=False,
+        is_active=True
     )
     db.add(new_user)
     db.commit()
@@ -80,16 +97,29 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
             detail="Incorrect email or password"
         )
     
+    # Check if trying admin
+    is_trying_admin = user.is_admin
+    
     # Validate password
     if not verify_password(login_data.password, user.password_hash):
+        if is_trying_admin:
+            import logging
+            logging.getLogger(__name__).warning(f"Failed admin login attempt for user: {user.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
+        )
+        
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La cuenta ha sido desactivada por el administrador."
         )
     
     # Generate token
     token = create_access_token(subject=user.id)
     return {"access_token": token, "token_type": "bearer"}
+
 
 @router.get("/me", response_model=UserResponse)
 def read_user_me(current_user: User = Depends(get_current_user)):

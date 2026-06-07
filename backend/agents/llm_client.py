@@ -7,70 +7,156 @@ from google.genai import types
 from groq import Groq
 from typing import Optional, Dict, Any, List
 
-
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def call_llm(prompt: str, system_instruction: Optional[str] = None, json_mode: bool = False) -> str:
-    """
-    Tries to call Gemini 2.0 Flash. On failure, falls back to Groq (Llama 3.3 70B).
-    If both are unavailable, runs a highly intelligent local math simulator.
-    """
-    
-    # 1. Try Gemini 2.0 Flash via new google-genai SDK
-    gemini_key = os.getenv("GEMINI_API_KEY")
-    if gemini_key and gemini_key not in ["placeholder_gemini_key", "your_gemini_api_key_here", ""]:
-        try:
-            logger.info("Attempting to call Gemini 2.0 Flash...")
-            client = genai.Client(api_key=gemini_key)
-            
-            # Setup configuration utilizing GenerateContentConfig
-            config = types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                response_mime_type="application/json" if json_mode else None,
-                temperature=0.7
-            )
-            
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
-                config=config
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e:
-            logger.error(f"Gemini API failure: {e}. Trying Groq...")
+# LLM call tracking counters
+_total_calls = 0
+_fallback_calls = 0
 
-    # 2. Try Groq (Llama 3.3 70B)
-    groq_key = os.getenv("GROQ_API_KEY")
-    if groq_key and groq_key not in ["placeholder_groq_key", "your_groq_api_key_here", ""]:
+def increment_total_calls():
+    global _total_calls
+    _total_calls += 1
+
+def increment_fallback_calls():
+    global _fallback_calls
+    _fallback_calls += 1
+
+def get_stats():
+    return _total_calls, _fallback_calls
+
+def get_agent_config(agent_key: str) -> Optional[Dict[str, Any]]:
+    """
+    Retrieves the current agent configuration from the database.
+    Returns a dict with system_prompt, temperature, and model_name, or None if not found.
+    """
+    try:
+        from app.core.database import SessionLocal
+        from sqlalchemy import text
+        db = SessionLocal()
         try:
-            logger.info("Attempting to call Groq (Llama 3.3 70B)...")
-            client = Groq(api_key=groq_key)
-            messages = []
-            if system_instruction:
-                messages.append({"role": "system", "content": system_instruction})
-            messages.append({"role": "user", "content": prompt})
-            
-            response_format = None
-            if json_mode:
-                response_format = {"type": "json_object"}
+            row = db.execute(
+                text("SELECT system_prompt, temperature, model_name FROM agent_configs WHERE agent_key = :key"),
+                {"key": agent_key}
+            ).first()
+            if row:
+                return {
+                    "system_prompt": row[0],
+                    "temperature": row[1],
+                    "model_name": row[2]
+                }
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Error loading agent config for '{agent_key}': {e}")
+    return None
+
+def call_llm(
+    prompt: str,
+    system_instruction: Optional[str] = None,
+    json_mode: bool = False,
+    temperature: float = 0.7,
+    model_name: Optional[str] = None
+) -> str:
+    """
+    Tries to call Gemini or Groq based on preference and fallback rules.
+    If both fail, runs a local mock simulator.
+    """
+    increment_total_calls()
+    
+    # Check model preference
+    is_groq_preferred = False
+    if model_name:
+        model_lower = model_name.lower()
+        if "groq" in model_lower or "llama" in model_lower:
+            is_groq_preferred = True
+
+    # Call function for Gemini
+    def try_gemini():
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key and gemini_key not in ["placeholder_gemini_key", "your_gemini_api_key_here", ""]:
+            try:
+                # Avoid passing Groq models to Gemini client
+                gemini_model = "gemini-2.0-flash"
+                if model_name and "llama" not in model_name.lower() and "groq" not in model_name.lower():
+                    gemini_model = model_name
+
+                logger.info(f"Attempting to call Gemini ({gemini_model})...")
+                client = genai.Client(api_key=gemini_key)
                 
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=messages,
-                response_format=response_format,
-                temperature=0.7
-            )
-            if completion and completion.choices:
-                return completion.choices[0].message.content
-        except Exception as e:
-            logger.error(f"Groq API failure: {e}. Falling back to Local Simulator...")
+                # Setup configuration utilizing GenerateContentConfig
+                config = types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    response_mime_type="application/json" if json_mode else None,
+                    temperature=temperature
+                )
+                
+                response = client.models.generate_content(
+                    model=gemini_model,
+                    contents=prompt,
+                    config=config
+                )
+                if response and response.text:
+                    return response.text
+            except Exception as e:
+                logger.error(f"Gemini API call failed: {e}")
+        return None
+
+    # Call function for Groq
+    def try_groq():
+        groq_key = os.getenv("GROQ_API_KEY")
+        if groq_key and groq_key not in ["placeholder_groq_key", "your_groq_api_key_here", ""]:
+            try:
+                # Avoid passing Gemini models to Groq client
+                groq_model = "llama-3.3-70b-versatile"
+                if model_name and "gemini" not in model_name.lower():
+                    groq_model = model_name
+
+                logger.info(f"Attempting to call Groq ({groq_model})...")
+                client = Groq(api_key=groq_key)
+                messages = []
+                if system_instruction:
+                    messages.append({"role": "system", "content": system_instruction})
+                messages.append({"role": "user", "content": prompt})
+                
+                response_format = None
+                if json_mode:
+                    response_format = {"type": "json_object"}
+                    
+                completion = client.chat.completions.create(
+                    model=groq_model,
+                    messages=messages,
+                    response_format=response_format,
+                    temperature=temperature
+                )
+                if completion and completion.choices:
+                    return completion.choices[0].message.content
+            except Exception as e:
+                logger.error(f"Groq API call failed: {e}")
+        return None
+
+    # Execute with preference
+    if is_groq_preferred:
+        res = try_groq()
+        if res is not None:
+            return res
+        res = try_gemini()
+        if res is not None:
+            return res
+    else:
+        res = try_gemini()
+        if res is not None:
+            return res
+        res = try_groq()
+        if res is not None:
+            return res
 
     # 3. Graceful Local Simulator Fallback
-    logger.warning("No active LLM keys. Utilizing internal Local Math Simulator.")
+    logger.warning("No active LLM keys or API calls failed. Utilizing internal Local Math Simulator.")
+    increment_fallback_calls()
     return get_local_mock_response(prompt, system_instruction, json_mode)
+
 
 def get_local_mock_response(prompt: str, system_instruction: Optional[str] = None, json_mode: bool = False) -> str:
     """
@@ -80,125 +166,150 @@ def get_local_mock_response(prompt: str, system_instruction: Optional[str] = Non
     prompt_lower = prompt.lower()
     system_lower = (system_instruction or "").lower()
 
-    # Case C: Evaluation (EvaluatorAgent)
-    if "evaluator" in system_lower or "evaluate" in prompt_lower or "evaluar" in prompt_lower:
-        # Parse what question is being evaluated and what the user's answer is
-        user_ans = "unknown"
-        correct_ans = "unknown"
-        
-        lines = prompt.split("\n")
-        for line in lines:
-            if ":" in line:
-                parts = line.split(":", 1)
-                key = parts[0].lower()
-                value = parts[1].strip()
-                if "submitted" in key or "user" in key:
-                    user_ans = value
-                elif "correct" in key or "expected" in key:
-                    correct_ans = value
-        
-        # Simple cleanup
-        user_ans_clean = user_ans.replace("$", "").replace(" ", "").replace("\"", "").replace("'", "").lower()
-        correct_ans_clean = correct_ans.replace("$", "").replace(" ", "").replace("\"", "").replace("'", "").lower()
-
-        # Check if correct
-        is_correct = False
-        if user_ans_clean == correct_ans_clean:
-            is_correct = True
-        elif user_ans_clean.isdigit() and correct_ans_clean.isdigit():
-            is_correct = int(user_ans_clean) == int(correct_ans_clean)
-        else:
-            # Dynamic factor order-independent check: e.g. (x-3)(x-4) matches (x-4)(x-3)
-            import re
-            user_factors = sorted(re.findall(r'\(([^)]+)\)', user_ans_clean))
-            correct_factors = sorted(re.findall(r'\(([^)]+)\)', correct_ans_clean))
-            if user_factors and correct_factors and user_factors == correct_factors:
-                is_correct = True
-            # Limits cleanup check: e.g. "3/2" matches "\frac{3}{2}"
-            elif "3/2" in user_ans_clean and "3/2" in correct_ans_clean:
-                is_correct = True
-            elif "3/2" in user_ans_clean and "frac{3}{2}" in correct_ans_clean:
-                is_correct = True
-            elif "pi/4" in user_ans_clean and "pi/4" in correct_ans_clean:
-                is_correct = True
-            elif "pi/4" in user_ans_clean and "frac{\pi}{4}" in correct_ans_clean:
-                is_correct = True
-        
-        explanation = ""
-        if is_correct:
-            explanation = f"¡Excelente! Tu respuesta **{user_ans}** es completamente correcta. Has aplicado los pasos matemáticos correctos paso a paso. Recuerda que la fórmula matemática se puede visualizar como: $x = {correct_ans}$."
-        else:
-            explanation = f"No es del todo correcto, pero es una excelente oportunidad para aprender. Tu respuesta fue **{user_ans}**, pero el resultado correcto es **{correct_ans}**. El error común aquí suele ser en el despeje o los signos. Recuerda: al mover un término, su signo cambia. ¡Sigue adelante, la constancia hace al maestro!"
-
-        return json.dumps({
-            "is_correct": is_correct,
-            "explanation": explanation
-        })
-
-    # Case B: Explanation (TopicAgent)
-    elif "topic" in system_lower or "explain" in prompt_lower or "explicación" in prompt_lower:
-        level = "Primary"
-        if "secondary" in prompt_lower or "secundaria" in prompt_lower:
-            level = "Secondary"
-        elif "university" in prompt_lower or "universidad" in prompt_lower or "universitaria" in prompt_lower:
-            level = "University"
-
-        topic = "Algebra"
-        if any(w in prompt_lower or w in system_lower for w in ["limite", "continuidad", "derivada", "integral", "calculus"]):
-            topic = "Calculus"
-        elif any(w in prompt_lower or w in system_lower for w in ["pitagora", "rectangulo", "triangulo", "area", "geometry"]):
-            topic = "Geometry"
-        elif any(w in prompt_lower or w in system_lower for w in ["trigono", "seno", "coseno", "tangente"]):
-            topic = "Trigonometry"
-        elif any(w in prompt_lower or w in system_lower for w in ["probabil", "distribucion", "dado", "statistics"]):
-            topic = "Statistics"
-        elif any(w in prompt_lower or w in system_lower for w in ["suma", "resta", "multipli", "divisi", "fracci", "decimal", "arithmetic"]):
-            topic = "Arithmetic"
-        elif any(w in prompt_lower or w in system_lower for w in ["ecuacion", "cuadratica", "matriz", "algebra"]):
-            topic = "Algebra"
-
-        return get_mock_explanation(topic, level)
-
-    # Case D: Motivator (MotivatorAgent)
-    elif "motivator" in system_lower or "score:" in prompt_lower or "motivation" in prompt_lower:
-        score = 5
-        if "score: 0" in prompt_lower or "score: 1" in prompt_lower:
-            score = 1
-        elif "score: 2" in prompt_lower or "score: 3" in prompt_lower:
-            score = 3
-        
-        if score >= 4:
-            return "¡Increíble desempeño! Has demostrado un dominio absoluto de este tema. Sigue con esta racha diaria para desbloquear nuevos niveles. ¡Eres un verdadero matemático estrella!"
-        elif score >= 2:
-            return "¡Buen trabajo! Has logrado resolver varios ejercicios correctamente. Con un poco más de práctica lograrás el puntaje perfecto. ¡No te detengas ahora!"
-        else:
-            return "¡No te rindas! Cada error es un paso más cerca del entendimiento. Repasa la explicación interactiva y vuelve a intentarlo. ¡La perseverancia es la clave en las matemáticas!"
-
-    # Case A: Exercise Generation (expects JSON list of questions)
+    # Precise routing based on Agent class identifier in system instruction
+    if "evaluatoragent" in system_lower:
+        is_evaluator = True
+    elif "exerciseagent" in system_lower:
+        is_evaluator = False
+        return get_exercise_agent_mock(prompt_lower, system_lower)
+    elif "motivatoragent" in system_lower:
+        return get_motivator_agent_mock(prompt_lower)
+    elif "topicagent" in system_lower:
+        return get_topic_agent_mock(prompt_lower, system_lower)
+    elif "hintagent" in system_lower:
+        return "Pista: Intenta agrupar los términos semejantes o despejar la variable paso a paso."
+    elif "protegeagent" in system_lower:
+        return "Entiendo. Creo que para resolver esto deberíamos aplicar la fórmula general. ¿Es correcto?"
     else:
-        # Determine topic and level from prompt
-        level = "Primary"
-        if "secondary" in prompt_lower or "secundaria" in prompt_lower:
-            level = "Secondary"
-        elif "university" in prompt_lower or "universidad" in prompt_lower or "universitaria" in prompt_lower:
-            level = "University"
-            
-        topic = "Algebra"
-        if any(w in prompt_lower or w in system_lower for w in ["limite", "continuidad", "derivada", "integral", "calculus"]):
-            topic = "Calculus"
-        elif any(w in prompt_lower or w in system_lower for w in ["pitagora", "rectangulo", "triangulo", "area", "geometry"]):
-            topic = "Geometry"
-        elif any(w in prompt_lower or w in system_lower for w in ["trigono", "seno", "coseno", "tangente"]):
-            topic = "Trigonometry"
-        elif any(w in prompt_lower or w in system_lower for w in ["probabil", "distribucion", "dado", "statistics"]):
-            topic = "Statistics"
-        elif any(w in prompt_lower or w in system_lower for w in ["suma", "resta", "multipli", "divisi", "fracci", "decimal", "arithmetic"]):
-            topic = "Arithmetic"
-        elif any(w in prompt_lower or w in system_lower for w in ["ecuacion", "cuadratica", "matriz", "algebra"]):
-            topic = "Algebra"
+        # Fallback to old substring rules if no direct agent class name matched
+        if "evaluator" in system_lower or "evaluate" in prompt_lower or "evaluar" in prompt_lower:
+            is_evaluator = True
+        elif "motivator" in system_lower or "score:" in prompt_lower or "motivation" in prompt_lower:
+            return get_motivator_agent_mock(prompt_lower)
+        elif "topic" in system_lower or "explain" in prompt_lower or "explicación" in prompt_lower:
+            return get_topic_agent_mock(prompt_lower, system_lower)
+        elif "exercise" in system_lower or "generate" in prompt_lower or "ejercicio" in prompt_lower:
+            return get_exercise_agent_mock(prompt_lower, system_lower)
+        else:
+            # Default to exercise generator to avoid crashing session starts
+            return get_exercise_agent_mock(prompt_lower, system_lower)
 
-        exercises = get_mock_exercises(topic, level)
-        return json.dumps({"exercises": exercises})
+    # EvaluatorAgent logic
+    user_ans = "unknown"
+    correct_ans = "unknown"
+    
+    lines = prompt.split("\n")
+    for line in lines:
+        if ":" in line:
+            parts = line.split(":", 1)
+            key = parts[0].lower()
+            value = parts[1].strip()
+            if "submitted" in key or "user" in key:
+                user_ans = value
+            elif "correct" in key or "expected" in key:
+                correct_ans = value
+    
+    # Simple cleanup
+    user_ans_clean = user_ans.replace("$", "").replace(" ", "").replace("\"", "").replace("'", "").lower()
+    correct_ans_clean = correct_ans.replace("$", "").replace(" ", "").replace("\"", "").replace("'", "").lower()
+
+    # Check if correct
+    is_correct = False
+    if user_ans_clean == correct_ans_clean:
+        is_correct = True
+    elif user_ans_clean.isdigit() and correct_ans_clean.isdigit():
+        is_correct = int(user_ans_clean) == int(correct_ans_clean)
+    else:
+        # Dynamic factor order-independent check: e.g. (x-3)(x-4) matches (x-4)(x-3)
+        import re
+        user_factors = sorted(re.findall(r'\(([^)]+)\)', user_ans_clean))
+        correct_factors = sorted(re.findall(r'\(([^)]+)\)', correct_ans_clean))
+        if user_factors and correct_factors and user_factors == correct_factors:
+            is_correct = True
+        # Limits cleanup check: e.g. "3/2" matches "\frac{3}{2}"
+        elif "3/2" in user_ans_clean and "3/2" in correct_ans_clean:
+            is_correct = True
+        elif "3/2" in user_ans_clean and "frac{3}{2}" in correct_ans_clean:
+            is_correct = True
+        elif "pi/4" in user_ans_clean and "pi/4" in correct_ans_clean:
+            is_correct = True
+        elif "pi/4" in user_ans_clean and "frac{\pi}{4}" in correct_ans_clean:
+            is_correct = True
+    
+    explanation = ""
+    if is_correct:
+        explanation = f"¡Excelente! Tu respuesta **{user_ans}** es completamente correcta. Has aplicado los pasos matemáticos correctos paso a paso. Recuerda que la fórmula matemática se puede visualizar como: $x = {correct_ans}$."
+    else:
+        explanation = f"No es del todo correcto, pero es una excelente oportunidad para aprender. Tu respuesta fue **{user_ans}**, pero el resultado correcto es **{correct_ans}**. El error común aquí suele ser en el despeje o los signos. Recuerda: al mover un término, su signo cambia. ¡Sigue adelante, la constancia hace al maestro!"
+
+    return json.dumps({
+        "is_correct": is_correct,
+        "explanation": explanation
+    })
+
+
+def get_motivator_agent_mock(prompt_lower: str) -> str:
+    score = 5
+    if "score: 0" in prompt_lower or "score: 1" in prompt_lower:
+        score = 1
+    elif "score: 2" in prompt_lower or "score: 3" in prompt_lower:
+        score = 3
+    
+    if score >= 4:
+        return "¡Increíble desempeño! Has demostrado un dominio absoluto de este tema. Sigue con esta racha diaria para desbloquear nuevos niveles. ¡Eres un verdadero matemático estrella!"
+    elif score >= 2:
+        return "¡Buen trabajo! Has logrado resolver varios ejercicios correctamente. Con un poco más de práctica lograrás el puntaje perfecto. ¡No te detengas ahora!"
+    else:
+        return "¡No te rindas! Cada error es un paso más cerca del entendimiento. Repasa la explicación interactiva y vuelve a intentarlo. ¡La perseverancia es la clave en las matemáticas!"
+
+
+def get_topic_agent_mock(prompt_lower: str, system_lower: str) -> str:
+    level = "Primary"
+    if "secondary" in prompt_lower or "secundaria" in prompt_lower:
+        level = "Secondary"
+    elif "university" in prompt_lower or "universidad" in prompt_lower or "universitaria" in prompt_lower:
+        level = "University"
+
+    topic = "Algebra"
+    if any(w in prompt_lower or w in system_lower for w in ["limite", "continuidad", "derivada", "integral", "calculus"]):
+        topic = "Calculus"
+    elif any(w in prompt_lower or w in system_lower for w in ["pitagora", "rectangulo", "triangulo", "area", "geometry"]):
+        topic = "Geometry"
+    elif any(w in prompt_lower or w in system_lower for w in ["trigono", "seno", "coseno", "tangente"]):
+        topic = "Trigonometry"
+    elif any(w in prompt_lower or w in system_lower for w in ["probabil", "distribucion", "dado", "statistics"]):
+        topic = "Statistics"
+    elif any(w in prompt_lower or w in system_lower for w in ["suma", "resta", "multipli", "divisi", "fracci", "decimal", "arithmetic"]):
+        topic = "Arithmetic"
+    elif any(w in prompt_lower or w in system_lower for w in ["ecuacion", "cuadratica", "matriz", "algebra"]):
+        topic = "Algebra"
+
+    return get_mock_explanation(topic, level)
+
+
+def get_exercise_agent_mock(prompt_lower: str, system_lower: str) -> str:
+    level = "Primary"
+    if "secondary" in prompt_lower or "secundaria" in prompt_lower:
+        level = "Secondary"
+    elif "university" in prompt_lower or "universidad" in prompt_lower or "universitaria" in prompt_lower:
+        level = "University"
+        
+    topic = "Algebra"
+    if any(w in prompt_lower or w in system_lower for w in ["limite", "continuidad", "derivada", "integral", "calculus"]):
+        topic = "Calculus"
+    elif any(w in prompt_lower or w in system_lower for w in ["pitagora", "rectangulo", "triangulo", "area", "geometry"]):
+        topic = "Geometry"
+    elif any(w in prompt_lower or w in system_lower for w in ["trigono", "seno", "coseno", "tangente"]):
+        topic = "Trigonometry"
+    elif any(w in prompt_lower or w in system_lower for w in ["probabil", "distribucion", "dado", "statistics"]):
+        topic = "Statistics"
+    elif any(w in prompt_lower or w in system_lower for w in ["suma", "resta", "multipli", "divisi", "fracci", "decimal", "arithmetic"]):
+        topic = "Arithmetic"
+    elif any(w in prompt_lower or w in system_lower for w in ["ecuacion", "cuadratica", "matriz", "algebra"]):
+        topic = "Algebra"
+
+    exercises = get_mock_exercises(topic, level)
+    return json.dumps({"exercises": exercises})
 
 def get_mock_exercises(topic: str, level: str, area: str = "Arithmetic") -> List[Dict[str, Any]]:
     """Generates highly customized and randomized mock math questions based on topic, area, and level."""

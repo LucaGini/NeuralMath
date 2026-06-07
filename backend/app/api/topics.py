@@ -35,8 +35,8 @@ def get_topics(db: Session = Depends(get_db), current_user: User = Depends(get_c
     """
     Returns the list of topics. Optionally filters by user's current academic level.
     """
-    # Show all topics, but sorting user's level first makes a beautiful UX!
-    topics = db.query(Topic).all()
+    # Show only active topics for students, but sorting user's level first makes a beautiful UX!
+    topics = db.query(Topic).filter(Topic.is_active == True).all()
     # Sort so that current user's level appears first
     sorted_topics = sorted(
         topics, 

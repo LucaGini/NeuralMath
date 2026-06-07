@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, Boolean
 from app.core.database import Base
 
 class Topic(Base):
@@ -9,3 +9,4 @@ class Topic(Base):
     area = Column(String, nullable=False)  # Arithmetic, Algebra, Geometry, Trigonometry, Calculus, Statistics
     level = Column(String, nullable=False) # Primary / Secondary / University
     subtopics = Column(JSON, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
