@@ -38,13 +38,13 @@ export const Navbar: React.FC<NavbarProps> = () => {
   };
 
   return (
-    <nav className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#0c1220]/80 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center transition-colors duration-200">
+    <nav className="border-b border-paper-200 dark:border-paper-800/60 bg-white/80 dark:bg-paper-950/95 backdrop-blur-md sticky top-0 z-40 px-6 py-4 flex justify-between items-center transition-colors duration-200">
       {/* Brand Logo & Title */}
       <div 
         className="flex items-center gap-3 cursor-pointer select-none"
         onClick={() => navigate("/dashboard")}
       >
-        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-0.5 shadow-md shadow-mathPurple-500/10 border border-slate-200/50 overflow-hidden hover:scale-105 transition-transform duration-200">
+        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-0.5 shadow-md shadow-primary-500/10 border border-paper-200/50 overflow-hidden hover:scale-105 transition-transform duration-200">
           <img 
             src="/logo.png" 
             alt="NeuralMath Logo" 
@@ -53,14 +53,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
         </div>
         <div>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black tracking-tight text-slate-800 dark:text-white block">
+            <span className="text-xl font-black tracking-tight text-paper-800 dark:text-white block">
               NeuralMath
             </span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold italic block select-none">
+            <span className="text-[9px] text-paper-400 dark:text-paper-500 font-semibold italic block select-none">
               by Ing. Luca Gini
             </span>
           </div>
-          <span className="text-[10px] text-mathPurple-500 dark:text-mathPurple-400 uppercase tracking-widest font-semibold block">
+          <span className="text-[10px] text-primary-500 dark:text-primary-400 uppercase tracking-widest font-semibold block">
             {t.dashboard}
           </span>
         </div>
@@ -68,28 +68,28 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
       {/* Navigation Links */}
       {token && (
-        <div className="hidden sm:flex items-center gap-1 bg-slate-150/40 dark:bg-slate-900/60 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 transition-colors">
+        <div className="hidden sm:flex items-center gap-1 bg-paper-100/40 dark:bg-paper-900/60 p-1.5 rounded-2xl border border-paper-200/60 dark:border-paper-800/60 transition-colors">
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-paper-600 dark:text-paper-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-paper-50 dark:hover:bg-paper-950 transition-all"
           >
             {language === "es" ? "Panel" : "Dashboard"}
           </button>
           <button
             onClick={() => navigate("/topics")}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-paper-600 dark:text-paper-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-paper-50 dark:hover:bg-paper-950 transition-all"
           >
             {language === "es" ? "Temas" : "Topics"}
           </button>
           <button
             onClick={() => navigate("/progress")}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-paper-600 dark:text-paper-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-paper-50 dark:hover:bg-paper-950 transition-all"
           >
             {t.progress}
           </button>
           <button
             onClick={() => navigate("/profile")}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400 hover:bg-slate-50 dark:hover:bg-[#0c1220] transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-paper-600 dark:text-paper-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-paper-50 dark:hover:bg-paper-950 transition-all"
           >
             {language === "es" ? "Perfil" : "Profile"}
           </button>
@@ -109,17 +109,17 @@ export const Navbar: React.FC<NavbarProps> = () => {
         {/* Language Selector */}
         <button
           onClick={toggleLanguage}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-200 dark:border-slate-800/80 transition-all text-xs font-semibold"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-paper-600 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white hover:bg-paper-100 dark:hover:bg-paper-800/60 border border-paper-200 dark:border-paper-800/60 transition-all text-xs font-semibold"
           title="Cambiar idioma / Change language"
         >
-          <Globe className="w-4 h-4 text-mathPurple-500" />
+          <Globe className="w-4 h-4 text-primary-500" />
           <span>{language === "es" ? "ES" : "EN"}</span>
         </button>
 
         {/* Theme Selector */}
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-200 dark:border-slate-800/80 transition-all"
+          className="p-2.5 rounded-xl text-paper-600 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white hover:bg-paper-100 dark:hover:bg-paper-800/60 border border-paper-200 dark:border-paper-800/60 transition-all"
           title={theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
         >
           {theme === "dark" ? (
@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
         {token && (
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-200 dark:border-slate-800/80 hover:border-red-200 dark:hover:border-red-500/20 transition-all text-sm font-semibold"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-paper-500 dark:text-paper-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 border border-paper-200 dark:border-paper-800/60 hover:border-red-200 dark:hover:border-red-500/20 transition-all text-sm font-semibold"
           >
             <LogOut className="w-4 h-4" />
             <span className="hidden md:inline">{t.logout}</span>

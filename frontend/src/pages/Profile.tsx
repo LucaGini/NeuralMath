@@ -105,20 +105,18 @@ export const Profile: React.FC = () => {
   };
 
   const levelOptions = [
-    { id: "Primary", labelEs: "Primaria", labelEn: "Primary", emoji: "🎒", descEs: "Temas y ejercicios iniciales", descEn: "Basic math & initial topics", color: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/40" },
-    { id: "Secondary", labelEs: "Secundaria", labelEn: "Secondary", emoji: "📐", descEs: "Álgebra, geometría y ecuaciones", descEn: "Algebra, geometry & equations", color: "from-purple-500/10 to-indigo-500/10 border-purple-500/20 text-mathPurple-600 dark:text-mathPurple-400 hover:border-mathPurple-500/40" },
-    { id: "University", labelEs: "Universidad", labelEn: "University", emoji: "🎓", descEs: "Cálculo y álgebra lineal avanzada", descEn: "Advanced calculus & linear algebra", color: "from-cyan-500/10 to-blue-500/10 border-cyan-500/20 text-mathCyan-600 dark:text-mathCyan-400 hover:border-mathCyan-500/40" }
+    { id: "Primary", labelEs: "Primaria", labelEn: "Primary", emoji: "🎒", descEs: "Temas y ejercicios iniciales", descEn: "Basic math & initial topics", color: "from-emerald-500/10 to-teal-500/10 border-emerald-550/20 text-emerald-600 dark:text-emerald-450 hover:border-emerald-500/40" },
+    { id: "Secondary", labelEs: "Secundaria", labelEn: "Secondary", emoji: "📐", descEs: "Álgebra, geometría y ecuaciones", descEn: "Algebra, geometry & equations", color: "from-primary-500/10 to-amber-500/10 border-primary-500/20 text-primary-600 dark:text-primary-450 hover:border-primary-500/40" },
+    { id: "University", labelEs: "Universidad", labelEn: "University", emoji: "🎓", descEs: "Cálculo y álgebra lineal avanzada", descEn: "Advanced calculus & linear algebra", color: "from-chalk-500/10 to-chalk-600/10 border-chalk-550/20 text-chalk-600 dark:text-chalk-400 hover:border-chalk-500/40" }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-800 dark:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-paper-50 dark:bg-paper-950 math-grid text-paper-700 dark:text-paper-100 transition-colors duration-200">
       <Navbar />
 
       {/* Main Container */}
       <main className="max-w-3xl mx-auto px-6 py-12 relative">
-        {/* Background ambient glows */}
-        <div className="absolute top-12 left-1/4 w-72 h-72 bg-mathPurple-600/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-24 right-1/4 w-72 h-72 bg-mathCyan-500/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Background ambient glows removed */}
 
         {/* Section Header */}
         <div className="mb-10 text-center md:text-left relative z-10">
@@ -127,10 +125,10 @@ export const Profile: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center justify-center md:justify-start gap-2.5 mb-2"
           >
-            <div className="p-2 rounded-xl bg-mathPurple-500/10 border border-mathPurple-500/20 shadow-inner">
-              <User className="w-5 h-5 text-mathPurple-500" />
+            <div className="p-2 rounded-xl bg-primary-500/10 border border-primary-500/20 shadow-inner">
+              <User className="w-5 h-5 text-primary-500" />
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-mathPurple-500 dark:text-mathPurple-400">
+            <span className="text-xs font-black uppercase tracking-widest text-primary-600 dark:text-primary-400">
               {language === "es" ? "Ajustes de Cuenta" : "Account Settings"}
             </span>
           </motion.div>
@@ -142,7 +140,7 @@ export const Profile: React.FC = () => {
           >
             {language === "es" ? "Tu Perfil Matemático" : "Your Mathematical Profile"}
           </motion.h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+          <p className="text-paper-500 dark:text-paper-400 mt-2 text-sm">
             {language === "es" 
               ? "Personaliza tus datos y cambia tu nivel para adaptar las lecciones a tu medida." 
               : "Customize your details and change your level to tailor lessons to your needs."}
@@ -151,8 +149,8 @@ export const Profile: React.FC = () => {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 border-4 border-mathPurple-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm font-semibold text-paper-500 dark:text-paper-400">
               {t.loading}
             </p>
           </div>
@@ -162,22 +160,22 @@ export const Profile: React.FC = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white/95 dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 rounded-3xl p-8 shadow-xl dark:shadow-2xl space-y-8 relative z-10"
+            className="bg-white dark:bg-paper-900 border border-paper-250 dark:border-paper-800 p-8 rounded-3xl shadow-sm dark:shadow-2xl space-y-8 relative z-10"
           >
             {/* Header profile status */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/60">
-              <div className="w-14 h-14 bg-mathPurple-500/10 text-mathPurple-500 border border-mathPurple-500/20 rounded-2xl flex items-center justify-center text-xl font-bold shadow-inner">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-paper-50 dark:bg-paper-950/40 border border-paper-200 dark:border-paper-800/60">
+              <div className="w-14 h-14 bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20 rounded-2xl flex items-center justify-center text-xl font-bold shadow-inner">
                 {name.trim() ? name.substring(0, 2).toUpperCase() : "NM"}
               </div>
               <div>
-                <h4 className="font-extrabold text-base text-slate-800 dark:text-white leading-tight">
+                <h4 className="font-extrabold text-base text-paper-800 dark:text-white leading-tight">
                   {name || (language === "es" ? "Estudiante" : "Student")}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-450 mt-0.5">
+                <p className="text-xs text-paper-500 dark:text-paper-400 mt-0.5">
                   {email}
                 </p>
               </div>
-              <div className="ml-auto flex items-center gap-1 px-3 py-1 rounded-xl bg-mathPurple-500/10 border border-mathPurple-500/20 text-mathPurple-500 text-[10px] font-black uppercase tracking-wider">
+              <div className="ml-auto flex items-center gap-1 px-3 py-1 rounded-xl bg-primary-500/10 border border-primary-500/20 text-primary-600 dark:text-primary-400 text-[10px] font-black uppercase tracking-wider">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Activo</span>
               </div>
@@ -199,8 +197,8 @@ export const Profile: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Full Name Input */}
               <div className="space-y-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-slate-650 dark:text-slate-400 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-mathPurple-500" />
+                <label className="text-xs font-extrabold uppercase tracking-wider text-paper-600 dark:text-paper-455 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-primary-500" />
                   <span>{language === "es" ? "Nombre Completo" : "Full Name"}</span>
                 </label>
                 <div className="relative">
@@ -208,7 +206,7 @@ export const Profile: React.FC = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-[#0c1220]/60 border border-slate-200 dark:border-slate-800/80 rounded-2xl px-4 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-mathPurple-500/40 focus:border-mathPurple-500/80 transition-all dark:text-white"
+                    className="w-full bg-paper-50 dark:bg-paper-950/60 border border-paper-250 dark:border-paper-800 rounded-2xl px-4 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all dark:text-white"
                     placeholder={language === "es" ? "Ingresa tu nombre..." : "Enter your full name..."}
                     required
                   />
@@ -217,8 +215,8 @@ export const Profile: React.FC = () => {
 
               {/* Email Input (Read only) */}
               <div className="space-y-2">
-                <label className="text-xs font-extrabold uppercase tracking-wider text-slate-650 dark:text-slate-450 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-slate-400" />
+                <label className="text-xs font-extrabold uppercase tracking-wider text-paper-600 dark:text-paper-455 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-paper-400" />
                   <span>{language === "es" ? "Correo Electrónico" : "Email Address"}</span>
                 </label>
                 <div className="relative">
@@ -226,7 +224,7 @@ export const Profile: React.FC = () => {
                     type="email"
                     value={email}
                     disabled
-                    className="w-full bg-slate-100 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-800/40 rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-500 dark:text-slate-500 cursor-not-allowed select-none focus:outline-none"
+                    className="w-full bg-paper-100 dark:bg-paper-950/30 border border-paper-250 dark:border-paper-800/40 rounded-2xl px-4 py-3.5 text-sm font-semibold text-paper-450 dark:text-paper-500 cursor-not-allowed select-none focus:outline-none"
                   />
                 </div>
               </div>
@@ -234,8 +232,8 @@ export const Profile: React.FC = () => {
 
             {/* Academic Level Picker Section */}
             <div className="space-y-3">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-650 dark:text-slate-400 flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-mathPurple-500" />
+              <label className="text-xs font-extrabold uppercase tracking-wider text-paper-600 dark:text-paper-455 flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-primary-500" />
                 <span>{language === "es" ? "Nivel Académico" : "Academic Level"}</span>
               </label>
               
@@ -246,9 +244,9 @@ export const Profile: React.FC = () => {
                     <div
                       key={opt.id}
                       onClick={() => setLevel(opt.id)}
-                      className={`cursor-pointer p-4 rounded-2xl border bg-slate-50/40 dark:bg-slate-900/20 text-center md:text-left flex flex-col items-center md:items-start space-y-2 select-none transition-all duration-300 ${opt.color} ${
+                      className={`cursor-pointer p-4 rounded-2xl border bg-paper-50/45 dark:bg-paper-950/20 text-center md:text-left flex flex-col items-center md:items-start space-y-2 select-none transition-all duration-300 ${opt.color} ${
                         isSelected 
-                          ? "ring-2 ring-mathPurple-500 border-mathPurple-500/80 bg-mathPurple-500/5 shadow-md shadow-mathPurple-500/5 dark:bg-mathPurple-500/10" 
+                          ? "ring-2 ring-primary-500 border-primary-500 bg-primary-500/5 shadow-md shadow-primary-550/5 dark:bg-primary-500/10" 
                           : "opacity-75 hover:opacity-100 hover:scale-[1.02]"
                       }`}
                     >
@@ -257,7 +255,7 @@ export const Profile: React.FC = () => {
                         <h5 className="font-extrabold text-sm dark:text-white leading-tight">
                           {language === "es" ? opt.labelEs : opt.labelEn}
                         </h5>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-450 mt-1 leading-snug">
+                        <p className="text-[10px] text-paper-450 dark:text-paper-500 mt-1 leading-snug">
                           {language === "es" ? opt.descEs : opt.descEn}
                         </p>
                       </div>
@@ -268,16 +266,16 @@ export const Profile: React.FC = () => {
             </div>
 
             {/* Password Management Divider */}
-            <div className="h-px bg-slate-100 dark:bg-slate-800/60" />
+            <div className="h-px bg-paper-150 dark:bg-paper-800/60" />
 
             <div className="space-y-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <h4 className="font-extrabold text-sm flex items-center gap-1.5">
-                    <Lock className="w-4 h-4 text-mathPurple-500" />
+                    <Lock className="w-4 h-4 text-primary-500" />
                     <span>{language === "es" ? "Cambiar Contraseña" : "Change Password"}</span>
                   </h4>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-450 mt-0.5">
+                  <p className="text-[10px] text-paper-500 dark:text-paper-400 mt-0.5">
                     {language === "es" 
                       ? "Completa estos campos únicamente si deseas actualizar tu contraseña." 
                       : "Fill these fields only if you wish to update your password."}
@@ -299,7 +297,7 @@ export const Profile: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* New Password */}
                 <div className="space-y-2 relative">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-650 dark:text-slate-400">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-paper-600 dark:text-paper-455">
                     {language === "es" ? "Nueva Contraseña" : "New Password"}
                   </label>
                   <div className="relative">
@@ -308,7 +306,7 @@ export const Profile: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={email === "estudiante@neuralmath.edu"}
-                      className={`w-full bg-slate-50 dark:bg-[#0c1220]/60 border border-slate-200 dark:border-slate-800/80 rounded-2xl pl-4 pr-11 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-mathPurple-500/40 focus:border-mathPurple-500/80 transition-all dark:text-white ${
+                      className={`w-full bg-paper-50 dark:bg-paper-950/60 border border-paper-250 dark:border-paper-800 rounded-2xl pl-4 pr-11 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all dark:text-white ${
                         email === "estudiante@neuralmath.edu" ? "cursor-not-allowed opacity-60" : ""
                       }`}
                       placeholder={
@@ -321,7 +319,7 @@ export const Profile: React.FC = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       disabled={email === "estudiante@neuralmath.edu"}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-paper-400 hover:text-paper-600 dark:hover:text-white p-1 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
@@ -330,7 +328,7 @@ export const Profile: React.FC = () => {
 
                 {/* Confirm Password */}
                 <div className="space-y-2 relative">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-slate-650 dark:text-slate-400">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-paper-600 dark:text-paper-455">
                     {language === "es" ? "Confirmar Nueva Contraseña" : "Confirm New Password"}
                   </label>
                   <div className="relative">
@@ -339,7 +337,7 @@ export const Profile: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       disabled={email === "estudiante@neuralmath.edu"}
-                      className={`w-full bg-slate-50 dark:bg-[#0c1220]/60 border border-slate-200 dark:border-slate-800/80 rounded-2xl pl-4 pr-11 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-mathPurple-500/40 focus:border-mathPurple-500/80 transition-all dark:text-white ${
+                      className={`w-full bg-paper-50 dark:bg-paper-950/60 border border-paper-250 dark:border-paper-800 rounded-2xl pl-4 pr-11 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all dark:text-white ${
                         email === "estudiante@neuralmath.edu" ? "cursor-not-allowed opacity-60" : ""
                       }`}
                       placeholder={
@@ -352,7 +350,7 @@ export const Profile: React.FC = () => {
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       disabled={email === "estudiante@neuralmath.edu"}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-paper-400 hover:text-paper-600 dark:hover:text-white p-1 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {showConfirmPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                     </button>
@@ -362,11 +360,11 @@ export const Profile: React.FC = () => {
             </div>
 
             {/* Bottom Actions Row */}
-            <div className="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="flex items-center justify-between pt-6 border-t border-paper-150 dark:border-paper-800/60">
               <button
                 type="button"
                 onClick={() => navigate("/dashboard")}
-                className="px-6 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-700 dark:hover:text-white transition-all select-none"
+                className="px-6 py-3.5 rounded-2xl border border-paper-250 dark:border-paper-800 text-xs font-extrabold uppercase tracking-widest text-paper-550 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-paper-800/60 hover:text-paper-750 dark:hover:text-white transition-all select-none"
               >
                 {language === "es" ? "Volver al Panel" : "Back to Panel"}
               </button>
@@ -374,7 +372,7 @@ export const Profile: React.FC = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-7 py-3.5 bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2.5 shadow-lg shadow-mathPurple-600/10 hover:shadow-mathPurple-500/20 active:scale-95 transition-all select-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-7 py-3.5 bg-primary-600 hover:bg-primary-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-2.5 shadow-lg shadow-primary-600/10 active:scale-[0.98] transition-all select-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

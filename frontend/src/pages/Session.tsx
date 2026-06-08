@@ -107,7 +107,7 @@ export const Session: React.FC = () => {
   const [canvasUsedExercises, setCanvasUsedExercises] = useState<number[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lineWidth] = useState(3);
-  const [drawColor, setDrawColor] = useState("#a855f7"); // Violet accent default
+  const [drawColor, setDrawColor] = useState("#f59e0b"); // Amber accent default
   const [isEraser, setIsEraser] = useState(false);
   const [showScratchpad, setShowScratchpad] = useState(false);
   const [history, setHistory] = useState<string[]>([]);
@@ -459,9 +459,9 @@ export const Session: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-100 p-6 transition-colors duration-200">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500 mb-4"></div>
-        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-paper-50 dark:bg-paper-950 text-paper-700 dark:text-paper-100 p-6 transition-colors duration-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+        <span className="text-sm font-semibold text-paper-500 dark:text-paper-400">
           {loadingMsg}
         </span>
       </div>
@@ -475,39 +475,34 @@ export const Session: React.FC = () => {
     const hasNewBadges = completedSummary.newly_unlocked && completedSummary.newly_unlocked.length > 0;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6 relative overflow-hidden transition-colors duration-200">
+      <div className="min-h-screen flex items-center justify-center bg-paper-50 dark:bg-paper-950 p-6 relative overflow-hidden transition-colors duration-200">
         {/* Background ambient glows */}
-        {isDailyChallenge ? (
+        {isDailyChallenge && (
           <>
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-650/10 rounded-full blur-3xl" />
-          </>
-        ) : (
-          <>
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
           </>
         )}
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`w-full max-w-lg bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center space-y-6 transition-all duration-300 border ${
+          className={`w-full max-w-lg bg-white dark:bg-paper-900 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 text-center space-y-6 transition-all duration-300 border ${
             isDailyChallenge 
               ? "border-orange-500/40 ring-4 ring-orange-500/10 dark:ring-orange-500/5 shadow-orange-550/10" 
-              : "border-slate-200 dark:border-slate-800"
+              : "border-paper-200 dark:border-paper-800"
           }`}
         >
           <div>
             <span className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${
-              isDailyChallenge ? "text-orange-600 dark:text-orange-400" : "text-mathPurple-600 dark:text-mathPurple-400"
+              isDailyChallenge ? "text-orange-600 dark:text-orange-400" : "text-primary-600 dark:text-primary-400"
             }`}>
               {isDailyChallenge 
                 ? (language === "es" ? "¡DESAFÍO DIARIO CONQUISTADO! ⚔️" : "DAILY QUEST CONQUERED! ⚔️")
                 : (language === "es" ? "Desafío Completado" : "Challenge Completed")
               }
             </span>
-            <h2 className="text-3xl font-black text-slate-800 dark:text-white">{topicName}</h2>
+            <h2 className="text-3xl font-black text-paper-800 dark:text-white">{topicName}</h2>
           </div>
 
           {/* New Badges Celebratory Notification Banners */}
@@ -529,10 +524,10 @@ export const Session: React.FC = () => {
                       <span className="text-[10px] text-amber-600 dark:text-amber-400 font-black uppercase tracking-widest block">
                         {t.new_badge}
                       </span>
-                      <span className="text-sm font-bold text-slate-800 dark:text-white block mt-0.5">
+                      <span className="text-sm font-bold text-paper-800 dark:text-white block mt-0.5">
                         {language === "es" ? badge.title_es : badge.title_en}
                       </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-tight">
+                      <span className="text-[10px] text-paper-500 dark:text-paper-400 block mt-0.5 leading-tight">
                         {language === "es" ? badge.desc_es : badge.desc_en}
                       </span>
                     </div>
@@ -544,22 +539,22 @@ export const Session: React.FC = () => {
 
           {/* Gamified Stat badges */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-slate-50 dark:bg-[#161c2c] border border-slate-200 dark:border-slate-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
+            <div className="bg-paper-50 dark:bg-paper-950 border border-paper-200 dark:border-paper-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
               <Trophy className="w-8 h-8 text-yellow-500 mb-2 animate-bounce" />
-              <span className="text-2xl font-black text-slate-800 dark:text-white">
+              <span className="text-2xl font-black text-paper-800 dark:text-white">
                 {completedSummary.score} / {completedSummary.total_questions}
               </span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-1">
+              <span className="text-[9px] text-paper-500 dark:text-paper-400 uppercase tracking-widest font-semibold mt-1">
                 {language === "es" ? "Aciertos" : "Correct"}
               </span>
             </div>
             
-            <div className="bg-slate-50 dark:bg-[#161c2c] border border-slate-200 dark:border-slate-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
+            <div className="bg-paper-50 dark:bg-paper-950 border border-paper-200 dark:border-paper-800/80 p-5 rounded-2xl flex flex-col items-center justify-center transition-colors">
               <Flame className="w-8 h-8 text-orange-500 mb-2" />
-              <span className="text-2xl font-black text-slate-800 dark:text-white">
+              <span className="text-2xl font-black text-paper-800 dark:text-white">
                 {completedSummary.streak_days} {language === "es" ? "Días" : "Days"}
               </span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mt-1">
+              <span className="text-[9px] text-paper-500 dark:text-paper-400 uppercase tracking-widest font-semibold mt-1">
                 {t.active_streak}
               </span>
             </div>
@@ -568,10 +563,10 @@ export const Session: React.FC = () => {
           <div className={`py-4 px-6 rounded-2xl flex items-center justify-between border ${
             isDailyChallenge 
               ? "bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/25" 
-              : "bg-gradient-to-r from-mathPurple-600/10 to-indigo-600/10 border-mathPurple-500/20"
+              : "bg-gradient-to-r from-primary-500/10 to-amber-500/10 border-primary-500/20"
           }`}>
             <span className={`text-sm font-bold ${
-              isDailyChallenge ? "text-orange-700 dark:text-orange-355" : "text-mathPurple-700 dark:text-mathPurple-300"
+              isDailyChallenge ? "text-orange-700 dark:text-orange-355" : "text-primary-700 dark:text-primary-300"
             }`}>
               {language === "es" ? "Puntos de Experiencia:" : "Experience Points:"}
             </span>
@@ -583,18 +578,18 @@ export const Session: React.FC = () => {
           {/* Motivator Agent Box */}
           <div className={`p-6 rounded-2xl relative text-left transition-colors border ${
             isDailyChallenge 
-              ? "bg-slate-50 dark:bg-slate-900/60 border-orange-500/20" 
-              : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800"
+              ? "bg-paper-50 dark:bg-paper-900/60 border-orange-500/20" 
+              : "bg-paper-50 dark:bg-paper-900/60 border-paper-200 dark:border-paper-800"
           }`}>
-            <div className="absolute -top-3.5 left-6 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-0.5 rounded-full flex items-center gap-1.5 transition-colors">
+            <div className="absolute -top-3.5 left-6 bg-white dark:bg-paper-950 border border-paper-200 dark:border-paper-800 px-3 py-0.5 rounded-full flex items-center gap-1.5 transition-colors">
               <Sparkles className={`w-3.5 h-3.5 animate-pulse ${
-                isDailyChallenge ? "text-orange-500" : "text-mathPurple-500 dark:text-mathPurple-400"
+                isDailyChallenge ? "text-orange-500" : "text-primary-500 dark:text-primary-400"
               }`} />
-              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+              <span className="text-[9px] font-bold text-paper-500 dark:text-paper-400 uppercase tracking-widest">
                 MotivatorAgent
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-300 text-sm italic leading-relaxed mt-2">
+            <p className="text-paper-600 dark:text-paper-300 text-sm italic leading-relaxed mt-2">
               "{completedSummary.motivation_message}"
             </p>
           </div>
@@ -604,7 +599,7 @@ export const Session: React.FC = () => {
             className={`w-full font-bold py-4 rounded-2xl shadow-lg transition-all hover:scale-[1.01] active:scale-[0.99] ${
               isDailyChallenge
                 ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-orange-550/20"
-                : "bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white shadow-mathPurple-600/20"
+                : "bg-primary-600 hover:bg-primary-500 text-white shadow-primary-600/10"
             }`}
           >
             {t.finish}
@@ -618,9 +613,9 @@ export const Session: React.FC = () => {
   const progressPercent = ((currentIndex + (evaluation ? 1 : 0)) / exercises.length) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-700 dark:text-slate-100 flex flex-col justify-between transition-colors duration-200">
+    <div className="min-h-screen bg-paper-50 dark:bg-paper-950 math-grid text-paper-700 dark:text-paper-100 flex flex-col justify-between transition-colors duration-200">
       {/* Top Bar with Duolingo Progress */}
-      <header className="border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-[#0c1220] px-6 py-4 flex items-center justify-between gap-6 transition-colors">
+      <header className="border-b border-paper-250 dark:border-paper-900 bg-white dark:bg-paper-950 px-6 py-4 flex items-center justify-between gap-6 transition-colors">
         <button
           onClick={() => {
             showConfirm(
@@ -630,17 +625,17 @@ export const Session: React.FC = () => {
               () => navigate("/topics")
             );
           }}
-          className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-colors"
+          className="p-2 rounded-xl text-paper-500 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white hover:bg-paper-100 dark:hover:bg-paper-800 border border-paper-200 dark:border-paper-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
 
         {/* Progress Bar */}
-        <div className="flex-1 max-w-xl bg-slate-200 dark:bg-slate-800 h-3.5 rounded-full overflow-hidden relative">
+        <div className="flex-1 max-w-xl bg-paper-200 dark:bg-paper-900 h-3.5 rounded-full overflow-hidden relative">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercent}%` }}
-            className={isDailyChallenge ? "bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full" : "bg-gradient-to-r from-mathPurple-500 to-indigo-500 h-full rounded-full"}
+            className={isDailyChallenge ? "bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full" : "bg-primary-500 h-full rounded-full"}
           />
         </div>
 
@@ -666,7 +661,7 @@ export const Session: React.FC = () => {
           </div>
         )}
 
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl transition-colors">
+        <span className="text-xs font-bold text-paper-500 dark:text-paper-400 bg-paper-100 dark:bg-paper-900 border border-paper-200 dark:border-paper-800 px-3 py-1.5 rounded-xl transition-colors">
           {currentIndex + 1} / {exercises.length}
         </span>
       </header>
@@ -683,10 +678,10 @@ export const Session: React.FC = () => {
           key={currentIndex}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`w-full max-w-2xl bg-white dark:bg-[#0c1220] p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-all duration-300 border ${
+          className={`w-full max-w-2xl bg-white dark:bg-paper-900 p-8 rounded-3xl shadow-md dark:shadow-xl space-y-6 transition-all duration-300 border ${
             isDailyChallenge 
               ? "border-orange-500/40 ring-4 ring-orange-500/10 dark:ring-orange-550/5 shadow-orange-500/10" 
-              : "border-slate-200 dark:border-slate-800/80"
+              : "border-paper-250 dark:border-paper-800/80"
           }`}
         >
           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -694,7 +689,7 @@ export const Session: React.FC = () => {
               <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
                 isDailyChallenge
                   ? "text-orange-600 dark:text-orange-400 bg-orange-500/10 border-orange-500/20"
-                  : "text-mathPurple-750 dark:text-mathPurple-400 bg-mathPurple-500/10 border-mathPurple-500/20"
+                  : "text-primary-750 dark:text-primary-400 bg-primary-500/10 border-primary-500/20"
               }`}>
                 {isDailyChallenge
                   ? (language === "es" ? "COMBATE DE JEFE ⚔️" : "BOSS FIGHT ⚔️")
@@ -714,8 +709,8 @@ export const Session: React.FC = () => {
               onClick={() => setShowScratchpad(!showScratchpad)}
               className={`text-xs font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
                 showScratchpad
-                  ? "bg-red-500/10 border-red-500/30 text-red-650 dark:text-red-400 hover:bg-red-500/20"
-                  : "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850 text-slate-650 dark:text-slate-400 hover:text-mathPurple-600 dark:hover:text-mathPurple-400"
+                  ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                  : "bg-paper-100 dark:bg-paper-900 border-paper-200 dark:border-paper-800 text-paper-650 dark:text-paper-400 hover:text-primary-600 dark:hover:text-primary-400"
               }`}
             >
               <span>{showScratchpad ? "❌" : "✏️"}</span>
@@ -723,7 +718,7 @@ export const Session: React.FC = () => {
             </button>
           </div>
 
-          <div className="prose dark:prose-invert text-lg md:text-xl text-slate-800 dark:text-slate-100 font-medium py-4">
+          <div className="prose dark:prose-invert text-lg md:text-xl text-paper-800 dark:text-paper-100 font-medium py-4">
             <MathRenderer text={activeExercise?.question || ""} />
           </div>
 
@@ -736,18 +731,18 @@ export const Session: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-3 overflow-hidden"
               >
-                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 gap-3 flex-wrap">
+                <div className="flex items-center justify-between bg-paper-50 dark:bg-paper-900/60 p-2.5 rounded-2xl border border-paper-200 dark:border-paper-800 gap-3 flex-wrap">
                   {/* Color Palette */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-slate-450 dark:text-slate-500 mr-1 uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-paper-400 dark:text-paper-500 mr-1 uppercase tracking-wider">
                       {language === "es" ? "Color:" : "Color:"}
                     </span>
                     {[
-                      { hex: "#a855f7", label: "Violeta" }, // purple
+                      { hex: "#f59e0b", label: "Ámbar" },  // primary/amber
                       { hex: "#3b82f6", label: "Azul" },   // blue
                       { hex: "#10b981", label: "Menta" },  // emerald
                       { hex: "#ef4444", label: "Rojo" },   // red
-                      { hex: theme === "dark" ? "#f1f5f9" : "#0f172a", label: theme === "dark" ? "Blanco" : "Negro" }
+                      { hex: theme === "dark" ? "#f1f5f9" : "#1c1917", label: theme === "dark" ? "Blanco" : "Negro" }
                     ].map((cOpt) => (
                       <button
                         key={cOpt.hex}
@@ -759,8 +754,8 @@ export const Session: React.FC = () => {
                         style={{ backgroundColor: cOpt.hex }}
                         className={`w-6 h-6 rounded-full border transition-all ${
                           drawColor === cOpt.hex && !isEraser
-                            ? "ring-2 ring-offset-2 ring-mathPurple-500 border-white"
-                            : "border-slate-350 dark:border-slate-750"
+                            ? "ring-2 ring-offset-2 ring-primary-500 border-white"
+                            : "border-paper-300 dark:border-paper-700"
                         }`}
                         title={cOpt.label}
                       />
@@ -776,7 +771,7 @@ export const Session: React.FC = () => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
                         isEraser
                           ? "bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-                          : "bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-550 hover:text-slate-700 dark:hover:text-slate-300"
+                          : "bg-white dark:bg-paper-950 border border-paper-200 dark:border-paper-800 text-paper-550 hover:text-paper-750 dark:hover:text-white"
                       }`}
                       title={language === "es" ? "Borrador" : "Eraser"}
                     >
@@ -789,7 +784,7 @@ export const Session: React.FC = () => {
                       type="button"
                       onClick={handleUndo}
                       disabled={history.length === 0}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-550 hover:text-slate-700 dark:hover:text-slate-300 disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-paper-950 border border-paper-200 dark:border-paper-800 text-paper-550 hover:text-paper-750 dark:hover:text-white disabled:opacity-40 disabled:pointer-events-none transition-all flex items-center gap-1.5"
                       title={language === "es" ? "Deshacer" : "Undo"}
                     >
                       <span>↩️</span>
@@ -800,7 +795,7 @@ export const Session: React.FC = () => {
                       key="clear-btn"
                       type="button"
                       onClick={handleClear}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-950 border border-red-200 dark:border-red-950/30 text-red-500 hover:bg-red-500/5 transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-paper-950 border border-red-200 dark:border-red-950/30 text-red-500 hover:bg-red-500/5 transition-all flex items-center gap-1.5"
                       title={language === "es" ? "Limpiar Todo" : "Clear All"}
                     >
                       <span>🗑️</span>
@@ -809,7 +804,7 @@ export const Session: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-850 rounded-2xl overflow-hidden bg-slate-50 dark:bg-[#070b14]/50 shadow-inner">
+                <div className="relative border-2 border-dashed border-paper-250 dark:border-paper-800 rounded-2xl overflow-hidden bg-paper-50 dark:bg-paper-950/50 shadow-inner">
                   <canvas
                     ref={canvasRef}
                     width={600}
@@ -824,27 +819,27 @@ export const Session: React.FC = () => {
                     className="w-full h-[250px] block cursor-crosshair touch-none"
                   />
                   {/* Floating helpful watermark */}
-                  <div className="absolute bottom-2.5 right-3.5 text-[10px] font-bold text-slate-350 dark:text-slate-600 pointer-events-none select-none uppercase tracking-widest">
+                  <div className="absolute bottom-2.5 right-3.5 text-[10px] font-bold text-paper-400 dark:text-paper-600 pointer-events-none select-none uppercase tracking-widest">
                     ✏️ {language === "es" ? "Lienzo de Operaciones" : "Scratch Workspace"}
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-
+ 
           {/* If Teach-Back Alby Task, render Alby's Robot Misconception Card here! */}
           {activeExercise?.protege_answer && activeExercise?.protege_explanation && (
-            <div className="bg-slate-50 dark:bg-slate-900/40 border border-mathPurple-500/30 p-6 rounded-2xl space-y-4 relative overflow-hidden transition-colors shadow-inner">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+            <div className="bg-paper-50 dark:bg-paper-900/40 border border-primary-500/30 p-6 rounded-2xl space-y-4 relative overflow-hidden transition-colors shadow-inner">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary-500/5 rounded-full blur-xl" />
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-mathPurple-100 dark:bg-mathPurple-950/40 rounded-xl flex items-center justify-center text-3xl animate-bounce">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-950/40 rounded-xl flex items-center justify-center text-3xl animate-bounce">
                   🤖
                 </div>
                 <div>
-                  <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
+                  <span className="text-[10px] text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider block">
                     Compañero Virtual
                   </span>
-                  <h4 className="font-extrabold text-slate-850 dark:text-white text-base">Alby cometió un error</h4>
+                  <h4 className="font-extrabold text-paper-800 dark:text-white text-base">Alby cometió un error</h4>
                 </div>
               </div>
               
@@ -852,27 +847,27 @@ export const Session: React.FC = () => {
                 <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest block">
                   Su respuesta final:
                 </span>
-                <div className="text-base font-bold text-slate-800 dark:text-white">
+                <div className="text-base font-bold text-paper-800 dark:text-white">
                   <MathRenderer text={activeExercise.protege_answer || ""} />
                 </div>
               </div>
-
+ 
               <div className="space-y-1">
-                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <span className="text-[10px] font-black text-paper-400 dark:text-paper-500 uppercase tracking-widest block">
                   Su razonamiento:
                 </span>
-                <p className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed italic">
+                <p className="text-paper-650 dark:text-paper-300 text-sm leading-relaxed italic">
                   <MathRenderer text={activeExercise.protege_explanation || ""} />
                 </p>
               </div>
             </div>
           )}
-
+ 
           <form onSubmit={handleSubmitAnswer} className="space-y-4">
             {activeExercise?.protege_answer ? (
               /* === TEACH BACK TUTOR REVIEW TEXTAREA === */
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 block">
+                <label className="text-xs font-bold text-paper-500 dark:text-paper-400 block">
                   ✍️ {language === "es" ? "Tu explicación correctora para Alby:" : "Your corrective explanation for Alby:"}
                 </label>
                 <textarea
@@ -882,7 +877,7 @@ export const Session: React.FC = () => {
                   }}
                   placeholder={language === "es" ? "Escríbele una explicación a Alby indicando qué error cometió y cómo llegar a la solución correcta..." : "Write Alby an explanation showing his error and how to reach the correct answer..."}
                   rows={4}
-                  className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-sm"
+                  className="w-full bg-paper-50 dark:bg-paper-950 border border-paper-200 dark:border-paper-800 rounded-2xl px-5 py-4 text-paper-850 dark:text-paper-100 placeholder-paper-400 dark:placeholder-paper-600 focus:outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-paper-950 transition-colors text-sm"
                   disabled={!!evaluation}
                   required
                   autoFocus
@@ -903,13 +898,13 @@ export const Session: React.FC = () => {
                         onClick={() => !evaluation && setSelectedChoice(choice)}
                         className={`p-4 rounded-2xl border text-left text-sm font-semibold transition-all relative overflow-hidden flex flex-col justify-between min-h-[90px]
                           ${selectedChoice === choice
-                            ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/20"
-                            : "bg-slate-50 dark:bg-[#161c2c]/40 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:border-slate-350 hover:bg-slate-100/40"
+                            ? "bg-primary-500/10 border-primary-500 text-primary-700 dark:text-primary-350 ring-2 ring-primary-500/20"
+                            : "bg-paper-50 dark:bg-paper-955 border-paper-200 dark:border-paper-800 text-paper-700 dark:text-paper-350 hover:border-paper-350 hover:bg-paper-100/40"
                           }
                           ${evaluation ? "cursor-not-allowed opacity-75" : "cursor-pointer"}
                         `}
                       >
-                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">
+                        <span className="text-[10px] font-black text-paper-400 dark:text-paper-500 uppercase tracking-widest block mb-1">
                           {language === "es" ? "Opción" : "Option"} {["A", "B", "C", "D"][idx]}
                         </span>
                         <div className="flex-1 flex items-center">
@@ -919,7 +914,7 @@ export const Session: React.FC = () => {
                     ))}
                   </div>
                 )}
-
+ 
                 {/* === FILL IN THE BLANK === */}
                 {activeExercise?.exercise_type === "fill_blank" && (
                   <input
@@ -929,13 +924,13 @@ export const Session: React.FC = () => {
                       if (!evaluation) setUserAnswer(e.target.value);
                     }}
                     placeholder={t.fill_missing}
-                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border-2 border-dashed border-mathPurple-400/40 focus:border-mathPurple-500 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base text-center font-bold"
+                    className="w-full bg-paper-50 dark:bg-paper-950 border-2 border-dashed border-primary-400/40 focus:border-primary-500 rounded-2xl px-5 py-4 text-paper-850 dark:text-paper-100 placeholder-paper-400 dark:placeholder-paper-600 focus:outline-none focus:bg-white dark:focus:bg-paper-950 transition-colors text-base text-center font-bold"
                     disabled={!!evaluation}
                     required
                     autoFocus
                   />
                 )}
-
+ 
                 {/* === FREE TEXT === */}
                 {(!activeExercise?.exercise_type || activeExercise.exercise_type === "free_text") && (
                   <input
@@ -945,7 +940,7 @@ export const Session: React.FC = () => {
                       if (!evaluation) setUserAnswer(e.target.value);
                     }}
                     placeholder={language === "es" ? "Ingresa tu respuesta..." : "Type your answer..."}
-                    className="w-full bg-slate-50 dark:bg-[#161c2c]/40 border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 text-slate-850 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-650 focus:outline-none focus:border-mathPurple-500 focus:bg-white dark:focus:bg-[#0c1220] transition-colors text-base"
+                    className="w-full bg-paper-50 dark:bg-paper-955 border border-paper-200 dark:border-paper-800 rounded-2xl px-5 py-4 text-paper-850 dark:text-paper-100 placeholder-paper-400 dark:placeholder-paper-650 focus:outline-none focus:border-primary-500 focus:bg-white dark:focus:bg-paper-950 transition-colors text-base"
                     disabled={!!evaluation}
                     required
                     autoFocus
@@ -953,7 +948,7 @@ export const Session: React.FC = () => {
                 )}
               </>
             )}
-
+ 
             {!evaluation && (
               <button
                 type="submit"
@@ -961,7 +956,7 @@ export const Session: React.FC = () => {
                 className={`w-full font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm disabled:opacity-50 disabled:pointer-events-none ${
                   isDailyChallenge
                     ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white shadow-lg shadow-orange-500/20"
-                    : "bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white shadow-lg shadow-mathPurple-600/10"
+                    : "bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-600/10"
                 }`}
               >
                 {submitting 
@@ -971,7 +966,7 @@ export const Session: React.FC = () => {
               </button>
             )}
           </form>
-
+ 
           {/* Socratic Hint ladder */}
           {!evaluation && activeExercise && (
             <div className="space-y-3 pt-2">
@@ -991,7 +986,7 @@ export const Session: React.FC = () => {
                 type="button"
                 onClick={handleRequestHint}
                 disabled={hintLevel >= 4 || loadingHint}
-                className="text-xs font-bold text-slate-450 dark:text-slate-500 hover:text-mathPurple-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="text-xs font-bold text-paper-500 dark:text-paper-500 hover:text-primary-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 {hintLevel === 0
                   ? (language === "es" ? "💡 ¿Necesitas una pista? (−5 XP)" : "💡 Need a hint? (−5 XP)")
@@ -999,11 +994,11 @@ export const Session: React.FC = () => {
                     ? (language === "es" ? `💡 Pista más específica (−5 XP adicionales)` : `💡 More specific hint (−5 more XP)`)
                     : (language === "es" ? "✨ Máximo de pistas alcanzado" : "✨ Maximum hints reached")
                 }
-                {loadingHint && <span className="animate-spin rounded-full h-3 h-3 border-t-2 border-mathPurple-500" />}
+                {loadingHint && <span className="animate-spin rounded-full h-3 h-3 border-t-2 border-primary-500" />}
               </button>
             </div>
           )}
-
+ 
           {/* Evaluator Agent Panel Popups */}
           <AnimatePresence>
             {evaluation && (
@@ -1022,7 +1017,7 @@ export const Session: React.FC = () => {
                     🏷️ {language === "es" ? errorTypeLabelsEs[evaluation.error_type] : errorTypeLabelsEn[evaluation.error_type]}
                   </div>
                 )}
-
+ 
                 <div className="flex items-center justify-between font-bold text-sm mb-3 gap-4">
                   <div className="flex items-center gap-2">
                     {evaluation.is_correct ? (
@@ -1037,7 +1032,7 @@ export const Session: React.FC = () => {
                       </>
                     )}
                   </div>
-
+ 
                   <button
                     type="button"
                     onClick={() => {
@@ -1077,11 +1072,11 @@ export const Session: React.FC = () => {
                     💡 {evaluation.misconception}
                   </div>
                 )}
-
-                <div className="text-slate-650 dark:text-slate-300 text-sm leading-relaxed prose dark:prose-invert">
+ 
+                <div className="text-paper-650 dark:text-paper-300 text-sm leading-relaxed prose dark:prose-invert">
                   <MathRenderer text={evaluation.explanation} />
                 </div>
-
+ 
                 <button
                   onClick={handleContinue}
                   className={`w-full mt-5 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm ${
@@ -1090,7 +1085,7 @@ export const Session: React.FC = () => {
                         ? "bg-orange-655 hover:bg-orange-550 bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg shadow-orange-550/15"
                         : "bg-green-600 hover:bg-green-500 text-white"
                       : isDailyChallenge
-                        ? "bg-red-655 hover:bg-red-550 bg-gradient-to-r from-red-600 to-orange-650 text-white shadow-lg shadow-red-550/15"
+                        ? "bg-red-655 hover:bg-red-550 bg-gradient-to-r from-red-600 to-orange-655 text-white shadow-lg shadow-red-550/15"
                         : "bg-amber-600 hover:bg-amber-500 text-white"
                   }`}
                 >
@@ -1104,7 +1099,7 @@ export const Session: React.FC = () => {
       </main>
       
       {/* Bottom decorative banner */}
-      <footer className="py-4 text-center text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest bg-white dark:bg-slate-950/40 border-t border-slate-200 dark:border-slate-900 transition-colors">
+      <footer className="py-4 text-center text-[10px] text-paper-400 dark:text-paper-600 uppercase tracking-widest bg-white dark:bg-paper-950/40 border-t border-paper-200 dark:border-paper-900 transition-colors">
         NeuralMath Interactive Learning Loop
       </footer>
     </div>

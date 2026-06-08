@@ -141,8 +141,8 @@ const AlbyAvatar: React.FC<{ level: number }> = ({ level }) => {
 
       <defs>
         <linearGradient id="alby-face-grad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={level === 5 ? "#1e1b4b" : "#64748b"} />
-          <stop offset="100%" stopColor={level === 5 ? "#47106e" : "#334155"} />
+          <stop offset="0%" stopColor={level === 5 ? "#1e1b4b" : "#78716c"} />
+          <stop offset="100%" stopColor={level === 5 ? "#47106e" : "#44403c"} />
         </linearGradient>
       </defs>
     </svg>
@@ -259,8 +259,8 @@ export const Dashboard: React.FC = () => {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper-50 dark:bg-paper-950 transition-colors duration-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
       </div>
     );
   }
@@ -337,7 +337,7 @@ export const Dashboard: React.FC = () => {
   const paginatedJournal = journal.slice(startJournalIndex, startJournalIndex + JOURNAL_ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-700 dark:text-slate-200 pb-12 transition-colors duration-200">
+    <div className="min-h-screen bg-paper-50 dark:bg-paper-950 math-grid text-paper-700 dark:text-paper-200 pb-12 transition-colors duration-200">
       {/* Central Navigation Bar */}
       <Navbar />
 
@@ -347,28 +347,27 @@ export const Dashboard: React.FC = () => {
         {/* Profile Card & Achievements Left Column */}
         <div className="lg:col-span-1 space-y-6">
           {/* User Profile Card */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-mathPurple-500/5 rounded-full blur-xl" />
+          <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
             
             <div className="flex items-center gap-4">
               {/* Interactive Avatar Container */}
               <div 
                 onClick={() => setAvatarModalOpen(true)}
-                className="w-16 h-16 bg-slate-100 dark:bg-slate-800/80 border-2 border-mathPurple-500/30 hover:border-mathPurple-500 rounded-2xl flex items-center justify-center text-3xl cursor-pointer hover:scale-105 transition-all shadow-inner group relative"
+                className="w-16 h-16 bg-paper-55 dark:bg-paper-800/80 border-2 border-primary-500/30 hover:border-primary-500 rounded-2xl flex items-center justify-center text-3xl cursor-pointer hover:scale-105 transition-all shadow-inner group relative"
                 title={t.change_avatar}
               >
                 <span>{activeAvatar.emoji}</span>
-                <div className="absolute -bottom-1 -right-1 bg-mathPurple-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute -bottom-1 -right-1 bg-primary-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Sparkles className="w-2.5 h-2.5" />
                 </div>
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                <h2 className="text-xl font-bold text-paper-800 dark:text-white flex items-center gap-1.5">
                   {user.name}
                 </h2>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-mathPurple-500 dark:text-mathPurple-400" />
+                <div className="flex items-center gap-1.5 text-xs text-paper-500 dark:text-paper-400 mt-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-primary-500 dark:text-primary-400" />
                   <span>
                     {user.level === "Primary"
                       ? t.primary
@@ -377,25 +376,25 @@ export const Dashboard: React.FC = () => {
                       : t.university}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 italic block mt-0.5">
+                <span className="text-[10px] text-paper-400 dark:text-paper-500 italic block mt-0.5">
                   {language === "es" ? activeAvatar.desc_es : activeAvatar.desc_en}
                 </span>
               </div>
             </div>
 
             {/* Daily Streak & XP Stats */}
-            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
-              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
+            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-paper-100 dark:border-paper-800/60">
+              <div className="flex flex-col items-center p-3 bg-paper-50 dark:bg-paper-900/40 rounded-2xl border border-paper-100 dark:border-paper-800/50 transition-colors">
                 <Flame className="w-6 h-6 text-orange-500 mb-1" />
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.streak_days}</span>
-                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+                <span className="text-lg font-bold text-paper-800 dark:text-white">{user.streak_days}</span>
+                <span className="text-[9px] text-paper-500 dark:text-paper-400 uppercase tracking-wider font-semibold">
                   {t.streak} ({t.streak_days})
                 </span>
               </div>
-              <div className="flex flex-col items-center p-3 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800/50 transition-colors">
+              <div className="flex flex-col items-center p-3 bg-paper-50 dark:bg-paper-900/40 rounded-2xl border border-paper-100 dark:border-paper-800/50 transition-colors">
                 <Trophy className="w-6 h-6 text-yellow-500 mb-1" />
-                <span className="text-lg font-bold text-slate-800 dark:text-white">{user.xp_total} XP</span>
-                <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+                <span className="text-lg font-bold text-paper-800 dark:text-white">{user.xp_total} XP</span>
+                <span className="text-[9px] text-paper-500 dark:text-paper-400 uppercase tracking-wider font-semibold">
                   {t.xp}
                 </span>
               </div>
@@ -404,7 +403,7 @@ export const Dashboard: React.FC = () => {
             {/* Start Practice button */}
             <button
               onClick={() => navigate("/topics")}
-              className="w-full mt-6 bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-mathPurple-600/10 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm"
+              className="w-full mt-6 bg-primary-600 hover:bg-primary-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-primary-600/10 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all text-sm"
             >
               {t.start_practice}
               <ChevronRight className="w-4 h-4" />
@@ -431,12 +430,11 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Alby Affinity & Level Card */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-xl" />
+          <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl relative overflow-hidden shadow-md dark:shadow-xl transition-colors duration-200">
             
             <div className="flex items-center gap-4">
               {/* Dynamic Avatar display with hover effect */}
-              <div className="w-16 h-16 bg-slate-50 dark:bg-[#070b14]/50 border-2 border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-inner relative group p-1 transition-all duration-300 hover:border-emerald-500/40">
+              <div className="w-16 h-16 bg-paper-50 dark:bg-paper-950/50 border-2 border-emerald-500/20 rounded-2xl flex items-center justify-center shadow-inner relative group p-1 transition-all duration-300 hover:border-emerald-500/40">
                 <div className="w-full h-full flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                   <AlbyAvatar level={albyLevel} />
                 </div>
@@ -444,16 +442,16 @@ export const Dashboard: React.FC = () => {
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-bold text-slate-800 dark:text-white text-sm">
+                  <h4 className="font-bold text-paper-800 dark:text-white text-sm">
                     Alby ({albyInfo.name})
                   </h4>
                   <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
                     Nivel {albyLevel}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-paper-500 dark:text-paper-400 mt-1">
                   {language === "es" 
-                    ? "¡Tu compañero robótico de aprendizaje!" 
+                    ? "¡Tu companion robótico de aprendizaje!" 
                     : "Your robotic learning companion!"}
                 </p>
               </div>
@@ -461,11 +459,11 @@ export const Dashboard: React.FC = () => {
 
             {/* Progress Bar towards next level */}
             <div className="mt-5 space-y-1.5">
-              <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              <div className="flex justify-between text-[10px] font-bold text-paper-400 dark:text-paper-500 uppercase tracking-widest">
                 <span>XP: {albyXpInLevel} / 100</span>
                 <span>{language === "es" ? "Siguiente Nivel" : "Next Level"}</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-200/50 dark:border-slate-850/40 relative shadow-inner">
+              <div className="w-full bg-paper-100 dark:bg-paper-800 h-3 rounded-full overflow-hidden border border-paper-200/50 dark:border-paper-800/40 relative shadow-inner">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${albyXpInLevel}%` }}
@@ -485,12 +483,12 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Gamified Achievements Gallery */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-            <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-2">
-              <Award className="w-5 h-5 text-mathPurple-500" />
+          <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+            <h3 className="text-base font-bold text-paper-800 dark:text-white flex items-center gap-2 mb-2">
+              <Award className="w-5 h-5 text-primary-500" />
               {t.achievements}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+            <p className="text-xs text-paper-500 dark:text-paper-400 mb-5 leading-relaxed">
               {t.achievements_sub}
             </p>
 
@@ -502,22 +500,22 @@ export const Dashboard: React.FC = () => {
                     key={key} 
                     className={`flex items-center gap-4 p-3.5 rounded-2xl border transition-all ${
                       unlocked 
-                        ? "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/80" 
-                        : "bg-slate-100/40 dark:bg-slate-950/20 border-slate-100 dark:border-slate-900/60 opacity-60"
+                        ? "bg-paper-50 dark:bg-paper-900/30 border-paper-200 dark:border-paper-800/80" 
+                        : "bg-paper-100/40 dark:bg-paper-950/20 border-paper-100 dark:border-paper-900/60 opacity-60"
                     }`}
                   >
                     {/* Badge Icon */}
                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-2xl border shadow-md bg-gradient-to-tr ${
-                      unlocked ? config.color : "from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-900 border-slate-300 dark:border-slate-800"
+                      unlocked ? config.color : "from-paper-200 to-paper-300 dark:from-paper-800 dark:to-paper-900 border-paper-300 dark:border-paper-800"
                     }`}>
-                      {unlocked ? config.emoji : <Lock className="w-4 h-4 text-slate-400 dark:text-slate-600" />}
+                      {unlocked ? config.emoji : <Lock className="w-4 h-4 text-paper-400 dark:text-paper-600" />}
                     </div>
 
                     <div className="flex-1">
-                      <span className={`text-xs font-bold block ${unlocked ? "text-slate-800 dark:text-white" : "text-slate-500 dark:text-slate-600"}`}>
+                      <span className={`text-xs font-bold block ${unlocked ? "text-paper-800 dark:text-white" : "text-paper-500 dark:text-paper-600"}`}>
                         {language === "es" ? config.title_es : config.title_en}
                       </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                      <span className="text-[10px] text-paper-500 dark:text-paper-400 block mt-0.5 leading-snug">
                         {language === "es"
                           ? (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_es : "Bloqueado: " + config.desc_es)
                           : (unlocked ? user.achievements.find(a => a.badge_key === key)?.desc_en : "Locked: " + config.desc_en)}
@@ -533,9 +531,7 @@ export const Dashboard: React.FC = () => {
         {/* Analytics & Progression Curve Right Columns */}
         <div className="lg:col-span-2 space-y-6">
           {/* Cosmic Quest Daily Calendar Row */}
-          <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-orange-500/20 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-all duration-200">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 dark:bg-orange-500/10 rounded-full blur-2xl animate-pulse" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-2xl" />
+          <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-orange-500/20 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-all duration-200">
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
               <div className="text-left">
@@ -543,10 +539,10 @@ export const Dashboard: React.FC = () => {
                   <Sparkles className="w-3.5 h-3.5 animate-spin text-orange-500" />
                   {language === "es" ? "Desafío Cósmico Especial" : "Special Cosmic Challenge"}
                 </span>
-                <h3 className="text-xl font-black text-slate-800 dark:text-white mt-1">
+                <h3 className="text-xl font-black text-paper-800 dark:text-white mt-1">
                   {language === "es" ? "⚔️ Misión Diaria: Boss Fight" : "⚔️ Daily Quest: Boss Fight"}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md leading-relaxed">
+                <p className="text-xs text-paper-500 dark:text-paper-400 mt-1 max-w-md leading-relaxed">
                   {language === "es"
                     ? "Un único problema matemático de alta dificultad adaptado a tu nivel académico. ¡Completarlo hoy te otorga un súper bono de +100 XP y potencia el nivel de Alby!"
                     : "A single high-difficulty math problem custom-tailored to your level. Completing it grants a massive +100 XP bonus and empowers Alby!"}
@@ -578,14 +574,14 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Calendar Row with Planetary Nodes */}
-            <div className="grid grid-cols-7 gap-2 md:gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="grid grid-cols-7 gap-2 md:gap-4 mt-6 pt-6 border-t border-paper-100 dark:border-paper-800/60">
               {weekDays.map((day, idx) => {
                 const isToday = day.isToday;
                 const isCompleted = (isToday && dailyCompleted) || day.isPast;
                 
                 return (
                   <div key={idx} className="flex flex-col items-center">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-2.5">
+                    <span className="text-[10px] font-bold text-paper-400 dark:text-paper-500 mb-2.5">
                       {day.name}
                     </span>
                     
@@ -594,10 +590,10 @@ export const Dashboard: React.FC = () => {
                         isToday
                           ? dailyCompleted
                             ? "bg-gradient-to-tr from-emerald-500 to-teal-500 border-emerald-400 shadow-emerald-500/20 text-white scale-105"
-                            : "bg-slate-50 dark:bg-slate-900 border-cyan-500 ring-2 ring-cyan-500/30 animate-pulse text-slate-800 dark:text-white scale-105 shadow-cyan-500/10"
+                            : "bg-paper-50 dark:bg-paper-900 border-cyan-500 ring-2 ring-cyan-500/30 animate-pulse text-paper-800 dark:text-white scale-105 shadow-cyan-500/10"
                           : isCompleted
                             ? "bg-emerald-500/5 dark:bg-emerald-955/40 border-emerald-200/20 dark:border-emerald-800/80 text-emerald-600 dark:text-emerald-400"
-                            : "bg-slate-100 dark:bg-slate-950/60 border-slate-200 dark:border-slate-900 text-slate-400 dark:text-slate-600"
+                            : "bg-paper-100 dark:bg-paper-950/60 border-paper-200 dark:border-paper-900 text-paper-400 dark:text-paper-600"
                       }`}
                       title={day.name}
                     >
@@ -614,13 +610,13 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Tab Selection Navigation */}
-          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
+          <div className="flex border-b border-paper-200 dark:border-paper-800/60 gap-6">
             <button
               onClick={() => setActiveTab("history")}
               className={`pb-3 font-bold text-sm tracking-wide transition-all ${
                 activeTab === "history"
-                  ? "border-b-2 border-mathPurple-500 text-mathPurple-500"
-                  : "text-slate-400 hover:text-slate-700 dark:text-slate-450 dark:hover:text-slate-300"
+                  ? "border-b-2 border-primary-500 text-primary-500"
+                  : "text-paper-400 hover:text-paper-700 dark:text-paper-500 dark:hover:text-paper-300"
               }`}
             >
               {language === "es" ? "📊 Rendimiento e Historial" : "📊 Performance & History"}
@@ -630,7 +626,7 @@ export const Dashboard: React.FC = () => {
               className={`pb-3 font-bold text-sm tracking-wide transition-all flex items-center gap-1.5 ${
                 activeTab === "journal"
                   ? "border-b-2 border-emerald-500 text-emerald-500"
-                  : "text-slate-400 hover:text-slate-700 dark:text-slate-450 dark:hover:text-slate-300"
+                  : "text-paper-400 hover:text-paper-700 dark:text-paper-500 dark:hover:text-paper-300"
               }`}
             >
               <span>📓 {language === "es" ? "La Bitácora de Alby" : "Alby's Journal"}</span>
@@ -645,8 +641,8 @@ export const Dashboard: React.FC = () => {
           {activeTab === "history" && (
             <>
               {/* Accuracy Progress chart */}
-              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-                <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4">
+              <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+                <h3 className="text-base font-bold text-paper-800 dark:text-white mb-4">
                   {language === "es" ? "Historial de Precisión (Últimas 10 Sesiones)" : "Accuracy Performance (Last 10 Sessions)"}
                 </h3>
                 <div className="h-64 flex flex-col justify-center">
@@ -655,20 +651,20 @@ export const Dashboard: React.FC = () => {
                       <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#1e293b" : "#e2e8f0"} />
-                        <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
-                        <YAxis stroke="#64748b" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={theme === "dark" ? "#292524" : "#e7e5e4"} />
+                        <XAxis dataKey="date" stroke="#78716c" fontSize={10} tickLine={false} />
+                        <YAxis stroke="#78716c" fontSize={10} tickLine={false} domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: theme === "dark" ? "#0f172a" : "#ffffff",
-                            borderColor: theme === "dark" ? "#334155" : "#cbd5e1",
+                            backgroundColor: theme === "dark" ? "#1c1917" : "#ffffff",
+                            borderColor: theme === "dark" ? "#44403c" : "#e7e5e4",
                             borderRadius: "16px",
                             boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                            color: theme === "dark" ? "#f8fafc" : "#0f172a",
+                            color: theme === "dark" ? "#fafaf9" : "#1c1917",
                             fontSize: "12px",
                             border: "1px solid"
                           }}
@@ -682,7 +678,7 @@ export const Dashboard: React.FC = () => {
                         <Area 
                           type="monotone" 
                           dataKey={language === "es" ? "Puntaje" : "Score"} 
-                          stroke="#8b5cf6" 
+                          stroke="#f59e0b" 
                           strokeWidth={2.5} 
                           fillOpacity={1} 
                           fill="url(#colorScore)" 
@@ -690,12 +686,12 @@ export const Dashboard: React.FC = () => {
                       </AreaChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl h-full transition-colors duration-200">
+                    <div className="flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-paper-200 dark:border-paper-800/80 rounded-2xl h-full transition-colors duration-200">
                       <div className="text-4xl mb-2">📈</div>
-                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-350">
+                      <p className="text-sm font-semibold text-paper-700 dark:text-paper-300">
                         {language === "es" ? "¡Gráfico de Progreso Vacío!" : "No Progression Data Yet!"}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[280px]">
+                      <p className="text-xs text-paper-400 dark:text-paper-500 mt-1 max-w-[280px]">
                         {language === "es" 
                           ? "Completa tu primer entrenamiento matemático para visualizar tu curva de aprendizaje." 
                           : "Complete your first math training session to visualize your accuracy learning curve here."}
@@ -706,9 +702,9 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Recent sessions */}
-              <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
-                <h3 className="text-base font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-mathPurple-500" />
+              <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl shadow-md dark:shadow-xl transition-colors duration-200">
+                <h3 className="text-base font-bold text-paper-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary-500" />
                   {t.history}
                 </h3>
                 
@@ -716,16 +712,16 @@ export const Dashboard: React.FC = () => {
                   {paginatedHistory.map((record) => (
                     <div
                       key={record.id}
-                      className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/40 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl hover:border-slate-300 dark:hover:hover:border-slate-700/60 transition-all duration-150"
+                      className="flex items-center justify-between p-4 bg-paper-50 dark:bg-paper-900/40 border border-paper-200/80 dark:border-paper-800/80 rounded-2xl hover:border-paper-300 dark:hover:hover:border-paper-700/60 transition-all duration-150"
                     >
                       <div>
-                        <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block">
+                        <span className="text-[10px] text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider block">
                           {record.topic.area}
                         </span>
-                        <span className="font-bold text-slate-800 dark:text-white text-sm">{record.topic.name}</span>
+                        <span className="font-bold text-paper-800 dark:text-white text-sm">{record.topic.name}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 block">
+                        <span className="text-sm font-semibold text-paper-700 dark:text-paper-205 block">
                           {record.score} / {record.total_exercises || 5} {language === "es" ? "correctas" : "correct"}
                         </span>
                         <span className="text-xs text-green-600 dark:text-green-400 font-bold block">
@@ -735,7 +731,7 @@ export const Dashboard: React.FC = () => {
                     </div>
                   ))}
                   {history.length === 0 && (
-                    <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
+                    <div className="text-center py-8 text-paper-400 dark:text-paper-500 text-sm">
                       {t.history_empty}
                     </div>
                   )}
@@ -746,7 +742,7 @@ export const Dashboard: React.FC = () => {
                       <button
                         onClick={() => setHistoryPage((prev) => Math.max(1, prev - 1))}
                         disabled={historyPage === 1}
-                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="p-2 rounded-xl border border-paper-200 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-950 text-paper-500 hover:text-paper-800 dark:text-paper-450 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
                         title={language === "es" ? "Página anterior" : "Previous page"}
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
@@ -758,8 +754,8 @@ export const Dashboard: React.FC = () => {
                           onClick={() => setHistoryPage(page)}
                           className={`w-8 h-8 rounded-xl border text-xs font-bold transition-all ${
                             historyPage === page
-                              ? "bg-gradient-to-r from-mathPurple-600 to-indigo-600 border-mathPurple-500 text-white shadow-md shadow-mathPurple-600/10"
-                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-455 hover:text-slate-800 dark:hover:text-white"
+                              ? "bg-primary-600 border-primary-500 text-white shadow-md shadow-primary-600/10"
+                              : "border-paper-200 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-950 text-paper-600 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white"
                           }`}
                         >
                           {page}
@@ -769,7 +765,7 @@ export const Dashboard: React.FC = () => {
                       <button
                         onClick={() => setHistoryPage((prev) => Math.min(totalHistoryPages, prev + 1))}
                         disabled={historyPage === totalHistoryPages}
-                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="p-2 rounded-xl border border-paper-200 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-950 text-paper-500 hover:text-paper-800 dark:text-paper-450 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
                         title={language === "es" ? "Siguiente página" : "Next page"}
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -782,23 +778,23 @@ export const Dashboard: React.FC = () => {
           )}
 
           {activeTab === "journal" && (
-            <div className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-colors duration-200">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-6">
-                <h3 className="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800/60 p-6 rounded-3xl shadow-md dark:shadow-xl relative overflow-hidden transition-colors duration-200">
+              <div className="flex items-center justify-between border-b border-paper-100 dark:border-paper-800/60 pb-3 mb-6">
+                <h3 className="text-base font-bold text-paper-800 dark:text-white flex items-center gap-2">
                   📓 {language === "es" ? "Apuntes de Alby" : "Alby's Journal"}
                 </h3>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-bold">
+                <span className="text-[10px] text-paper-400 dark:text-paper-505 uppercase tracking-widest font-bold">
                   {language === "es" ? "Metacognición Activa" : "Active Metacognition"}
                 </span>
               </div>
 
               {journal.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800/80 rounded-2xl">
+                <div className="text-center py-12 border-2 border-dashed border-paper-200 dark:border-paper-800/80 rounded-2xl">
                   <div className="text-4xl mb-2">🤖📓</div>
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-355">
+                  <p className="text-sm font-semibold text-paper-700 dark:text-paper-300">
                     {language === "es" ? "La bitácora está vacía" : "Alby's journal is empty!"}
                   </p>
-                  <p className="text-xs text-slate-450 dark:text-slate-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                  <p className="text-xs text-paper-500 dark:text-paper-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
                     {language === "es"
                       ? "Enséñale a tu compañero Alby resolviendo correctamente lecciones en el modo 'Enseñar a Alby'."
                       : "Teach your companion robot Alby by correctly resolving corrective feedback tasks in 'Teach Alby' mode."}
@@ -815,7 +811,7 @@ export const Dashboard: React.FC = () => {
                   {/* Notebook spiral rings representation */}
                   <div className="absolute left-[-15px] top-0 bottom-0 w-2 flex flex-col justify-around pointer-events-none opacity-40">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="w-4 h-4 bg-slate-300 dark:bg-slate-750 rounded-full border border-slate-400 dark:border-slate-900 shadow-inner" />
+                      <div key={i} className="w-4 h-4 bg-paper-300 dark:bg-paper-700 rounded-full border border-paper-400 dark:border-paper-900 shadow-inner" />
                     ))}
                   </div>
 
@@ -823,17 +819,17 @@ export const Dashboard: React.FC = () => {
                     {paginatedJournal.map((entry, idx) => (
                       <div
                         key={entry.id}
-                        className="bg-amber-50/40 dark:bg-slate-900/60 border-l-4 border-amber-400 dark:border-emerald-500/80 p-4 rounded-r-2xl shadow-sm relative group hover:scale-[1.01] transition-transform duration-150"
+                        className="bg-amber-50/40 dark:bg-paper-950/60 border-l-4 border-amber-400 dark:border-emerald-500/80 p-4 rounded-r-2xl shadow-sm relative group hover:scale-[1.01] transition-transform duration-150"
                       >
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-[10px] text-amber-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
                             {language === "es" ? `Lección Aprendida #${journal.length - (startJournalIndex + idx)}` : `Insight Taught #${journal.length - (startJournalIndex + idx)}`} — {entry.concept}
                           </span>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500">
+                          <span className="text-[9px] text-paper-400 dark:text-paper-500">
                             {new Date(entry.created_at).toLocaleDateString(language === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" })}
                           </span>
                         </div>
-                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 italic leading-relaxed">
+                        <div className="text-sm font-semibold text-paper-800 dark:text-paper-100 italic leading-relaxed">
                           <MathRenderer text={`"${entry.entry_text}"`} />
                         </div>
                       </div>
@@ -846,7 +842,7 @@ export const Dashboard: React.FC = () => {
                       <button
                         onClick={() => setJournalPage((prev) => Math.max(1, prev - 1))}
                         disabled={journalPage === 1}
-                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="p-2 rounded-xl border border-paper-250 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-800 text-paper-500 hover:text-paper-800 dark:text-paper-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
                         title={language === "es" ? "Página anterior" : "Previous page"}
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
@@ -859,7 +855,7 @@ export const Dashboard: React.FC = () => {
                           className={`w-8 h-8 rounded-xl border text-xs font-bold transition-all ${
                             journalPage === page
                               ? "bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-500 text-white shadow-md shadow-emerald-600/10"
-                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-455 hover:text-slate-800 dark:hover:text-white"
+                              : "border-paper-250 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-800 text-paper-650 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white"
                           }`}
                         >
                           {page}
@@ -869,7 +865,7 @@ export const Dashboard: React.FC = () => {
                       <button
                         onClick={() => setJournalPage((prev) => Math.min(totalJournalPages, prev + 1))}
                         disabled={journalPage === totalJournalPages}
-                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1220] hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                        className="p-2 rounded-xl border border-paper-250 dark:border-paper-800 bg-white dark:bg-paper-900 hover:bg-paper-50 dark:hover:bg-paper-800 text-paper-500 hover:text-paper-800 dark:text-paper-400 dark:hover:text-white disabled:opacity-50 disabled:pointer-events-none transition-colors"
                         title={language === "es" ? "Siguiente página" : "Next page"}
                       >
                         <ChevronRight className="w-3.5 h-3.5" />
@@ -891,13 +887,13 @@ export const Dashboard: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+              className="w-full max-w-lg bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
             >
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-mathPurple-500" />
+              <h3 className="text-lg font-bold text-paper-800 dark:text-white mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary-500" />
                 {t.select_avatar}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              <p className="text-xs text-paper-500 dark:text-paper-400 mb-5 leading-relaxed">
                 {language === "es" ? "Elige el rostro de las matemáticas que te acompañará en tu aprendizaje." : "Choose the mathematician figure to guide your daily training loop."}
               </p>
 
@@ -908,8 +904,8 @@ export const Dashboard: React.FC = () => {
                     onClick={() => !updatingAvatar && handleAvatarChange(item.id)}
                     className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer hover:scale-[1.01] transition-all ${
                       user.avatar_id === item.id 
-                        ? "bg-mathPurple-50 dark:bg-mathPurple-950/20 border-mathPurple-500 text-mathPurple-900 dark:text-mathPurple-300"
-                        : "bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+                        ? "bg-primary-50 dark:bg-primary-950/20 border-primary-500 text-primary-900 dark:text-primary-300"
+                        : "bg-paper-50 dark:bg-paper-900/30 border-paper-200 dark:border-paper-800 hover:border-paper-350 dark:hover:border-paper-700"
                     }`}
                   >
                     <span className="text-3xl">{item.emoji}</span>
@@ -923,11 +919,11 @@ export const Dashboard: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-paper-100 dark:border-paper-800">
                 <button
                   disabled={updatingAvatar}
                   onClick={() => setAvatarModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-50 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-paper-250 dark:border-paper-800 hover:bg-paper-100 dark:hover:bg-paper-800/80 text-xs font-bold text-paper-600 dark:text-paper-400 disabled:opacity-50 transition-colors"
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
                 </button>
@@ -942,14 +938,14 @@ export const Dashboard: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-lg bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+              className="w-full max-w-lg bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
             >
-              <div className="flex items-center gap-3.5 border-b border-slate-100 dark:border-slate-800/80 pb-4 mb-4">
+              <div className="flex items-center gap-3.5 border-b border-paper-100 dark:border-paper-800/80 pb-4 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-3xl animate-bounce">
                   🤖
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800 dark:text-white">
+                  <h3 className="text-lg font-black text-paper-800 dark:text-white">
                     {language === "es" ? "Enseñar a Alby" : "Tutoring Alby"}
                   </h3>
                   <span className="text-[10px] text-emerald-600 dark:text-emerald-450 uppercase tracking-widest font-black block">
@@ -959,7 +955,7 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Subtitle description */}
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              <p className="text-xs text-paper-500 dark:text-paper-400 mb-5 leading-relaxed">
                 {language === "es" 
                   ? "Alby es tu compañero robótico que está aprendiendo. Ayúdale a encontrar y corregir sus deslices matemáticos. Selecciona qué temas quieres repasar con él."
                   : "Alby is your learning robot companion. Help him identify and socratic-correct his math slips. Select the topics you want to practice with him."}
@@ -967,10 +963,10 @@ export const Dashboard: React.FC = () => {
 
               {/* Topics Selection Checklist */}
               <div className="space-y-3 mb-6">
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                <label className="block text-[10px] font-black text-paper-400 dark:text-paper-500 uppercase tracking-widest">
                   {language === "es" ? "Selecciona Temas de Enfoque" : "Select Focus Topics"}
                 </label>
-                <div className="max-h-48 overflow-y-auto pr-1 space-y-2 border border-slate-100 dark:border-slate-800/60 p-3 rounded-2xl bg-slate-50/50 dark:bg-slate-900/10">
+                <div className="max-h-48 overflow-y-auto pr-1 space-y-2 border border-paper-100 dark:border-paper-800/60 p-3 rounded-2xl bg-paper-50/50 dark:bg-paper-900/10">
                   {topics
                     .filter((t) => t.level.toLowerCase() === user.level.toLowerCase())
                     .map((tItem) => {
@@ -988,7 +984,7 @@ export const Dashboard: React.FC = () => {
                           className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:scale-[1.005] active:scale-[0.995] transition-all text-xs font-semibold ${
                             isSelected
                               ? "bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500 text-emerald-800 dark:text-emerald-450"
-                              : "bg-white dark:bg-[#0f172a] border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
+                              : "bg-white dark:bg-paper-950 border-paper-200 dark:border-paper-800 text-paper-650 dark:text-paper-400 hover:border-paper-350 dark:hover:border-paper-700"
                           }`}
                         >
                           <input
@@ -1002,7 +998,7 @@ export const Dashboard: React.FC = () => {
                       );
                     })}
                   {topics.filter((t) => t.level.toLowerCase() === user.level.toLowerCase()).length === 0 && (
-                    <p className="text-xs text-slate-450 dark:text-slate-500 italic py-2 text-center">
+                    <p className="text-xs text-paper-450 dark:text-paper-500 italic py-2 text-center">
                       {language === "es" ? "Cargando temas disponibles..." : "Loading available topics..."}
                     </p>
                   )}
@@ -1011,7 +1007,7 @@ export const Dashboard: React.FC = () => {
 
               {/* Number of exercises picker */}
               <div className="space-y-3 mb-6">
-                <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                <label className="block text-[10px] font-black text-paper-400 dark:text-paper-500 uppercase tracking-widest">
                   {language === "es" ? "Cantidad de Desafíos" : "Number of Challenges"}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1022,7 +1018,7 @@ export const Dashboard: React.FC = () => {
                       className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${
                         albyDuration === num
                           ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-500/10"
-                          : "bg-white dark:bg-[#0f172a] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                          : "bg-white dark:bg-paper-950 text-paper-600 dark:text-paper-400 border-paper-200 dark:border-paper-800 hover:border-paper-355 dark:hover:border-paper-700"
                       }`}
                     >
                       {num} {language === "es" ? "Ejercicios" : "Problems"}
@@ -1032,10 +1028,10 @@ export const Dashboard: React.FC = () => {
               </div>
 
               {/* Actions Footer */}
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-paper-100 dark:border-paper-800/80">
                 <button
                   onClick={() => setAlbyModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-paper-250 dark:border-paper-800 hover:bg-paper-100 dark:hover:bg-paper-800/80 text-xs font-bold text-paper-600 dark:text-paper-400 transition-colors"
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
                 </button>

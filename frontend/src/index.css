@@ -4,55 +4,50 @@
 
 @layer base {
   html {
-    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: 'Nunito', system-ui, sans-serif;
+  }
+  h1, h2 {
+    font-family: 'DM Serif Display', serif;
+    letter-spacing: -0.02em;
+  }
+  code, .mono {
+    font-family: 'DM Mono', monospace;
   }
 }
 
-/* Glassmorphism utility helpers */
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glass-light {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.03);
-}
-
-/* Premium scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
-}
-
-/* Mathematical grid sheet background pattern */
+/* Grid de papel milimetrado — REEMPLAZAR .math-grid */
 .math-grid {
-  background-image: 
-    linear-gradient(to right, rgba(99, 102, 241, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(99, 102, 241, 0.055) 1px, transparent 1px) !important;
-  background-size: 32px 32px !important;
+  background-image:
+    linear-gradient(to right, rgba(245, 158, 11, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.055) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
 }
 
 .dark .math-grid {
-  background-image: 
-    linear-gradient(to right, rgba(99, 102, 241, 0.065) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(99, 102, 241, 0.065) 1px, transparent 1px) !important;
+  background-image:
+    linear-gradient(to right, rgba(245, 158, 11, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(245, 158, 11, 0.07) 1px, transparent 1px) !important;
+  background-size: 28px 28px !important;
 }
 
+/* Glassmorphism — SOLO para modals/overlays, NO cards */
+.glass-overlay {
+  background: rgba(12, 10, 9, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(231, 229, 228, 0.8);
+}
+
+/* Scrollbar cálido */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #57534e; /* paper-600 */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover { background: #78716c; }

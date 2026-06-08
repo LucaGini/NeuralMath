@@ -165,14 +165,14 @@ export const TopicSelection: React.FC = () => {
 
   if (loadingTopics) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-mathPurple-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-paper-50 dark:bg-paper-950 transition-colors duration-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] math-grid text-slate-700 dark:text-slate-200 pb-16 transition-colors duration-200">
+    <div className="min-h-screen bg-paper-50 dark:bg-paper-950 math-grid text-paper-700 dark:text-paper-200 pb-16 transition-colors duration-200">
       {/* Sticky Header Navbar */}
       <Navbar />
 
@@ -180,7 +180,7 @@ export const TopicSelection: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6 mt-6 flex items-center gap-4">
         <button
           onClick={() => navigate("/dashboard")}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60 border border-slate-200 dark:border-slate-800 transition-all text-xs font-semibold"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-paper-500 dark:text-paper-400 hover:text-paper-800 dark:hover:text-white hover:bg-paper-100 dark:hover:bg-paper-800/85 border border-paper-200 dark:border-paper-800 transition-all text-xs font-semibold"
         >
           <ArrowLeft className="w-4 h-4" />
           {t.back}
@@ -191,7 +191,7 @@ export const TopicSelection: React.FC = () => {
         
         {/* Left Side: Topic list (spanning 5 cols on lg) */}
         <div className="md:col-span-5 space-y-4">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
+          <h3 className="text-lg font-bold text-paper-800 dark:text-white mb-2">
             {language === "es" ? "Temas Disponibles" : "Available Topics"}
           </h3>
           <div className="grid grid-cols-1 gap-3 max-h-[65vh] overflow-y-auto pr-2">
@@ -201,19 +201,19 @@ export const TopicSelection: React.FC = () => {
                 onClick={() => handleSelectTopic(tItem)}
                 className={`text-left p-5 rounded-2xl border transition-all flex flex-col justify-between items-start gap-4 relative overflow-hidden ${
                   selectedTopic?.id === tItem.id
-                    ? "bg-mathPurple-50 dark:bg-mathPurple-600/10 border-mathPurple-500 shadow-md"
-                    : "bg-white dark:bg-[#0c1220] border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/50 dark:hover:bg-[#12192a]/50"
+                    ? "bg-primary-50 dark:bg-primary-600/10 border-primary-500 shadow-md"
+                    : "bg-white dark:bg-paper-900 border-paper-200 dark:border-paper-850 hover:border-paper-350 dark:hover:border-paper-700 hover:bg-paper-50 dark:hover:bg-paper-800"
                 }`}
               >
-                <div className="absolute top-0 right-0 w-12 h-12 bg-mathPurple-500/5 rounded-full blur-lg" />
+                <div className="absolute top-0 right-0 w-12 h-12 bg-primary-500/5 rounded-full blur-lg" />
                 <div>
-                  <span className="text-[10px] text-mathPurple-600 dark:text-mathPurple-400 font-bold uppercase tracking-wider block mb-1">
+                  <span className="text-[10px] text-primary-600 dark:text-primary-400 font-bold uppercase tracking-wider block mb-1">
                     {tItem.area === "Arithmetic" ? (language === "es" ? "Aritmética" : "Arithmetic") : tItem.area === "Algebra" ? (language === "es" ? "Álgebra" : "Algebra") : tItem.area === "Geometry" ? (language === "es" ? "Geometría" : "Geometry") : tItem.area === "Trigonometry" ? (language === "es" ? "Trigonometría" : "Trigonometry") : tItem.area === "Calculus" ? (language === "es" ? "Cálculo" : "Calculus") : (language === "es" ? "Estadística" : "Statistics")}
                   </span>
-                  <h4 className="font-bold text-slate-800 dark:text-white text-base">{tItem.name}</h4>
+                  <h4 className="font-bold text-paper-800 dark:text-white text-base">{tItem.name}</h4>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/60 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-800/80">
-                  <GraduationCap className="w-3.5 h-3.5 text-mathPurple-600 dark:text-mathPurple-400" />
+                <div className="flex items-center gap-1 text-[11px] text-paper-500 dark:text-paper-400 bg-paper-100 dark:bg-paper-950 px-2.5 py-1 rounded-full border border-paper-200 dark:border-paper-800/80">
+                  <GraduationCap className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
                   <span>
                     {tItem.level === "Primary"
                       ? t.primary
@@ -235,13 +235,13 @@ export const TopicSelection: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="h-full min-h-[400px] bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center text-center p-8 shadow-md dark:shadow-xl transition-colors duration-200"
+                className="h-full min-h-[400px] bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl flex flex-col items-center justify-center text-center p-8 shadow-md dark:shadow-xl transition-colors duration-200"
               >
-                <HelpCircle className="w-16 h-16 text-slate-300 dark:text-slate-700 mb-4 animate-pulse" />
-                <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">
+                <HelpCircle className="w-16 h-16 text-paper-300 dark:text-paper-700 mb-4 animate-pulse" />
+                <h4 className="text-lg font-bold text-paper-700 dark:text-paper-300">
                   {language === "es" ? "Ningún tema seleccionado" : "No topic selected"}
                 </h4>
-                <p className="text-slate-400 dark:text-slate-500 text-sm max-w-sm mt-2">
+                <p className="text-paper-450 dark:text-paper-500 text-sm max-w-sm mt-2">
                   {language === "es" 
                     ? "Elige uno de los temas del listado para que el TopicAgent genere tu explicación matemática personalizada."
                     : "Choose one of the topics from the list so the TopicAgent can generate your custom math explanation."}
@@ -253,15 +253,15 @@ export const TopicSelection: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-md dark:shadow-xl flex flex-col justify-between min-h-[500px] transition-colors duration-200"
+                className="bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl p-6 md:p-8 shadow-md dark:shadow-xl flex flex-col justify-between min-h-[500px] transition-colors duration-200"
               >
                 {loadingExplanation ? (
                   <div className="flex flex-col items-center justify-center py-24 text-center">
-                    <Loader2 className="w-10 h-10 text-mathPurple-500 animate-spin mb-4" />
-                    <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+                    <Loader2 className="w-10 h-10 text-primary-500 animate-spin mb-4" />
+                    <span className="text-sm font-semibold text-paper-500 dark:text-paper-400">
                       {language === "es" ? "TopicAgent estructurando lección..." : "TopicAgent compiling lesson..."}
                     </span>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 max-w-xs mt-2">
+                    <span className="text-[11px] text-paper-400 dark:text-paper-500 max-w-xs mt-2">
                       {language === "es" 
                         ? `Organizando analogías y fórmulas matemáticas para tu nivel de ${selectedTopic.level === "Primary" ? "Primaria" : selectedTopic.level === "Secondary" ? "Secundaria" : "Universidad"}.`
                         : `Organizing math analogies and formulas tailored for your ${selectedTopic.level} level.`}
@@ -269,12 +269,12 @@ export const TopicSelection: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6 gap-4">
+                    <div className="flex items-center justify-between border-b border-paper-100 dark:border-paper-800/80 pb-4 mb-6 gap-4">
                       <div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block">
+                        <span className="text-[10px] text-paper-400 dark:text-paper-500 font-bold uppercase tracking-wider block">
                           {language === "es" ? "Lección Interactiva" : "Interactive Lesson"}
                         </span>
-                        <h3 className="text-xl font-black text-slate-850 dark:text-white mt-0.5">
+                        <h3 className="text-xl font-black text-paper-800 dark:text-white mt-0.5">
                           {selectedTopic.name}
                         </h3>
                       </div>
@@ -292,7 +292,7 @@ export const TopicSelection: React.FC = () => {
                         className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all text-xs font-bold shrink-0 ${
                           isSpeaking
                             ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-500/20"
-                            : "bg-mathPurple-500/10 border-mathPurple-500/30 text-mathPurple-700 dark:text-mathPurple-400 hover:bg-mathPurple-500/20"
+                            : "bg-primary-500/10 border-primary-500/30 text-primary-750 dark:text-primary-400 hover:bg-primary-500/20"
                         }`}
                       >
                         {isSpeaking ? (
@@ -311,8 +311,8 @@ export const TopicSelection: React.FC = () => {
 
                     {/* Subtopics Selector */}
                     {selectedTopic.subtopics && selectedTopic.subtopics.length > 0 && (
-                      <div className="mb-6 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-2xl">
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mb-2.5">
+                      <div className="mb-6 bg-paper-50/50 dark:bg-paper-900/30 border border-paper-200 dark:border-paper-800/50 p-4 rounded-2xl">
+                        <span className="text-[10px] text-paper-400 dark:text-paper-500 font-bold uppercase tracking-wider block mb-2.5">
                           {language === "es" ? "Subtemas de Enfoque (Opcional)" : "Focus Subtopics (Optional)"}
                         </span>
                         <div className="flex flex-wrap gap-2">
@@ -320,8 +320,8 @@ export const TopicSelection: React.FC = () => {
                             onClick={() => handleSelectTopic(selectedTopic)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                               !selectedSubtopic
-                                ? "bg-mathPurple-600 text-white border-mathPurple-600 shadow-md shadow-mathPurple-500/10"
-                                : "bg-white dark:bg-[#0f172a] text-slate-655 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                                ? "bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-500/10"
+                                : "bg-white dark:bg-paper-950 text-paper-600 dark:text-paper-400 border-paper-200 dark:border-paper-800 hover:border-paper-350 dark:hover:border-paper-700"
                             }`}
                           >
                             {language === "es" ? "✨ Todo el Tema" : "✨ Complete Topic"}
@@ -333,8 +333,8 @@ export const TopicSelection: React.FC = () => {
                               title={sub.description}
                               className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
                                 selectedSubtopic?.name === sub.name
-                                  ? "bg-mathPurple-500 text-white border-mathPurple-500 shadow-md shadow-mathPurple-500/10"
-                                  : "bg-white dark:bg-[#0f172a] text-slate-655 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700"
+                                  ? "bg-primary-500 text-white border-primary-500 shadow-md shadow-primary-500/10"
+                                  : "bg-white dark:bg-paper-950 text-paper-650 dark:text-paper-400 border-paper-200 dark:border-paper-800 hover:border-paper-350 dark:hover:border-paper-700"
                               }`}
                             >
                               {sub.name}
@@ -342,7 +342,7 @@ export const TopicSelection: React.FC = () => {
                           ))}
                         </div>
                         {selectedSubtopic && (
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2.5 italic">
+                          <p className="text-[11px] text-paper-500 dark:text-paper-400 mt-2.5 italic">
                             🎯 {selectedSubtopic.description}
                           </p>
                         )}
@@ -351,29 +351,29 @@ export const TopicSelection: React.FC = () => {
 
                     {subtopicExplanationLoading ? (
                       <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <Loader2 className="w-8 h-8 text-mathPurple-500 animate-spin mb-3" />
-                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        <Loader2 className="w-8 h-8 text-primary-500 animate-spin mb-3" />
+                        <span className="text-xs font-semibold text-paper-500 dark:text-paper-400">
                           {language === "es" ? "TopicAgent enfocando lección..." : "TopicAgent focusing lesson..."}
                         </span>
                       </div>
                     ) : (
-                      <div className="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 text-sm md:text-base leading-relaxed">
+                      <div className="prose dark:prose-invert max-w-none text-paper-600 dark:text-paper-300 text-sm md:text-base leading-relaxed">
                         <MathRenderer text={explanation} />
                       </div>
                     )}
 
-                    <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="border-t border-paper-100 dark:border-paper-800/80 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                       <div>
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500 block">
+                        <span className="text-[11px] text-paper-400 dark:text-paper-500 block">
                           {language === "es" ? "¿Listo para resolver desafíos?" : "Ready to solve challenges?"}
                         </span>
-                        <span className="text-xs font-bold text-mathPurple-600 dark:text-mathPurple-400 block">
+                        <span className="text-xs font-bold text-primary-600 dark:text-primary-450 block">
                           {language === "es" ? "Ejercicios dinámicos te esperan" : "Dynamic exercises await you"}
                         </span>
                       </div>
                       <button
                         onClick={handleStartSession}
-                        className="w-full sm:w-auto bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-mathPurple-600/20 text-sm"
+                        className="w-full sm:w-auto bg-primary-600 hover:bg-primary-500 text-white font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary-600/10 text-sm"
                       >
                         {language === "es" ? "Iniciar Desafío" : "Start Session"}
                         <Play className="w-4 h-4" />
@@ -396,21 +396,21 @@ export const TopicSelection: React.FC = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-xl bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
+              className="w-full max-w-xl bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl p-6 shadow-2xl transition-colors duration-200"
             >
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-mathPurple-500" />
+              <h3 className="text-lg font-bold text-paper-800 dark:text-white mb-2 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary-500" />
                 {language === "es" ? "Selecciona tu Aventura" : "Select Your Adventure"}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+              <p className="text-xs text-paper-500 dark:text-paper-400 mb-5 leading-relaxed">
                 {language === "es" 
                   ? "NeuralMath genera una misión y una historia continua con tus ejercicios. Elige el tema que prefieras:"
                   : "NeuralMath generates a dynamic narrative quest matching your math problems. Choose your adventure theme:"}
               </p>
 
               {/* Session Duration Selector */}
-              <div className="mb-5 bg-slate-50/50 dark:bg-slate-900/10 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/80">
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2.5 uppercase tracking-wider">
+              <div className="mb-5 bg-paper-50/50 dark:bg-paper-900/10 p-4 rounded-2xl border border-paper-100 dark:border-paper-800/80">
+                <span className="text-xs font-bold text-paper-500 dark:text-paper-400 block mb-2.5 uppercase tracking-wider">
                   ⏱️ {language === "es" ? "Duración de la Sesión" : "Session Duration"}
                 </span>
                 <div className="grid grid-cols-3 gap-2">
@@ -425,8 +425,8 @@ export const TopicSelection: React.FC = () => {
                       onClick={() => setSelectedDuration(d.val)}
                       className={`py-2 px-3 rounded-xl border text-[11px] font-extrabold transition-all duration-150 ${
                         selectedDuration === d.val
-                          ? "bg-mathPurple-500/10 border-mathPurple-500 text-mathPurple-700 dark:text-mathPurple-300 ring-2 ring-mathPurple-500/15"
-                          : "bg-white dark:bg-slate-950/20 border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700"
+                          ? "bg-primary-500/10 border-primary-500 text-primary-700 dark:text-primary-300 ring-2 ring-primary-500/15"
+                          : "bg-white dark:bg-paper-950 border-paper-200 dark:border-paper-800 text-paper-600 dark:text-paper-400 hover:border-paper-350 dark:hover:border-paper-700"
                       }`}
                     >
                       {language === "es" ? d.label_es : d.label_en}
@@ -440,16 +440,16 @@ export const TopicSelection: React.FC = () => {
                   <div
                     key={themeItem.id}
                     onClick={() => handleStartWithTheme(themeItem.id)}
-                    className="flex items-center gap-4 p-4 rounded-2xl border bg-slate-50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800 hover:border-mathPurple-500/50 hover:bg-mathPurple-50/10 dark:hover:bg-[#12192a] cursor-pointer hover:scale-[1.01] transition-all duration-150 group"
+                    className="flex items-center gap-4 p-4 rounded-2xl border bg-paper-50 dark:bg-paper-900/30 border-paper-200 dark:border-paper-800 hover:border-primary-500/50 hover:bg-primary-50/10 dark:hover:bg-paper-850 cursor-pointer hover:scale-[1.01] transition-all duration-150 group"
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border shadow-md bg-gradient-to-tr ${themeItem.color} text-white`}>
                       {themeItem.icon}
                     </div>
                     <div className="flex-1">
-                      <span className="text-sm font-extrabold block text-slate-800 dark:text-white group-hover:text-mathPurple-600 dark:group-hover:text-mathPurple-400 transition-colors">
+                      <span className="text-sm font-extrabold block text-paper-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {language === "es" ? themeItem.title_es : themeItem.title_en}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                      <span className="text-xs text-paper-500 dark:text-paper-400 block mt-0.5 leading-snug">
                         {language === "es" ? themeItem.desc_es : themeItem.desc_en}
                       </span>
                     </div>
@@ -457,10 +457,10 @@ export const TopicSelection: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-paper-100 dark:border-paper-800">
                 <button
                   onClick={() => setThemeModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-400 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-paper-250 dark:border-paper-800 hover:bg-paper-100 dark:hover:bg-paper-800/80 text-xs font-bold text-paper-600 dark:text-paper-400 transition-colors"
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
                 </button>

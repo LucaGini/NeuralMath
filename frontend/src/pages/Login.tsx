@@ -86,30 +86,25 @@ export const Login: React.FC = () => {
     setPassword("Matematicas123");
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] math-grid p-4 relative overflow-hidden transition-colors duration-200">
-      {/* Background ambient glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-mathPurple-600/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
-
+  return (    <div className="min-h-screen flex items-center justify-center bg-paper-50 dark:bg-paper-950 math-grid p-4 relative overflow-hidden transition-colors duration-200">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md bg-white dark:bg-slate-800/40 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 transition-colors duration-200"
+        className="w-full max-w-md bg-white dark:bg-paper-900/60 border border-paper-200 dark:border-paper-700/50 p-8 rounded-3xl shadow-xl dark:shadow-2xl relative z-10 transition-colors duration-200"
       >
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-1 shadow-lg shadow-mathPurple-500/10 border border-slate-200/40 overflow-hidden hover:scale-105 transition-transform duration-300 mb-4">
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center p-1 shadow-lg shadow-primary-500/10 border border-paper-200/40 overflow-hidden hover:scale-105 transition-transform duration-300 mb-4">
             <img 
               src="/logo.png" 
               alt="NeuralMath Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-slate-200 dark:to-mathPurple-300 dark:bg-clip-text">
+          <h1 className="text-3xl font-extrabold tracking-tight text-paper-800 dark:text-white">
             NeuralMath
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          <p className="text-paper-500 dark:text-paper-400 text-sm mt-1">
             {language === "es" ? "Plataforma Inteligente de Matemáticas" : "AI-Powered Math Learning Platform"}
           </p>
         </div>
@@ -142,7 +137,7 @@ export const Login: React.FC = () => {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-paper-500 dark:text-paper-300 uppercase tracking-wider mb-2">
               {t.email}
             </label>
             <input
@@ -150,13 +145,13 @@ export const Login: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ejemplo@correo.com"
-              className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl px-4 py-3.5 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-mathPurple-500 transition-all"
+              className="w-full bg-paper-50 dark:bg-paper-900/60 border border-paper-200 dark:border-paper-700/80 rounded-2xl px-4 py-3.5 text-paper-800 dark:text-paper-100 placeholder-paper-400 dark:placeholder-paper-500 focus:outline-none focus:border-primary-500 transition-all"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-paper-500 dark:text-paper-300 uppercase tracking-wider mb-2">
               {t.password}
             </label>
             <div className="relative">
@@ -165,7 +160,7 @@ export const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl pl-4 pr-12 py-3.5 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-mathPurple-500 transition-all"
+                className="w-full bg-paper-50 dark:bg-paper-900/60 border border-paper-200 dark:border-paper-700/80 rounded-2xl pl-4 pr-12 py-3.5 text-paper-800 dark:text-paper-100 placeholder-paper-400 dark:placeholder-paper-500 focus:outline-none focus:border-primary-500 transition-all"
                 required
               />
               <button
@@ -191,7 +186,7 @@ export const Login: React.FC = () => {
                 setRecoverySuccess("");
                 pickRandomChallenge();
               }}
-              className="text-mathPurple-600 dark:text-mathPurple-400 hover:underline hover:text-mathPurple-500 font-semibold focus:outline-none"
+              className="text-primary-600 dark:text-primary-400 hover:underline hover:text-primary-500 font-semibold focus:outline-none"
             >
               {language === "es" ? "¿Olvidaste tu contraseña?" : "Forgot your password?"}
             </button>
@@ -200,7 +195,7 @@ export const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-mathPurple-600 to-indigo-600 hover:from-mathPurple-500 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-mathPurple-600/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+            className="w-full bg-primary-600 hover:bg-primary-500 text-white font-semibold py-3.5 rounded-2xl shadow-lg shadow-primary-600/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {loading ? t.signing_in : t.login}
             <LogIn className="w-4 h-4" />
@@ -208,8 +203,8 @@ export const Login: React.FC = () => {
         </form>
 
         <div className="relative my-6 flex items-center justify-center">
-          <div className="absolute w-full h-[1px] bg-slate-200 dark:bg-slate-700/50" />
-          <span className="relative bg-white dark:bg-[#161c2c] px-3 text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+          <div className="absolute w-full h-[1px] bg-paper-200 dark:bg-paper-700/50" />
+          <span className="relative bg-white dark:bg-paper-950 px-3 text-xs text-paper-400 dark:text-paper-500 uppercase tracking-widest">
             {language === "es" ? "Ó" : "OR"}
           </span>
         </div>
@@ -217,15 +212,15 @@ export const Login: React.FC = () => {
         {/* Quick Demo Login bypass */}
         <button
           onClick={fillQuickDemo}
-          className="w-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/60 dark:hover:bg-slate-950/90 text-mathPurple-700 dark:text-mathPurple-300 border border-mathPurple-200 dark:border-mathPurple-900/40 hover:border-mathPurple-400 dark:hover:border-mathPurple-800/60 font-semibold py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+          className="w-full bg-paper-100 hover:bg-paper-200 dark:bg-paper-950/60 dark:hover:bg-paper-950/90 text-primary-700 dark:text-primary-300 border border-primary-300 dark:border-primary-900/40 hover:border-primary-400 dark:hover:border-primary-800/60 font-semibold py-3 rounded-2xl flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
         >
-          <Sparkles className="w-4 h-4 text-mathPurple-600 dark:text-mathPurple-400" />
+          <Sparkles className="w-4 h-4 text-primary-600 dark:text-primary-400" />
           {t.quick_demo}
         </button>
 
-        <p className="text-center text-slate-500 dark:text-slate-400 text-sm mt-8">
+        <p className="text-center text-paper-500 dark:text-paper-400 text-sm mt-8">
           {t.no_account}{" "}
-          <Link to="/register" className="text-mathPurple-600 dark:text-mathPurple-400 hover:text-mathPurple-500 dark:hover:text-mathPurple-300 font-semibold hover:underline">
+          <Link to="/register" className="text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 font-semibold hover:underline">
             {language === "es" ? "Regístrate aquí" : "Register here"}
           </Link>
         </p>
@@ -237,12 +232,12 @@ export const Login: React.FC = () => {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-white dark:bg-[#0c1220] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl relative"
+            className="w-full max-w-md bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-3xl p-6 shadow-2xl relative"
           >
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
+            <h3 className="text-lg font-bold text-paper-800 dark:text-white mb-2 flex items-center gap-2">
               🧮 {language === "es" ? "Recuperación Socrática" : "Socratic Password Reset"}
             </h3>
-            <p className="text-xs text-slate-550 dark:text-slate-400 mb-4 leading-relaxed">
+            <p className="text-xs text-paper-500 dark:text-paper-400 mb-4 leading-relaxed">
               {language === "es"
                 ? "Para restablecer tu contraseña, demuestra tu destreza resolviendo el siguiente reto algebraico:"
                 : "To reset your password, prove your mathematical proficiency by solving the algebraic challenge below:"}
@@ -325,7 +320,7 @@ export const Login: React.FC = () => {
             >
               {/* Email */}
               <div>
-                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-semibold text-paper-500 dark:text-paper-400 uppercase tracking-wider mb-1.5">
                   {t.email}
                 </label>
                 <input
@@ -333,18 +328,18 @@ export const Login: React.FC = () => {
                   value={recoveryEmail}
                   onChange={(e) => setRecoveryEmail(e.target.value)}
                   placeholder="ejemplo@correo.com"
-                  className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                  className="w-full bg-paper-50 dark:bg-paper-900/60 border border-paper-200 dark:border-paper-800 rounded-xl px-3.5 py-2.5 text-xs text-paper-800 dark:text-paper-100 placeholder-paper-400 focus:outline-none focus:border-primary-500"
                   required
                   disabled={recoveryLoading}
                 />
               </div>
 
               {/* Math Question */}
-              <div className="bg-mathPurple-500/5 dark:bg-mathPurple-500/10 border border-mathPurple-500/20 p-4 rounded-xl text-center">
-                <span className="text-xs text-slate-550 dark:text-slate-400 block mb-1">
+              <div className="bg-primary-500/5 dark:bg-primary-500/10 border border-primary-500/20 p-4 rounded-xl text-center">
+                <span className="text-xs text-paper-500 dark:text-paper-400 block mb-1">
                   {language === "es" ? "Resolver para x:" : "Solve for x:"}
                 </span>
-                <span className="text-sm font-black text-mathPurple-600 dark:text-mathPurple-400 block tracking-wide">
+                <span className="text-sm font-black text-primary-600 dark:text-primary-400 block tracking-wide">
                   {currentChallenge.equation}
                 </span>
                 <input
@@ -352,7 +347,7 @@ export const Login: React.FC = () => {
                   value={recoveryMathAnswer}
                   onChange={(e) => setRecoveryMathAnswer(e.target.value)}
                   placeholder={language === "es" ? "Introduce el valor de x" : "Enter value of x"}
-                  className="w-2/3 mx-auto mt-2 text-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                  className="w-2/3 mx-auto mt-2 text-center bg-white dark:bg-paper-900 border border-paper-200 dark:border-paper-800 rounded-xl px-3 py-2 text-xs font-bold text-paper-800 dark:text-white placeholder-paper-400 focus:outline-none focus:border-primary-500"
                   required
                   disabled={recoveryLoading}
                 />
@@ -360,7 +355,7 @@ export const Login: React.FC = () => {
 
               {/* New Password */}
               <div>
-                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-semibold text-paper-500 dark:text-paper-400 uppercase tracking-wider mb-1.5">
                   {language === "es" ? "Nueva Contraseña" : "New Password"}
                 </label>
                 <div className="relative">
@@ -369,14 +364,14 @@ export const Login: React.FC = () => {
                     value={recoveryPassword}
                     onChange={(e) => setRecoveryPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-850 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                    className="w-full bg-paper-50 dark:bg-paper-900/60 border border-paper-200 dark:border-paper-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-paper-800 dark:text-paper-100 placeholder-paper-400 focus:outline-none focus:border-primary-500"
                     required
                     disabled={recoveryLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowRecoveryPassword(!showRecoveryPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-paper-400 hover:text-paper-600 dark:text-paper-500 dark:hover:text-paper-300 focus:outline-none"
                   >
                     {showRecoveryPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -385,7 +380,7 @@ export const Login: React.FC = () => {
 
               {/* Confirm New Password */}
               <div>
-                <label className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-[10px] font-semibold text-paper-500 dark:text-paper-400 uppercase tracking-wider mb-1.5">
                   {language === "es" ? "Confirmar Nueva Contraseña" : "Confirm New Password"}
                 </label>
                 <div className="relative">
@@ -394,14 +389,14 @@ export const Login: React.FC = () => {
                     value={recoveryConfirmPassword}
                     onChange={(e) => setRecoveryConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-mathPurple-500"
+                    className="w-full bg-paper-50 dark:bg-paper-900/60 border border-paper-200 dark:border-paper-800 rounded-xl pl-3.5 pr-10 py-2.5 text-xs text-paper-800 dark:text-paper-100 placeholder-paper-400 focus:outline-none focus:border-primary-500"
                     required
                     disabled={recoveryLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowRecoveryConfirmPassword(!showRecoveryConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-paper-400 hover:text-paper-600 dark:text-paper-500 dark:hover:text-paper-300 focus:outline-none"
                   >
                     {showRecoveryConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -412,14 +407,14 @@ export const Login: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRecoveryModalOpen(false)}
-                  className="w-1/2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs font-semibold py-2.5 rounded-xl transition-all"
+                  className="w-1/2 border border-paper-200 dark:border-paper-800 hover:bg-paper-100 dark:hover:bg-paper-800/80 text-xs font-semibold py-2.5 rounded-xl transition-all"
                   disabled={recoveryLoading}
                 >
                   {language === "es" ? "Cancelar" : "Cancel"}
                 </button>
                 <button
                   type="submit"
-                  className="w-1/2 bg-mathPurple-600 hover:bg-mathPurple-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md transition-all disabled:opacity-50"
+                  className="w-1/2 bg-primary-600 hover:bg-primary-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md transition-all disabled:opacity-50"
                   disabled={recoveryLoading}
                 >
                   {recoveryLoading ? (language === "es" ? "Procesando..." : "Processing...") : (language === "es" ? "Restablecer" : "Reset")}
