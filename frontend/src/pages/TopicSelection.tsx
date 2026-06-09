@@ -341,11 +341,6 @@ export const TopicSelection: React.FC = () => {
                             </button>
                           ))}
                         </div>
-                        {selectedSubtopic && (
-                          <p className="text-[11px] text-paper-500 dark:text-paper-400 mt-2.5 italic">
-                            🎯 {selectedSubtopic.description}
-                          </p>
-                        )}
                       </div>
                     )}
 

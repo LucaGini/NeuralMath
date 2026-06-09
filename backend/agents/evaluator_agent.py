@@ -52,23 +52,27 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
                 "- STATISTICS ROUNDING TOLERANCE: For statistics and probability calculations (e.g. Z-scores, normal distributions, p-values), accept rounding differences ONLY within a tolerance of +/- 0.005. If the student accepts values rounded outside this limit, mark 'is_correct' as False.\n"
                 "- ORDINARY DIFFERENTIAL EQUATIONS (ODEs): General solutions for ODEs must include the arbitrary constant C (case-insensitive) in the correct mathematical location (e.g. y = C*e^(2x) instead of y = e^(2x) + C). If it lacks C or is mathematically misplaced, mark 'is_correct' as False.\n"
                 "- GEOMETRIC UNITS: If units are specified in a geometry question, the correct dimension (linear for perimeters, squared for areas, cubed for volumes) must be enforced. If the student accepts linear units for an area (e.g., cm instead of cm^2), mark 'is_correct' as False.\n"
-                "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses). Reject if they accept an expanded polynomial (like x^2 - 5x + 6) even if algebraicaly identical."
+                "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses). Reject if they accept an expanded polynomial (like x^2 - 5x + 6) even if algebraicaly identical.\n"
+                "- COMPLEX NUMBERS: If the question asks for a result in binomial form (a+bi), both the real and imaginary parts must be correct. If it asks for the modulus, the result must be strictly positive (|z| >= 0). Accept equivalent forms like '3+2i' and '2i+3'. Reject if the imaginary unit 'i' is missing when required.\n"
+                "- SERIES & SEQUENCES: If the question asks whether a series converges or diverges, accept only 'converge'/'diverge' (or Spanish equivalents 'converge'/'diverge') as valid answers — not a number. If it asks for a limit or sum, apply the same decimal rounding tolerance of +/- 0.005 used for statistics.\n"
+                "- REGRESSION & CORRELATION: The Pearson correlation coefficient r must be between -1 and 1. For regression coefficients (slope and intercept), allow rounding tolerance of +/- 0.01. Reject r values outside [-1, 1] as mathematically impossible.\n"
+                "- DISCRETE MATHEMATICS: For truth tables, accept T/F, V/F, 1/0, or Verdadero/Falso as equivalent valid formats. For graph problems involving paths or routes, the order of vertices matters — verify it matches the expected answer."
             )
             temperature = 0.7
             model_name = None
             
         prompt = (
             f"Exercise Question: {exercise_question}\n"
-            f"True Correct Answer in DB: {correct_answer}\n"
+            f"Candidate Answer in DB: {correct_answer}\n"
             f"Alby's Flawed Answer: {protege_answer}\n"
             f"Alby's Flawed Explanation: {protege_explanation}\n"
             f"Student's Submitted Tutoring Correction: {user_answer}\n\n"
             "Please perform the following verification steps:\n"
-            "1. Independently solve the 'Exercise Question' step-by-step first.\n"
-            "2. Check if the 'True Correct Answer in DB' is mathematically correct. If it has a typo, ignore it and use your own calculated solution as the only source of truth.\n"
-            "3. Review Alby's error.\n"
-            "4. Assess the student's correction. Did they correctly identify Alby's mistake and explain the correct resolution mathematically?\n"
-            "5. CRITICAL: Strictly verify if the student's proposed solution/math is actually correct. Calculate the numerical value of any expressions or fractions they wrote. For example, if they wrote 'y=46/8' when the true solution is 'y=9/7', they are mathematically WRONG because 46/8 != 9/7. In such cases, you MUST set 'is_correct' to False.\n"
+            "1. Independently solve the 'Exercise Question' step-by-step first to find the true correct mathematical answer.\n"
+            "2. Review Alby's error.\n"
+            "3. Assess the student's correction. Did they correctly identify Alby's mistake and explain the correct resolution mathematically?\n"
+            "4. CRITICAL: Strictly verify if the student's proposed solution/math is actually correct compared to the mathematical truth (ignore the 'Candidate Answer in DB' if it is incorrect). Calculate the numerical value of any expressions or fractions they wrote. For example, if they wrote 'y=46/8' when the true solution is 'y=9/7', they are mathematically WRONG because 46/8 != 9/7. In such cases, you MUST set 'is_correct' to False.\n"
+            "5. If the student's tutoring correction is correct, you MUST set 'is_correct' to true, even if their answer differs from the 'Candidate Answer in DB' (which might contain a database typo). Do NOT mention the database error, discrepancy, or typo in your student-facing 'explanation'.\n"
             "6. CRITICAL (+ C RIGOR): If the exercise involves an indefinite integral, make sure the student's final answer explicitly includes '+ C' or '+ c'. If they forgot it, set 'is_correct' to False and remind them of the integration constant.\n"
             "Analyze and return a JSON object with 'is_correct' and 'explanation'."
         )
@@ -90,10 +94,10 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
                 "'cancellation_error', 'arithmetic_slip', 'conceptual_error', 'other'. If is_correct is true, set to null.\n"
                 "- 'misconception': if is_correct is false, write ONE brief sentence in Spanish identifying the specific wrong belief or action. E.g. 'Olvidaste cambiar el signo de la desigualdad al dividir por un número negativo.' If correct, set to null.\n\n"
                 "RULES FOR MATHEMATICAL RIGOR (CRITICAL):\n"
-                "1. NEVER be lenient with incorrect math values or expressions. If the expected correct answer is '(x-3)(x-4)' and the student enters '(x-3)(x-9)', this is absolutely INCORRECT because their product expands to $x^2 - 12x + 27$, not $x^2 - 7x + 12$. You MUST mark it is_correct = false.\n"
-                "2. Do NOT blindly agree with the student. You must physically calculate and expand both the Expected Correct Answer and the Student's Submitted Answer to verify if they are mathematically identical or equivalent.\n"
-                "3. Support equivalence in representations (e.g. order of factors like '(x-3)(x-4)' vs '(x-4)(x-3)', or decimals like '0.5' vs '1/2'). But if the numerical or algebraic content is different, it is wrong.\n"
-                "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Expected Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question'. If the student's answer is mathematically correct and perfectly solves/satisfies the system of equations or algebraic question, you MUST override the incorrect database key and mark 'is_correct' as True. Celebrate their correctness and do not penalize them for system typos.\n"
+                "1. NEVER be lenient with incorrect math values or expressions. If the true correct mathematical answer is '(x-3)(x-4)' and the student enters '(x-3)(x-9)', this is absolutely INCORRECT. You MUST mark it is_correct = false.\n"
+                "2. Do NOT blindly agree with the student. You must independently solve the exercise first to find the mathematically true correct answer, and then verify if the Student's Submitted Answer is mathematically identical or equivalent to that true correct answer.\n"
+                "3. Support equivalence in representations (e.g. order of factors like '(x-3)(x-4)' vs '(x-4)(x-3)', or decimals like '0.5' vs '1/2') compared to the mathematically true correct answer. But if the student's answer is numerically or algebraically different from the true correct answer, it is wrong.\n"
+                "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Candidate Answer in DB' passed in the prompt is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question'. If the student's answer is mathematically correct and perfectly solves/satisfies the question, you MUST mark 'is_correct' as True. Do NOT penalize the student for database typos, and do NOT mention the database error, discrepancy, or 'Candidate Answer in DB' in your student-facing 'explanation'. Simply explain the math step-by-step showing why the student's answer is correct.\n"
                 "5. MULTIPLE SOLUTIONS / INCOMPLETE ANSWERS (CRITICAL): If the math problem, system, or equation has multiple distinct valid solutions, roots, or coordinates (e.g., quadratic equations with two distinct real roots like $x = 3$ and $x = 4$, absolute value equations, trigonometric equations, etc.), the student's submitted answer must represent ALL correct solutions to be marked is_correct = True. If the student only provides one of the required solutions (e.g., entering '4' but omitting '3'), you MUST mark it is_correct = False because the answer is mathematically incomplete. Classify the error_type as 'conceptual_error' and generate a supportive, socratic explanation in Spanish that commends their calculation for finding a valid root but clearly teaches them that the problem has other solutions, prompting them to find all solutions and explaining how to write the complete set (e.g., '3, 4' or '3 y 4').\n"
                 "6. ADDITIONAL RIGOR RULES BY TOPIC (CRITICAL):\n"
                 "- INDEFINITE INTEGRALS & ODEs: If the question involves an indefinite integral or an ODE general solution, the student's answer MUST include the arbitrary constant '+ C' (or '+ c') in the correct mathematical position. If it is missing or mathematically misplaced (e.g. y = e^(2x) + C instead of y = C*e^(2x) for y' = 2y), mark 'is_correct' as False.\n"
@@ -101,20 +105,25 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
                 "- DEFINITE INTEGRALS & BOUNDED AREAS: If the question asks for a geometric area under or between curves, the final answer must be strictly positive. If the student provides a negative value (even if it matches the signed definite integral value), you MUST mark 'is_correct' as False because geometric area cannot be negative.\n"
                 "- DECIMAL PRECISION & ROUNDING (STATISTICS & PROBABILITY): For statistical computations (Z-scores, p-values, normal probabilities), allow rounding differences only within +/- 0.005 tolerance. If the student is outside this range, mark 'is_correct' as False.\n"
                 "- GEOMETRIC UNITS: If the question specifies units, the answer must use the correct unit dimension (linear for perimeters, squared for areas, cubed for volumes). Reject if the unit dimension is incorrect (e.g., cm instead of cm^2 for area).\n"
-                "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses like (x-2)(x-3)). Reject expanded forms (like x^2 - 5x + 6) even if equivalent."
+                "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses like (x-2)(x-3)). Reject expanded forms (like x^2 - 5x + 6) even if equivalent.\n"
+                "- COMPLEX NUMBERS: If the question asks for a result in binomial form (a+bi), both the real and imaginary parts must be correct. If it asks for the modulus, the result must be strictly positive (|z| >= 0). Accept equivalent forms like '3+2i' and '2i+3'. Reject if the imaginary unit 'i' is missing when required.\n"
+                "- SERIES & SEQUENCES: If the question asks whether a series converges or diverges, accept only 'converge'/'diverge' (or Spanish equivalents 'converge'/'diverge') as valid answers — not a number. If it asks for a limit or sum, apply the same decimal rounding tolerance of +/- 0.005 used for statistics.\n"
+                "- REGRESSION & CORRELATION: The Pearson correlation coefficient r must be between -1 and 1. For regression coefficients (slope and intercept), allow rounding tolerance of +/- 0.01. Reject r values outside [-1, 1] as mathematically impossible.\n"
+                "- DISCRETE MATHEMATICS: For truth tables, accept T/F, V/F, 1/0, or Verdadero/Falso as equivalent valid formats. For graph problems involving paths or routes, the order of vertices matters — verify it matches the expected answer."
             )
             temperature = 0.7
             model_name = None
  
         prompt = (
             f"Exercise Question: {exercise_question}\n"
-            f"Expected Correct Answer in DB: {correct_answer}\n"
+            f"Candidate Answer in DB: {correct_answer}\n"
             f"Student's Submitted Answer: {user_answer}\n\n"
             "Please perform the following verification steps:\n"
-            "1. Independently solve the 'Exercise Question' step-by-step.\n"
-            "2. Check if the 'Student's Submitted Answer' is mathematically correct and solves the question.\n"
-            "3. Check if the 'Student's Submitted Answer' is equivalent to the 'Expected Correct Answer in DB'.\n"
-            "4. If the student's answer is mathematically correct for the question (even if the DB has a different/incorrect answer), mark 'is_correct' as true. If it is mathematically incorrect, mark 'is_correct' as false and explain the error step-by-step."
+            "1. Independently solve the 'Exercise Question' step-by-step to find the true correct mathematical answer.\n"
+            "2. Compare the 'Student's Submitted Answer' with the true correct mathematical answer you calculated. If they are mathematically equivalent/correct, you MUST set 'is_correct' to true.\n"
+            "3. Do NOT penalize the student if their correct answer differs from the 'Candidate Answer in DB'. The database answer might be wrong. Evaluate the student ONLY against the mathematical truth.\n"
+            "4. Do NOT mention the database error, discrepancy, or typo in your student-facing 'explanation'. Simply explain the math step-by-step showing why their answer is correct.\n"
+            "5. If the student's answer is incorrect, set 'is_correct' to false and explain the error step-by-step in Spanish."
         )
  
     try:

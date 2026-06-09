@@ -23,6 +23,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(rate_limit_admin), Depends(get_current_admin_user)])
 
 # Schemas
+class SubtopicInput(BaseModel):
+    name: str
+    description: str
+
+class TopicCreate(BaseModel):
+    name: str
+    area: str
+    level: str
+    subtopics: List[SubtopicInput] = []
+
+class TopicUpdate(BaseModel):
+    name: Optional[str] = None
+    area: Optional[str] = None
+    level: Optional[str] = None
+    subtopics: Optional[List[SubtopicInput]] = None
+
 class AgentConfigUpdate(BaseModel):
     agent_key: str
     system_prompt: str
@@ -536,3 +552,141 @@ def toggle_topic_active(
         "message": f"Tema '{topic.name}' {'activado' if topic.is_active else 'desactivado'} correctamente.",
         "is_active": topic.is_active
     }
+
+
+@router.post("/topics/create")
+def create_topic(
+    topic_data: TopicCreate,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    # Validation: Area
+    valid_areas = ["Arithmetic", "Algebra", "Geometry", "Trigonometry", "Calculus", "Statistics"]
+    if topic_data.area not in valid_areas:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Área no válida. Debe ser una de: {', '.join(valid_areas)}"
+        )
+    
+    # Validation: Level
+    valid_levels = ["Primary", "Secondary", "University"]
+    if topic_data.level not in valid_levels:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Nivel no válido. Debe ser uno de: {', '.join(valid_levels)}"
+        )
+    
+    # Validation: Subtopics count
+    if not (1 <= len(topic_data.subtopics) <= 3):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La cantidad de subtemas debe estar entre 1 y 3."
+        )
+        
+    # Create the Topic
+    new_topic = Topic(
+        name=topic_data.name,
+        area=topic_data.area,
+        level=topic_data.level,
+        subtopics=[{"name": s.name, "description": s.description} for s in topic_data.subtopics],
+        is_active=True
+    )
+    db.add(new_topic)
+    db.commit()
+    db.refresh(new_topic)
+    
+    # Audit log
+    audit_log = AuditLog(
+        admin_id=current_admin.id,
+        action="create_topic",
+        details={"topic_name": new_topic.name}
+    )
+    db.add(audit_log)
+    db.commit()
+    
+    return new_topic
+
+
+@router.put("/topics/{topic_id}/edit")
+def edit_topic(
+    topic_id: int,
+    topic_data: TopicUpdate,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tema no encontrado"
+        )
+        
+    # Patch updates
+    if topic_data.name is not None:
+        topic.name = topic_data.name
+        
+    if topic_data.area is not None:
+        valid_areas = ["Arithmetic", "Algebra", "Geometry", "Trigonometry", "Calculus", "Statistics"]
+        if topic_data.area not in valid_areas:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Área no válida. Debe ser una de: {', '.join(valid_areas)}"
+            )
+        topic.area = topic_data.area
+        
+    if topic_data.level is not None:
+        valid_levels = ["Primary", "Secondary", "University"]
+        if topic_data.level not in valid_levels:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Nivel no válido. Debe ser uno de: {', '.join(valid_levels)}"
+            )
+        topic.level = topic_data.level
+        
+    if topic_data.subtopics is not None:
+        if not (1 <= len(topic_data.subtopics) <= 3):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La cantidad de subtemas debe estar entre 1 y 3."
+            )
+        topic.subtopics = [{"name": s.name, "description": s.description} for s in topic_data.subtopics]
+        
+    # Audit log
+    audit_log = AuditLog(
+        admin_id=current_admin.id,
+        action="edit_topic",
+        details={"topic_name": topic.name}
+    )
+    db.add(audit_log)
+    db.commit()
+    db.refresh(topic)
+    
+    return topic
+
+
+@router.delete("/topics/{topic_id}")
+def delete_topic(
+    topic_id: int,
+    current_admin: User = Depends(get_current_admin_user),
+    db: Session = Depends(get_db)
+):
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tema no encontrado"
+        )
+        
+    topic_name = topic.name
+    db.delete(topic)
+    
+    # Audit log
+    audit_log = AuditLog(
+        admin_id=current_admin.id,
+        action="delete_topic",
+        details={"topic_name": topic_name}
+    )
+    db.add(audit_log)
+    db.commit()
+    
+    return {"message": "Tema eliminado correctamente"}

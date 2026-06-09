@@ -24,7 +24,7 @@ import {
   ArrowUpDown,
   BookOpen
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart,
   Line,
@@ -124,6 +124,18 @@ export const AdminConsole: React.FC = () => {
   const [topicPage, setTopicPage] = useState(1);
   const [totalTopics, setTotalTopics] = useState(0);
   const [topicLimit] = useState(10);
+  const [topicModalOpen, setTopicModalOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<TopicRow | null>(null);
+  const [savingTopic, setSavingTopic] = useState(false);
+  const [deletingTopicId, setDeletingTopicId] = useState<number | null>(null);
+  const [topicFormName, setTopicFormName] = useState("");
+  const [topicFormArea, setTopicFormArea] = useState("Algebra");
+  const [topicFormLevel, setTopicFormLevel] = useState("Primary");
+  const [topicFormSubtopics, setTopicFormSubtopics] = useState([
+    { name: "", description: "" },
+    { name: "", description: "" },
+    { name: "", description: "" },
+  ]);
 
   // States for Agent Settings
   const [agentConfigs, setAgentConfigs] = useState<AgentConfigRow[]>([]);
@@ -399,6 +411,81 @@ export const AdminConsole: React.FC = () => {
     } catch (err: any) {
       showAlert(err.response?.data?.detail || "Error al cambiar estado del tema");
     }
+  };
+
+  const handleOpenCreateTopic = () => {
+    setEditingTopic(null);
+    setTopicFormName("");
+    setTopicFormArea("Algebra");
+    setTopicFormLevel("Primary");
+    setTopicFormSubtopics([
+      { name: "", description: "" },
+      { name: "", description: "" },
+      { name: "", description: "" },
+    ]);
+    setTopicModalOpen(true);
+  };
+
+  const handleOpenEditTopic = (topic: TopicRow) => {
+    setEditingTopic(topic);
+    setTopicFormName(topic.name);
+    setTopicFormArea(topic.area);
+    setTopicFormLevel(topic.level);
+    const filled = topic.subtopics || [];
+    setTopicFormSubtopics([
+      filled[0] || { name: "", description: "" },
+      filled[1] || { name: "", description: "" },
+      filled[2] || { name: "", description: "" },
+    ]);
+    setTopicModalOpen(true);
+  };
+
+  const handleSaveTopic = async () => {
+    if (!topicFormName.trim()) return;
+    const validSubtopics = topicFormSubtopics.filter(s => s.name.trim());
+    setSavingTopic(true);
+    try {
+      if (editingTopic) {
+        await api.put(`/admin/topics/${editingTopic.id}/edit`, {
+          name: topicFormName,
+          area: topicFormArea,
+          level: topicFormLevel,
+          subtopics: validSubtopics,
+        });
+      } else {
+        await api.post("/admin/topics/create", {
+          name: topicFormName,
+          area: topicFormArea,
+          level: topicFormLevel,
+          subtopics: validSubtopics,
+        });
+      }
+      setTopicModalOpen(false);
+      fetchTopics();
+    } catch (err) {
+      console.error("Error saving topic:", err);
+    } finally {
+      setSavingTopic(false);
+    }
+  };
+
+  const handleDeleteTopic = (topic: TopicRow) => {
+    showConfirm(
+      language === "es"
+        ? `¿Eliminar permanentemente el tema "${topic.name}"? Esta acción no se puede deshacer.`
+        : `Permanently delete "${topic.name}"? This cannot be undone.`,
+      async () => {
+        setDeletingTopicId(topic.id);
+        try {
+          await api.delete(`/admin/topics/${topic.id}`);
+          fetchTopics();
+        } catch (err) {
+          console.error("Error deleting topic:", err);
+        } finally {
+          setDeletingTopicId(null);
+        }
+      }
+    );
   };
 
   // Update selected agent prompt form
@@ -904,6 +991,19 @@ export const AdminConsole: React.FC = () => {
         {activeTab === "curriculum" && (
           <div className="bg-white dark:bg-paper-900 rounded-3xl border border-paper-250 dark:border-paper-800 shadow-sm p-6">
             
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-bold text-paper-800 dark:text-white">
+                {language === "es" ? "Currícula" : "Curriculum"}
+              </h3>
+              <button
+                onClick={handleOpenCreateTopic}
+                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-primary-600/20"
+              >
+                <span>+</span>
+                {language === "es" ? "Nuevo Tema" : "New Topic"}
+              </button>
+            </div>
+
             {/* Filter by academic level */}
             <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
               {["All", "Primary", "Secondary", "University"].map((lvl) => (
@@ -937,6 +1037,7 @@ export const AdminConsole: React.FC = () => {
                       <th className="pb-4">Nivel Académico</th>
                       <th className="pb-4">Conceptos Asociados</th>
                       <th className="pb-4">Visibilidad Alumno</th>
+                      <th className="pb-4 text-right pr-2">{language === "es" ? "Editar" : "Edit"}</th>
                       <th className="pb-4 text-right pr-2">Acción Rápida</th>
                     </tr>
                   </thead>
@@ -990,6 +1091,26 @@ export const AdminConsole: React.FC = () => {
                                 {language === "es" ? "Oculto" : "Disabled"}
                               </span>
                             )}
+                          </td>
+                          <td className="py-4 text-right pr-2">
+                            <div className="flex justify-end gap-1.5">
+                              {/* Editar */}
+                              <button
+                                onClick={() => handleOpenEditTopic(topic)}
+                                className="px-3 py-1.5 rounded-lg border border-paper-300 dark:border-paper-700 text-xs font-bold text-paper-600 dark:text-paper-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+                              >
+                                {language === "es" ? "Editar" : "Edit"}
+                              </button>
+
+                              {/* Eliminar */}
+                              <button
+                                onClick={() => handleDeleteTopic(topic)}
+                                disabled={deletingTopicId === topic.id}
+                                className="px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-900/40 text-xs font-bold text-red-500 hover:bg-red-500/10 disabled:opacity-50 transition-all"
+                              >
+                                {deletingTopicId === topic.id ? "..." : (language === "es" ? "Eliminar" : "Delete")}
+                              </button>
+                            </div>
                           </td>
                           <td className="py-4 text-right pr-2">
                             <button
@@ -1394,19 +1515,19 @@ export const AdminConsole: React.FC = () => {
           </div>
         </div>
       )}
- 
+
       {/* ==================== MODAL: VERSION HISTORY ROLLBACK ==================== */}
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-4xl bg-white dark:bg-paper-900 border border-paper-250 dark:border-paper-800 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col max-h-[85vh]">
             
             <h3 className="text-base font-bold text-paper-800 dark:text-white mb-1 flex items-center gap-2 border-b border-paper-100 dark:border-paper-850 pb-3">
-              <History className="w-5 h-5 text-primary-500 animate-pulse" />
+              <History className="w-5 h-5 text-primary-500" />
               {language === "es" 
                 ? `Historial de Versiones: ${selectedAgentKey}Agent` 
                 : `Version History Trail: ${selectedAgentKey}Agent`}
             </h3>
- 
+
             <div className="overflow-y-auto my-4 pr-1 flex-1">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -1462,7 +1583,7 @@ export const AdminConsole: React.FC = () => {
                 </tbody>
               </table>
             </div>
- 
+
             <div className="flex justify-end border-t border-paper-100 dark:border-paper-850 pt-3">
               <button
                 onClick={() => setShowHistoryModal(false)}
@@ -1474,6 +1595,139 @@ export const AdminConsole: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ==================== MODAL: CREATE / EDIT TOPIC ==================== */}
+      <AnimatePresence>
+        {topicModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-lg bg-white dark:bg-paper-900 border border-paper-250 dark:border-paper-800 rounded-3xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col"
+            >
+              {/* Header */}
+              <h3 className="text-base font-bold text-paper-800 dark:text-white mb-2">
+                {editingTopic === null
+                  ? (language === "es" ? "Nuevo Tema" : "New Topic")
+                  : (language === "es" ? `Editar Tema: ${editingTopic.name}` : `Edit Topic: ${editingTopic.name}`)}
+              </h3>
+              
+              {/* Scrollable form body */}
+              <div className="space-y-4 overflow-y-auto pr-1 flex-1 my-2 scrollbar-none">
+                {/* Nombre del tema */}
+                <div>
+                  <label className="block text-[9px] font-black uppercase tracking-widest text-paper-400 mb-1">
+                    {language === "es" ? "Nombre del tema *" : "Topic Name *"}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={topicFormName}
+                    onChange={(e) => setTopicFormName(e.target.value)}
+                    placeholder={language === "es" ? "Ej. Ecuaciones Lineales" : "e.g. Linear Equations"}
+                    className="w-full bg-paper-50 dark:bg-paper-950 border border-paper-250 dark:border-paper-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary-500 transition-all text-paper-800 dark:text-white"
+                  />
+                </div>
+
+                {/* Area and Level Selects */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-paper-400 mb-1">
+                      {language === "es" ? "Área" : "Area"}
+                    </label>
+                    <select
+                      value={topicFormArea}
+                      onChange={(e) => setTopicFormArea(e.target.value)}
+                      className="w-full bg-paper-50 dark:bg-paper-950 border border-paper-250 dark:border-paper-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary-500 transition-all text-paper-700 dark:text-paper-350"
+                    >
+                      {["Arithmetic", "Algebra", "Geometry", "Trigonometry", "Calculus", "Statistics"].map((area) => (
+                        <option key={area} value={area}>{area}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-paper-400 mb-1">
+                      {language === "es" ? "Nivel" : "Level"}
+                    </label>
+                    <select
+                      value={topicFormLevel}
+                      onChange={(e) => setTopicFormLevel(e.target.value)}
+                      className="w-full bg-paper-50 dark:bg-paper-950 border border-paper-250 dark:border-paper-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary-500 transition-all text-paper-700 dark:text-paper-350"
+                    >
+                      {["Primary", "Secondary", "University"].map((level) => (
+                        <option key={level} value={level}>{level}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Subtopics Section */}
+                <div className="space-y-3 pt-2">
+                  <span className="block text-[10px] font-black uppercase tracking-widest text-paper-500 dark:text-paper-400">
+                    {language === "es" ? "Subtemas (1 a 3 recomendados)" : "Subtopics (1 to 3 recommended)"}
+                  </span>
+                  
+                  {topicFormSubtopics.map((subtopic, index) => (
+                    <div key={index} className="p-3 rounded-2xl bg-paper-50 dark:bg-paper-950 border border-paper-200 dark:border-paper-850 space-y-2">
+                      <span className="block text-[9px] font-bold text-primary-500 uppercase tracking-wider">
+                        {language === "es" ? `Subtema ${index + 1}` : `Subtopic ${index + 1}`}
+                      </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder={language === "es" ? "Nombre" : "Name"}
+                          value={subtopic.name}
+                          onChange={(e) => {
+                            const newSub = [...topicFormSubtopics];
+                            newSub[index].name = e.target.value;
+                            setTopicFormSubtopics(newSub);
+                          }}
+                          className="w-full bg-white dark:bg-paper-900 border border-paper-250 dark:border-paper-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary-500 transition-all text-paper-800 dark:text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder={language === "es" ? "Descripción" : "Description"}
+                          value={subtopic.description}
+                          onChange={(e) => {
+                            const newSub = [...topicFormSubtopics];
+                            newSub[index].description = e.target.value;
+                            setTopicFormSubtopics(newSub);
+                          }}
+                          className="w-full bg-white dark:bg-paper-900 border border-paper-250 dark:border-paper-800 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary-500 transition-all text-paper-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex gap-3 pt-4 border-t border-paper-100 dark:border-paper-850 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setTopicModalOpen(false)}
+                  className="flex-1 py-3 px-4 rounded-xl border border-paper-250 dark:border-paper-800 text-paper-500 dark:text-paper-400 hover:bg-paper-100 dark:hover:bg-paper-800 text-[10px] font-black uppercase tracking-widest transition-all"
+                >
+                  {language === "es" ? "Cancelar" : "Cancel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveTopic}
+                  disabled={savingTopic || !topicFormName.trim()}
+                  className="flex-1 py-3 px-4 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm disabled:opacity-50"
+                >
+                  {savingTopic
+                    ? (language === "es" ? "Guardando..." : "Saving...")
+                    : (language === "es" ? "Guardar" : "Save")}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

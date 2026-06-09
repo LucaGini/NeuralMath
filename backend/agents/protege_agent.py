@@ -32,14 +32,15 @@ def protege_node(state: AgentState) -> Dict[str, Any]:
             f"Your goal is to generate exactly {exercise_count} math exercises for the given topic and level.\n"
             "However, for EACH exercise, you must write a flawed solution that contains a subtle, typical algebraic or conceptual misconception.\n"
             "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
-            "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+            "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\\\int', '\\\\cdot', '\\\\frac', '\\\\times', to ensure they parse correctly without losing the backslash.)\n"
             "- 'correct_answer': the true, correct math solution string (e.g. '3' or '(x-2)(x-3)')\n"
             "- 'protege_answer': Alby's incorrect, flawed answer containing a specific slip (e.g. '9' or '(x-3)(x-9)')\n"
-            "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+            "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\\\int', '\\\\cdot', '\\\\frac', '\\\\times', to ensure they parse correctly without losing the backslash.)\n"
             "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
             "- 'order_index': sequential integer starting at 0\n"
             "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
-            "Ensure the wrong answers and explanations are mathematically plausible (common slips like sign errors, failing to distribute, multiplying instead of adding exponent rules, etc.)."
+            "Ensure the wrong answers and explanations are mathematically plausible (common slips like sign errors, failing to distribute, multiplying instead of adding exponent rules, etc.).\n"
+            "CRITICAL: Confine all exercises strictly to the mathematical scope of the topic and area provided. Do NOT introduce concepts from other topics. Alby's mistakes must be errors WITHIN the topic, not errors caused by applying a completely different topic's rules."
         )
         temperature = 0.7
         model_name = None
@@ -70,25 +71,16 @@ def protege_node(state: AgentState) -> Dict[str, Any]:
         return {"exercises": exercises}
     except Exception as e:
         logger.error(f"ProtegeAgent parsing error: {e}. Raw: {raw_response if 'raw_response' in locals() else 'None'}")
-        # Dynamic mock fallback for Alby exercises
+        # Dynamic fallback for Alby exercises — topic-aware
         fallback_exercises = [
             {
-                "question": f"Simplifica la expresión: $3(x + 4) - 5$ en el tema {topic}",
-                "correct_answer": "3x + 7",
-                "protege_answer": "3x + 9",
-                "protege_explanation": "¡Hola! Multipliqué $3 \\times x = 3x$. Pero luego olvidé multiplicar el 3 por el 4, así que dejé el 4 igual: $3x + 4$. Al final le resté 5 para obtener $3x - 1$. ¡Creo que está perfecto!",
-                "difficulty_level": "Fácil",
-                "order_index": 0,
-                "skill_tags": ["algebraic_simplification", "distribution"]
-            },
-            {
-                "question": f"Factoriza la expresión cuadrática: $x^2 - 5x + 6$",
-                "correct_answer": "(x-2)(x-3)",
-                "protege_answer": "(x-1)(x-6)",
-                "protege_explanation": "¡Hola! Busqué dos números que multiplicados dieran 6 y sumados dieran -5. Pensé en -1 y -6 porque $-1 \\times -6 = 6$, pero olvidé que $-1 + (-6) = -7$ y no -5. Así que me quedó $(x-1)(x-6)$!",
+                "question": f"Alby intentó resolver un ejercicio de {topic}. Revisá su razonamiento e identificá el error.",
+                "correct_answer": "Ver resolución correcta paso a paso",
+                "protege_answer": "Respuesta incorrecta de Alby",
+                "protege_explanation": f"¡Hola! Intenté resolver este problema de {topic} pero creo que cometí un error en algún paso. ¿Me ayudás a encontrarlo?",
                 "difficulty_level": "Medio",
-                "order_index": 1,
-                "skill_tags": ["quadratic_equations", "factoring"]
+                "order_index": 0,
+                "skill_tags": [area.lower().replace(" ", "_")]
             }
         ]
         return {"exercises": fallback_exercises}

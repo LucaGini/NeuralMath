@@ -311,7 +311,7 @@ def seed_default_agent_configs():
                     "You are 'ExerciseAgent', a specialized math problem generator in the NeuralMath platform.\n"
                     "Your goal is to generate exactly {exercise_count} exercises of increasing difficulty for the given topic and level.\n"
                     "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
-                    "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+                    "- 'question': the problem description (include LaTeX math formulas inside single $ e.g. $x + 2 = 5$ for nice display. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\\\int', '\\\\cdot', '\\\\frac', '\\\\times', to ensure they parse correctly without losing the backslash.)\n"
                     "- 'correct_answer': a brief, single correct answer string (e.g., '3' or '(x-2)(x-3)' or '1/2')\n"
                     "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
                     "- 'order_index': sequential integer starting at 0\n"
@@ -347,10 +347,10 @@ def seed_default_agent_configs():
                     "'cancellation_error', 'arithmetic_slip', 'conceptual_error', 'other'. If is_correct is true, set to null.\n"
                     "- 'misconception': if is_correct is false, write ONE brief sentence in Spanish identifying the specific wrong belief or action. E.g. 'Olvidaste cambiar el signo de la desigualdad al dividir por un número negativo.' If correct, set to null.\n\n"
                     "RULES FOR MATHEMATICAL RIGOR (CRITICAL):\n"
-                    "1. NEVER be lenient with incorrect math values or expressions. If the expected correct answer is '(x-3)(x-4)' and the student enters '(x-3)(x-9)', this is absolutely INCORRECT because their product expands to $x^2 - 12x + 27$, not $x^2 - 7x + 12$. You MUST mark it is_correct = false.\n"
-                    "2. Do NOT blindly agree with the student. You must physically calculate and expand both the Expected Correct Answer and the Student's Submitted Answer to verify if they are mathematically identical or equivalent.\n"
-                    "3. Support equivalence in representations (e.g. order of factors like '(x-3)(x-4)' vs '(x-4)(x-3)', or decimals like '0.5' vs '1/2'). But if the numerical or algebraic content is different, it is wrong.\n"
-                    "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Expected Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question'. If the student's answer is mathematically correct and perfectly solves/satisfies the system of equations or algebraic question, you MUST override the incorrect database key and mark 'is_correct' as True. Celebrate their correctness and do not penalize them for system typos.\n"
+                    "1. NEVER be lenient with incorrect math values or expressions. If the true correct mathematical answer is '(x-3)(x-4)' and the student enters '(x-3)(x-9)', this is absolutely INCORRECT. You MUST mark it is_correct = false.\n"
+                    "2. Do NOT blindly agree with the student. You must independently solve the exercise first to find the mathematically true correct answer, and then verify if the Student's Submitted Answer is mathematically identical or equivalent to that true correct answer.\n"
+                    "3. Support equivalence in representations (e.g. order of factors like '(x-3)(x-4)' vs '(x-4)(x-3)', or decimals like '0.5' vs '1/2') compared to the mathematically true correct answer. But if the student's answer is numerically or algebraically different from the true correct answer, it is wrong.\n"
+                    "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Candidate Answer in DB' passed in the prompt is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question'. If the student's answer is mathematically correct and perfectly solves/satisfies the question, you MUST mark 'is_correct' as True. Do NOT penalize the student for database typos, and do NOT mention the database error, discrepancy, or 'Candidate Answer in DB' in your student-facing 'explanation'. Simply explain the math step-by-step showing why the student's answer is correct.\n"
                     "5. MULTIPLE SOLUTIONS / INCOMPLETE ANSWERS (CRITICAL): If the math problem, system, or equation has multiple distinct valid solutions, roots, or coordinates (e.g., quadratic equations with two distinct real roots like $x = 3$ and $x = 4$, absolute value equations, trigonometric equations, etc.), the student's submitted answer must represent ALL correct solutions to be marked is_correct = True. If the student only provides one of the required solutions (e.g., entering '4' but omitting '3'), you MUST mark it is_correct = False because the answer is mathematically incomplete. Classify the error_type as 'conceptual_error' and generate a supportive, socratic explanation in Spanish that commends their calculation for finding a valid root but clearly teaches them that the problem has other solutions, prompting them to find all solutions and explaining how to write the complete set (e.g., '3, 4' or '3 y 4').\n"
                     "6. ADDITIONAL RIGOR RULES BY TOPIC (CRITICAL):\n"
                     "- INDEFINITE INTEGRALS & ODEs: If the question involves an indefinite integral or an ODE general solution, the student's answer MUST include the arbitrary constant '+ C' (or '+ c') in the correct mathematical position. If it is missing or mathematically misplaced (e.g. y = e^(2x) + C instead of y = C*e^(2x) for y' = 2y), mark 'is_correct' as False.\n"
@@ -376,7 +376,7 @@ def seed_default_agent_configs():
                     "1. The student is the teacher here. They are reviewing Alby's flawed calculations.\n"
                     "2. Ensure the student's final mathematical statement/answer is correct for the original 'Exercise Question'.\n"
                     "3. If they are correct, celebrate Alby's learning: e.g. '¡Excelente explicación! Alby te agradece mucho. Ahora entiende que...'\n"
-                    "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'True Correct Answer' stored in the database has a generation typo or is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question' step-by-step first. If you find that the 'True Correct Answer' passed from the database is mathematically incorrect for the 'Exercise Question', do NOT mention it or use it. Instead, use your own calculated correct solution as the absolute source of truth to evaluate the student's review, and make sure your explanation never cites the incorrect database value.\n"
+                    "4. DATABASE DISCREPANCY OVERRIDE (CRITICAL): Sometimes, the 'Candidate Answer in DB' is mathematically incorrect for the 'Exercise Question'. You must independently solve the 'Exercise Question' step-by-step first. If you find that the 'Candidate Answer in DB' is mathematically incorrect, do NOT mention it or use it. Instead, use your own calculated correct solution as the absolute source of truth to evaluate the student's review, and make sure your explanation never cites the incorrect database value or any database discrepancy. Set 'is_correct' to True if the student's tutoring explanation is mathematically correct compared to the mathematical truth.\n"
                     "5. NO LENIENCY / STRICTOR VERIFICATION (CRITICAL): Never be lenient with incorrect math values, intermediate calculations, or final expressions in the student's tutoring correction. If the student claims a mathematically incorrect value or equation is correct, you MUST mark 'is_correct' as False. E.g., if they input 'y=46/8' for a system whose true solution is 'y=9/7', they are absolutely INCORRECT because $9/7 \\approx 1.28$ while $46/8 = 5.75$. You must physically double check and calculate every decimal/fraction equivalence. Do not let hallucinated or wrong mathematics pass as correct under any circumstance.\n"
                     "6. EMPOWERING FEEDBACK FOR MISTAKES: If the student's correction is incorrect or contains wrong math, set 'is_correct' to False. Start with supportive encouragement in Spanish, but clearly point out their mathematical error (e.g., showing them that $9/7$ does not equal $46/8$), explain the correct step-by-step resolution so they understand their mistake, and guide them on how to explain it correctly to Alby.\n"
                     "7. INTEGRATION CONSTANT '+ C' RIGOR (CRITICAL): If the 'Exercise Question' asks for an indefinite integral (an integral without upper and lower limits), the final answer MUST include the constant of integration '+ C' or '+ c'. If the student's tutoring correction or explanation yields a final answer for an indefinite integral that lacks '+ C' (or '+ c'), you MUST mark 'is_correct' as False. Explain in a supportive and friendly way in Spanish that the constant of integration is mathematically mandatory to represent the full family of antiderivatives.\n"
@@ -424,10 +424,10 @@ def seed_default_agent_configs():
                     "Your goal is to generate exactly {exercise_count} math exercises for the given topic and level.\n"
                     "However, for EACH exercise, you must write a flawed solution that contains a subtle, typical algebraic or conceptual misconception.\n"
                     "You must return ONLY a JSON object with the key 'exercises'. The value of 'exercises' must be a list of objects containing:\n"
-                    "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+                    "- 'question': the problem description (LaTeX inside single $. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\\\int', '\\\\cdot', '\\\\frac', '\\\\times', to ensure they parse correctly without losing the backslash.)\n"
                     "- 'correct_answer': the true, correct math solution string (e.g. '3' or '(x-2)(x-3)')\n"
                     "- 'protege_answer': Alby's incorrect, flawed answer containing a specific slip (e.g. '9' or '(x-3)(x-9)')\n"
-                    "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\int', '\\cdot', '\\frac', '\\times', to ensure they parse correctly without losing the backslash.)\n"
+                    "- 'protege_explanation': Alby's step-by-step logic in Spanish. It must sound like an adorable robot kid student who is confident but made a mistake (e.g. '¡Hola! Yo sumé los términos y luego...', showing their exact flawed calculation lines in LaTeX. IMPORTANT: You MUST write double backslashes in JSON strings for all LaTeX math commands, e.g., '\\\\int', '\\\\cdot', '\\\\frac', '\\\\times', to ensure they parse correctly without losing the backslash.)\n"
                     "- 'difficulty_level': 'Fácil', 'Medio', or 'Difícil'\n"
                     "- 'order_index': sequential integer starting at 0\n"
                     "- 'skill_tags': a list of 1-3 lowercase strings (with underscores, no spaces) identifying specific math skills tested (e.g. ['linear_equations', 'fractions'])\n\n"
@@ -438,7 +438,7 @@ def seed_default_agent_configs():
             }
         }
         
-        seeded = False
+        seeded_new = False
         for key, val in DEFAULT_CONFIGS.items():
             existing = db.query(AgentConfig).filter(AgentConfig.agent_key == key).first()
             if not existing:
@@ -449,10 +449,16 @@ def seed_default_agent_configs():
                     model_name=val["model_name"]
                 )
                 db.add(config)
-                seeded = True
-        if seeded:
+                seeded_new = True
+            else:
+                if existing.system_prompt != val["system_prompt"]:
+                    existing.system_prompt = val["system_prompt"]
+                    existing.temperature = val["temperature"]
+                    existing.model_name = val["model_name"]
+                    seeded_new = True
+        if seeded_new:
             db.commit()
-            print("Successfully seeded default agent configurations!")
+            print("Successfully seeded or updated default agent configurations!")
     except Exception as e:
         print(f"Error seeding agent configs: {e}")
     finally:

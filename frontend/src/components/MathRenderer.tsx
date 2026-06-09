@@ -31,6 +31,9 @@ const sanitizeMath = (math: string): string => {
   // 5. Fix double backslashes before standard LaTeX commands (e.g. \\sin or \\circ becomes \sin or \circ)
   sanitized = sanitized.replace(/\\\\(?=[a-zA-Z])/g, '\\');
 
+  // 6. Fix missing backslash before cdot
+  sanitized = sanitized.replace(/(?<!\\)cdot/g, '\\cdot');
+
   return sanitized;
 };
 
