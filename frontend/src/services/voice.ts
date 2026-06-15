@@ -4,6 +4,12 @@
  */
 class VoiceServiceClass {
   private activeUtterance: SpeechSynthesisUtterance | null = null;
+  private chunksQueue: string[] = [];
+  private currentChunkIndex: number = 0;
+  private isStopping: boolean = false;
+  private matchingVoice: SpeechSynthesisVoice | null = null;
+  private lang: "es" | "en" = "es";
+  private onEndCallback: (() => void) | null = null;
 
   /**
    * Translates common LaTeX constructs into natural-sounding speech segments.
@@ -64,10 +70,13 @@ class VoiceServiceClass {
 
   /**
    * Speaks the given text using browser-native SpeechSynthesis.
-   * Finds the best matching ES or EN voice.
+   * Plays sentences sequentially in safe small chunks to prevent browser crashes on long texts.
    */
   public speak(text: string, lang: "es" | "en", onEnd: () => void) {
     this.stop();
+    this.isStopping = false;
+    this.onEndCallback = onEnd;
+    this.lang = lang;
 
     if (!window.speechSynthesis) {
       console.warn("Speech Synthesis is not supported in this browser.");
@@ -76,35 +85,92 @@ class VoiceServiceClass {
     }
 
     const cleanText = this.cleanLaTeXForSpeech(text, lang);
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    this.activeUtterance = utterance;
-
-    // Map language locales
-    utterance.lang = lang === "es" ? "es-ES" : "en-US";
     
-    // Attempt to pick a premium/natural native voice
-    const voices = window.speechSynthesis.getVoices();
-    const matchingVoice = voices.find(
-      (v) => v.lang.startsWith(utterance.lang) && (v.name.includes("Google") || v.name.includes("Natural"))
-    ) || voices.find((v) => v.lang.startsWith(utterance.lang));
+    // Split into sentences using punctuation markers
+    const sentences = cleanText
+      .split(/([.!?\n]+)/)
+      .reduce((acc: string[], val: string, idx: number) => {
+        if (idx % 2 === 0) {
+          if (val.trim()) acc.push(val.trim());
+        } else {
+          if (acc.length > 0) {
+            acc[acc.length - 1] += val;
+          }
+        }
+        return acc;
+      }, []);
 
-    if (matchingVoice) {
-      utterance.voice = matchingVoice;
+    // Combine sentences into chunks under 200 characters
+    this.chunksQueue = [];
+    let currentChunk = "";
+    for (const sentence of sentences) {
+      if ((currentChunk + " " + sentence).length > 200) {
+        if (currentChunk.trim()) {
+          this.chunksQueue.push(currentChunk.trim());
+        }
+        currentChunk = sentence;
+      } else {
+        currentChunk = currentChunk ? currentChunk + " " + sentence : sentence;
+      }
+    }
+    if (currentChunk.trim()) {
+      this.chunksQueue.push(currentChunk.trim());
     }
 
-    // Configure rates for comfortable pedagogy speed (slightly slower than standard)
-    utterance.rate = lang === "es" ? 0.95 : 0.9;
+    if (this.chunksQueue.length === 0) {
+      onEnd();
+      return;
+    }
+
+    // Attempt to pick a premium/natural native voice
+    const voices = window.speechSynthesis.getVoices();
+    const voiceLang = lang === "es" ? "es-ES" : "en-US";
+    this.matchingVoice = voices.find(
+      (v) => v.lang.startsWith(voiceLang) && (v.name.includes("Google") || v.name.includes("Natural"))
+    ) || voices.find((v) => v.lang.startsWith(voiceLang)) || null;
+
+    this.currentChunkIndex = 0;
+    this.playNextChunk();
+  }
+
+  private playNextChunk() {
+    if (this.isStopping) return;
+
+    if (this.currentChunkIndex >= this.chunksQueue.length) {
+      this.activeUtterance = null;
+      if (this.onEndCallback) {
+        this.onEndCallback();
+      }
+      return;
+    }
+
+    const chunkText = this.chunksQueue[this.currentChunkIndex];
+    const utterance = new SpeechSynthesisUtterance(chunkText);
+    this.activeUtterance = utterance;
+
+    utterance.lang = this.lang === "es" ? "es-ES" : "en-US";
+    if (this.matchingVoice) {
+      utterance.voice = this.matchingVoice;
+    }
+
+    utterance.rate = this.lang === "es" ? 0.95 : 0.9;
     utterance.pitch = 1.0;
 
     utterance.onend = () => {
-      this.activeUtterance = null;
-      onEnd();
+      if (this.isStopping) return;
+      this.currentChunkIndex++;
+      this.playNextChunk();
     };
 
     utterance.onerror = (e) => {
-      console.error("Speech Synthesis error:", e);
+      if (e.error === "interrupted" || this.isStopping) {
+        return;
+      }
+      console.error("Speech Synthesis chunk error:", e);
       this.activeUtterance = null;
-      onEnd();
+      if (this.onEndCallback) {
+        this.onEndCallback();
+      }
     };
 
     window.speechSynthesis.speak(utterance);
@@ -114,10 +180,13 @@ class VoiceServiceClass {
    * Cancels and stops all active audio synthesis immediately.
    */
   public stop() {
+    this.isStopping = true;
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
     this.activeUtterance = null;
+    this.chunksQueue = [];
+    this.currentChunkIndex = 0;
   }
 
   /**
