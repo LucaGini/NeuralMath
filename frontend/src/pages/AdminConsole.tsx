@@ -142,7 +142,7 @@ export const AdminConsole: React.FC = () => {
   const [selectedAgentKey, setSelectedAgentKey] = useState<string>("topic");
   const [editedPrompt, setEditedPrompt] = useState("");
   const [editedTemperature, setEditedTemperature] = useState(0.7);
-  const [editedModel, setEditedModel] = useState("gemini-2.0-flash");
+  const [editedModel, setEditedModel] = useState("gemini-2.5-flash-lite");
   const [agentHistory, setAgentHistory] = useState<AgentHistoryRow[]>([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [savingAgent, setSavingAgent] = useState(false);
@@ -499,7 +499,7 @@ export const AdminConsole: React.FC = () => {
     } else {
       setEditedPrompt("");
       setEditedTemperature(0.7);
-      setEditedModel("gemini-2.0-flash");
+      setEditedModel("gemini-2.5-flash-lite");
     }
   };
 
@@ -1244,7 +1244,7 @@ export const AdminConsole: React.FC = () => {
                         onChange={(e) => setEditedModel(e.target.value)}
                         className="w-full bg-paper-50 dark:bg-paper-950 border border-paper-250 dark:border-paper-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:border-primary-500 transition-all text-paper-700 dark:text-paper-350"
                       >
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Recomendado)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite (Recomendado)</option>
                         <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                         <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                       </select>

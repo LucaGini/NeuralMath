@@ -78,9 +78,12 @@ def call_llm(
         if gemini_key and gemini_key not in ["placeholder_gemini_key", "your_gemini_api_key_here", ""]:
             try:
                 # Avoid passing Groq models to Gemini client
-                gemini_model = "gemini-2.0-flash"
+                gemini_model = "gemini-2.5-flash-lite"
                 if model_name and "llama" not in model_name.lower() and "groq" not in model_name.lower():
-                    gemini_model = model_name
+                    if model_name == "gemini-2.0-flash":
+                        gemini_model = "gemini-2.5-flash-lite"
+                    else:
+                        gemini_model = model_name
 
                 logger.info(f"Attempting to call Gemini ({gemini_model})...")
                 client = genai.Client(api_key=gemini_key)

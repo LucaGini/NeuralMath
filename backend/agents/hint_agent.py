@@ -64,7 +64,7 @@ def hint_node(state: AgentState) -> Dict[str, Any]:
         # Safeguard LaTeX backslashes from JSON parsing collisions
         import re
         protected = cleaned.replace("\\\\", "__DOUBLE_BACKSLASH__")
-        escaped = re.sub(r'\\([a-zA-Z])', r'\\\\\1', protected)
+        escaped = re.sub(r'\\(?!["/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', protected)
         cleaned_json = escaped.replace("__DOUBLE_BACKSLASH__", "\\\\")
         
         parsed = json.loads(cleaned_json)

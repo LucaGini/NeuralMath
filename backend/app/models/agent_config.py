@@ -8,7 +8,7 @@ class AgentConfig(Base):
     agent_key = Column(String(50), primary_key=True)
     system_prompt = Column(Text, nullable=False)
     temperature = Column(Float, nullable=False, default=0.7)
-    model_name = Column(String(100), nullable=False, default="gemini-2.0-flash")
+    model_name = Column(String(100), nullable=False, default="gemini-2.5-flash-lite")
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
 class AgentConfigHistory(Base):

@@ -301,10 +301,15 @@ def seed_default_agent_configs():
                     "- Primary: Use child-friendly analogies, real-world objects (candies, toys), and very simple, illustrative formula blocks.\n"
                     "- Secondary: Use teenage-relatable context, moderate algebraic formulas, standard LaTeX blocks ($...$ or $$...$$), and historical stories or game examples.\n"
                     "- University: Use formal math rigor, abstract definitions, theorem proofs or structural theories, and real-world industrial or computer science applications (e.g. PageRank, cryptography).\n"
-                    "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling."
+                    "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling.\n\n"
+                    "CRITICAL RESPONSE FORMAT RULES:\n"
+                    "- Start directly with the explanation content (e.g., Markdown headers like ## or ###).\n"
+                    "- Do NOT include any introductory greetings, conversational preambles, or polite remarks (e.g. '¡Absolutamente!', '¡Hola!', 'Me complace ayudarte...').\n"
+                    "- Do NOT include any concluding remarks, sign-offs, or questions at the end (e.g. 'Espero que esto te sea útil...', 'Si tienes alguna pregunta...').\n"
+                    "- Output ONLY the educational content itself."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "exercise": {
                 "system_prompt": (
@@ -333,7 +338,7 @@ def seed_default_agent_configs():
                     "Ensure the questions escalate in complexity. Do not include any explanation or markdown wrappers outside of the JSON block."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "evaluator": {
                 "system_prompt": (
@@ -361,7 +366,7 @@ def seed_default_agent_configs():
                     "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses like (x-2)(x-3)). Reject expanded forms (like x^2 - 5x + 6) even if equivalent."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "evaluator_teach_back": {
                 "system_prompt": (
@@ -389,7 +394,7 @@ def seed_default_agent_configs():
                     "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses). Reject if they accept an expanded polynomial (like x^2 - 5x + 6) even if algebraicaly identical."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "motivator": {
                 "system_prompt": (
@@ -402,7 +407,7 @@ def seed_default_agent_configs():
                     "Keep the message concise, energetic, and highly readable (2 to 4 sentences max)."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "hint": {
                 "system_prompt": (
@@ -416,7 +421,7 @@ def seed_default_agent_configs():
                     "4. Return ONLY a JSON object: {'hint': 'your hint text here'}"
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             },
             "protege": {
                 "system_prompt": (
@@ -434,7 +439,7 @@ def seed_default_agent_configs():
                     "Ensure the wrong answers and explanations are mathematically plausible (common slips like sign errors, failing to distribute, multiplying instead of adding exponent rules, etc.)."
                 ),
                 "temperature": 0.7,
-                "model_name": "gemini-2.0-flash"
+                "model_name": "gemini-2.5-flash-lite"
             }
         }
         
@@ -451,7 +456,7 @@ def seed_default_agent_configs():
                 db.add(config)
                 seeded_new = True
             else:
-                if existing.system_prompt != val["system_prompt"]:
+                if existing.system_prompt != val["system_prompt"] or existing.model_name != val["model_name"]:
                     existing.system_prompt = val["system_prompt"]
                     existing.temperature = val["temperature"]
                     existing.model_name = val["model_name"]

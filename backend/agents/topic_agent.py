@@ -27,7 +27,12 @@ def topic_node(state: AgentState) -> Dict[str, Any]:
             "- Primary: Use child-friendly analogies, real-world objects (candies, toys), and very simple, illustrative formula blocks.\n"
             "- Secondary: Use teenage-relatable context, moderate algebraic formulas, standard LaTeX blocks ($...$ or $$...$$), and historical stories or game examples.\n"
             "- University: Use formal math rigor, abstract definitions, theorem proofs or structural theories, and real-world industrial or computer science applications (e.g. PageRank, cryptography).\n"
-            "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling."
+            "Always use rich LaTeX formatting inside $$ and $ to display formulas nicely. Avoid generic styling.\n\n"
+            "CRITICAL RESPONSE FORMAT RULES:\n"
+            "- Start directly with the explanation content (e.g., Markdown headers like ## or ###).\n"
+            "- Do NOT include any introductory greetings, conversational preambles, or polite remarks (e.g. '¡Absolutamente!', '¡Hola!', 'Me complace ayudarte...').\n"
+            "- Do NOT include any concluding remarks, sign-offs, or questions at the end (e.g. 'Espero que esto te sea útil...', 'Si tienes alguna pregunta...').\n"
+            "- Output ONLY the educational content itself."
         )
         temperature = 0.7
         model_name = None
