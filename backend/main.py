@@ -365,8 +365,8 @@ def seed_default_agent_configs():
                     "- GEOMETRIC UNITS: If the question specifies units, the answer must use the correct unit dimension (linear for perimeters, squared for areas, cubed for volumes). Reject if the unit dimension is incorrect (e.g., cm instead of cm^2 for area).\n"
                     "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses like (x-2)(x-3)). Reject expanded forms (like x^2 - 5x + 6) even if equivalent."
                 ),
-                "temperature": 0.7,
-                "model_name": "gemini-2.5-flash-lite"
+                "temperature": 0.0,
+                "model_name": "gemini-2.5-flash"
             },
             "evaluator_teach_back": {
                 "system_prompt": (
@@ -393,8 +393,8 @@ def seed_default_agent_configs():
                     "- GEOMETRIC UNITS: If units are specified in a geometry question, the correct dimension (linear for perimeters, squared for areas, cubed for volumes) must be enforced. If the student accepts linear units for an area (e.g., cm instead of cm^2), mark 'is_active' as False.\n"
                     "- POLYNOMIAL FACTORIZATION: If polynomial factorization is requested, the answer must be in factorized form (multiplied terms in parentheses). Reject if they accept an expanded polynomial (like x^2 - 5x + 6) even if algebraicaly identical."
                 ),
-                "temperature": 0.7,
-                "model_name": "gemini-2.5-flash-lite"
+                "temperature": 0.0,
+                "model_name": "gemini-2.5-flash"
             },
             "motivator": {
                 "system_prompt": (
@@ -456,7 +456,9 @@ def seed_default_agent_configs():
                 db.add(config)
                 seeded_new = True
             else:
-                if existing.system_prompt != val["system_prompt"] or existing.model_name != val["model_name"]:
+                if (existing.system_prompt != val["system_prompt"] or 
+                    existing.model_name != val["model_name"] or 
+                    existing.temperature != val["temperature"]):
                     existing.system_prompt = val["system_prompt"]
                     existing.temperature = val["temperature"]
                     existing.model_name = val["model_name"]

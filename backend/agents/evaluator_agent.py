@@ -58,8 +58,8 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
                 "- REGRESSION & CORRELATION: The Pearson correlation coefficient r must be between -1 and 1. For regression coefficients (slope and intercept), allow rounding tolerance of +/- 0.01. Reject r values outside [-1, 1] as mathematically impossible.\n"
                 "- DISCRETE MATHEMATICS: For truth tables, accept T/F, V/F, 1/0, or Verdadero/Falso as equivalent valid formats. For graph problems involving paths or routes, the order of vertices matters — verify it matches the expected answer."
             )
-            temperature = 0.7
-            model_name = None
+            temperature = 0.0
+            model_name = "gemini-2.5-flash"
             
         prompt = (
             f"Exercise Question: {exercise_question}\n"
@@ -111,8 +111,8 @@ def evaluator_node(state: AgentState) -> Dict[str, Any]:
                 "- REGRESSION & CORRELATION: The Pearson correlation coefficient r must be between -1 and 1. For regression coefficients (slope and intercept), allow rounding tolerance of +/- 0.01. Reject r values outside [-1, 1] as mathematically impossible.\n"
                 "- DISCRETE MATHEMATICS: For truth tables, accept T/F, V/F, 1/0, or Verdadero/Falso as equivalent valid formats. For graph problems involving paths or routes, the order of vertices matters — verify it matches the expected answer."
             )
-            temperature = 0.7
-            model_name = None
+            temperature = 0.0
+            model_name = "gemini-2.5-flash"
  
         prompt = (
             f"Exercise Question: {exercise_question}\n"
