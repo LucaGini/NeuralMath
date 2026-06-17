@@ -1,4 +1,11 @@
-# NeuralMath (AI-Powered Math Learning Platform MVP)
+![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.11-green)
+![React](https://img.shields.io/badge/React-18-blue)
+
+Copyright (C) 2026 Luca Gini
+Licensed under the GNU Affero General Public License v3.0
+
+# NeuralMath — AI-Powered Math Learning Platform
 
 NeuralMath is a highly rigorous, gamified, and agent-powered mathematical learning platform. The application provides personalized topic explanations, progressive learning sessions, interactive teaching workflows, and constructive critique loops using advanced multi-agent orchestrations.
 
@@ -189,9 +196,12 @@ To bypass registrations and log into a pre-populated workspace with **230 XP**, 
 *   **Password**: `Matematicas123`
 *   *Alternatively, click the "Acceso Rápido de Demostración" button on the Login page.*
 
+> These are read-only demo credentials for evaluation purposes only.
+
 ---
 
 ## Technical Stack Details
 
-*   **Backend**: Python, FastAPI, SQLAlchemy, PostgreSQL, Pydantic v2, JWT Security, LangGraph.
+*   **Backend**: Python, FastAPI, SQLAlchemy, PostgreSQL, Pydantic v2, JWT Security, LangGraph, Gemini, Groq, Langchain.
 *   **Frontend**: React, TypeScript, Vite, Recharts, Framer Motion, KaTeX (LaTeX typesetting).
+*   **Deployment**: Vercel, Render, Neon.
