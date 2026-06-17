@@ -68,6 +68,19 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const App: React.FC = () => {
+  if (import.meta.env.VITE_MAINTENANCE_MODE === 'true') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-paper-950 math-grid">
+        <div className="text-center px-6">
+          <h1 className="text-3xl font-bold text-white mb-3">NeuralMath</h1>
+          <p className="text-paper-400 text-base">
+            Estamos preparando algo especial.<br/>Volvé pronto.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
