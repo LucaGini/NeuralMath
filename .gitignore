@@ -69,3 +69,6 @@ Desktop.ini
 
 # Project Documentation
 docs/
+
+# Test scripts (local only)
+backend/test_key_rotation.py

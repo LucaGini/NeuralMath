@@ -74,27 +74,31 @@ def call_llm(
 
     # Call function for Gemini
     def try_gemini():
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if gemini_key and gemini_key not in ["placeholder_gemini_key", "your_gemini_api_key_here", ""]:
-            try:
-                # Avoid passing Groq models to Gemini client
-                gemini_model = "gemini-2.5-flash-lite"
-                if model_name and "llama" not in model_name.lower() and "groq" not in model_name.lower():
-                    if model_name == "gemini-2.0-flash":
-                        gemini_model = "gemini-2.5-flash-lite"
-                    else:
-                        gemini_model = model_name
+        raw_keys = os.getenv("GEMINI_API_KEYS", os.getenv("GEMINI_API_KEY", ""))
+        gemini_keys = [
+            k.strip() for k in raw_keys.split(",")
+            if k.strip() and k.strip() not in ["placeholder_gemini_key", "your_gemini_api_key_here", ""]
+        ]
+        random.shuffle(gemini_keys)
 
-                logger.info(f"Attempting to call Gemini ({gemini_model})...")
+        gemini_model = "gemini-2.5-flash-lite"
+        if model_name and "llama" not in model_name.lower() and "groq" not in model_name.lower():
+            if model_name == "gemini-2.0-flash":
+                gemini_model = "gemini-2.5-flash-lite"
+            else:
+                gemini_model = model_name
+
+        for gemini_key in gemini_keys:
+            try:
+                logger.info(f"Attempting to call Gemini ({gemini_model}) with key ...{gemini_key[-4:]}")
                 client = genai.Client(api_key=gemini_key)
-                
-                # Setup configuration utilizing GenerateContentConfig
+
                 config = types.GenerateContentConfig(
                     system_instruction=system_instruction,
                     response_mime_type="application/json" if json_mode else None,
                     temperature=temperature
                 )
-                
+
                 response = client.models.generate_content(
                     model=gemini_model,
                     contents=prompt,
@@ -103,30 +107,36 @@ def call_llm(
                 if response and response.text:
                     return response.text
             except Exception as e:
-                logger.error(f"Gemini API call failed: {e}")
+                logger.error(f"Gemini call failed with key ...{gemini_key[-4:]}: {e}")
+                continue
         return None
 
     # Call function for Groq
     def try_groq():
-        groq_key = os.getenv("GROQ_API_KEY")
-        if groq_key and groq_key not in ["placeholder_groq_key", "your_groq_api_key_here", ""]:
-            try:
-                # Avoid passing Gemini models to Groq client
-                groq_model = "llama-3.3-70b-versatile"
-                if model_name and "gemini" not in model_name.lower():
-                    groq_model = model_name
+        raw_keys = os.getenv("GROQ_API_KEYS", os.getenv("GROQ_API_KEY", ""))
+        groq_keys = [
+            k.strip() for k in raw_keys.split(",")
+            if k.strip() and k.strip() not in ["placeholder_groq_key", "your_groq_api_key_here", ""]
+        ]
+        random.shuffle(groq_keys)
 
-                logger.info(f"Attempting to call Groq ({groq_model})...")
+        groq_model = "llama-3.3-70b-versatile"
+        if model_name and "gemini" not in model_name.lower():
+            groq_model = model_name
+
+        for groq_key in groq_keys:
+            try:
+                logger.info(f"Attempting to call Groq ({groq_model}) with key ...{groq_key[-4:]}")
                 client = Groq(api_key=groq_key)
                 messages = []
                 if system_instruction:
                     messages.append({"role": "system", "content": system_instruction})
                 messages.append({"role": "user", "content": prompt})
-                
+
                 response_format = None
                 if json_mode:
                     response_format = {"type": "json_object"}
-                    
+
                 completion = client.chat.completions.create(
                     model=groq_model,
                     messages=messages,
@@ -136,7 +146,46 @@ def call_llm(
                 if completion and completion.choices:
                     return completion.choices[0].message.content
             except Exception as e:
-                logger.error(f"Groq API call failed: {e}")
+                logger.error(f"Groq call failed with key ...{groq_key[-4:]}: {e}")
+                continue
+        return None
+
+    # Call function for Cerebras (third fallback provider)
+    def try_cerebras():
+        raw_keys = os.getenv("CEREBRAS_API_KEYS", "")
+        cerebras_keys = [k.strip() for k in raw_keys.split(",") if k.strip()]
+        random.shuffle(cerebras_keys)
+
+        cerebras_model = "gpt-oss-120b"
+
+        for cerebras_key in cerebras_keys:
+            try:
+                logger.info(f"Attempting to call Cerebras ({cerebras_model}) with key ...{cerebras_key[-4:]}")
+                from openai import OpenAI as OpenAIClient
+                client = OpenAIClient(
+                    api_key=cerebras_key,
+                    base_url="https://api.cerebras.ai/v1"
+                )
+                messages = []
+                if system_instruction:
+                    messages.append({"role": "system", "content": system_instruction})
+                messages.append({"role": "user", "content": prompt})
+
+                response_format = None
+                if json_mode:
+                    response_format = {"type": "json_object"}
+
+                completion = client.chat.completions.create(
+                    model=cerebras_model,
+                    messages=messages,
+                    response_format=response_format,
+                    temperature=temperature
+                )
+                if completion and completion.choices:
+                    return completion.choices[0].message.content
+            except Exception as e:
+                logger.error(f"Cerebras call failed with key ...{cerebras_key[-4:]}: {e}")
+                continue
         return None
 
     # Execute with preference
@@ -147,11 +196,17 @@ def call_llm(
         res = try_gemini()
         if res is not None:
             return res
+        res = try_cerebras()
+        if res is not None:
+            return res
     else:
         res = try_gemini()
         if res is not None:
             return res
         res = try_groq()
+        if res is not None:
+            return res
+        res = try_cerebras()
         if res is not None:
             return res
 
