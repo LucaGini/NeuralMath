@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import jsPDF from "jspdf";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import { MathRenderer } from "../components/MathRenderer";
@@ -47,6 +48,14 @@ interface CompletionSummary {
   newly_unlocked: NewlyUnlockedAchievement[];
 }
 
+interface SessionResult {
+  question: string;
+  userAnswer: string;
+  isCorrect: boolean;
+  explanation: string;
+  exerciseType: string;
+}
+
 const errorTypeLabelsEs: Record<string, string> = {
   sign_error: "Error de Signo",
   distribution_error: "Error de Distribución",
@@ -89,6 +98,7 @@ export const Session: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [completedSummary, setCompletedSummary] = useState<CompletionSummary | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [sessionResults, setSessionResults] = useState<SessionResult[]>([]);
 
   // New Roadmap states
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -388,6 +398,15 @@ export const Session: React.FC = () => {
         misconception: res.data.misconception,
       });
 
+      // Accumulate exercise result for PDF export
+      setSessionResults(prev => [...prev, {
+        question: activeExercise.question,
+        userAnswer: answer,
+        isCorrect: res.data.is_correct,
+        explanation: res.data.explanation,
+        exerciseType: activeExercise.exercise_type,
+      }]);
+
       if (res.data.is_correct) {
         SoundEffects.playCorrect();
         if (sessionType === "speed_run") {
@@ -413,6 +432,195 @@ export const Session: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!completedSummary) return;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let y = 20;
+
+    // HEADER WITH LOGO
+    try {
+      const logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = "/logo.png";
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = logoImg.naturalWidth;
+      canvas.height = logoImg.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(logoImg, 0, 0);
+        const logoDataUrl = canvas.toDataURL("image/png");
+        doc.addImage(logoDataUrl, "PNG", margin, y - 6, 10, 10);
+      }
+    } catch {
+      // If logo fails to load, continue without it
+    }
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text("NeuralMath", margin + 13, y + 2);
+
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(
+      language === "es" ? "Resumen de Sesión de Práctica" : "Practice Session Summary",
+      margin, y
+    );
+    const dateStr = new Date().toLocaleDateString(
+      language === "es" ? "es-AR" : "en-US",
+      { year: "numeric", month: "long", day: "numeric" }
+    );
+    doc.text(dateStr, pageWidth - margin, y, { align: "right" });
+
+    y += 6;
+    doc.setDrawColor(230);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // TOPIC & STATS
+    doc.setFontSize(15);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(topicName || "Sesión", margin, y);
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const accuracy = completedSummary.total_questions > 0
+      ? Math.round((completedSummary.score / completedSummary.total_questions) * 100)
+      : 0;
+
+    const stats = [
+      { label: language === "es" ? "Resultado" : "Score", value: `${completedSummary.score} / ${completedSummary.total_questions}` },
+      { label: language === "es" ? "Precisión" : "Accuracy", value: `${accuracy}%` },
+      { label: language === "es" ? "XP ganados" : "XP Earned", value: `+${completedSummary.xp_earned} XP` },
+      { label: language === "es" ? "Racha activa" : "Active Streak", value: `${completedSummary.streak_days} ${language === "es" ? "días" : "days"}` },
+    ];
+
+    stats.forEach(stat => {
+      doc.setFont("helvetica", "bold");
+      doc.text(`${stat.label}:`, margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(stat.value, margin + 55, y);
+      y += 7;
+    });
+
+    y += 4;
+    doc.setDrawColor(230);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 10;
+
+    // EXERCISE BREAKDOWN
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0);
+    doc.text(
+      language === "es" ? "Detalle de ejercicios:" : "Exercise breakdown:",
+      margin, y
+    );
+    y += 8;
+
+    sessionResults.forEach((result, index) => {
+      if (y > 255) { doc.addPage(); y = 20; }
+
+      const resultLabel = result.isCorrect
+        ? (language === "es" ? "[OK] Correcto" : "[OK] Correct")
+        : (language === "es" ? "[X] Incorrecto" : "[X] Incorrect");
+
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(`${index + 1}. ${resultLabel}`, margin, y);
+      y += 5;
+
+      const cleanQ = result.question
+        .replace(/\$\$?([^$]+)\$\$?/g, "$1")
+        .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1)/($2)")
+        .replace(/\\[a-zA-Z]+\{([^}]+)\}/g, "$1")
+        .replace(/\\[a-zA-Z]+/g, "")
+        .replace(/[{}]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30);
+      const qLines = doc.splitTextToSize(`${language === "es" ? "Pregunta" : "Question"}: ${cleanQ}`, pageWidth - margin * 2 - 5);
+      doc.text(qLines, margin + 4, y);
+      y += qLines.length * 4.5 + 2;
+
+      doc.setTextColor(80);
+      const answerLabel = language === "es" ? "Tu respuesta" : "Your answer";
+      const aLines = doc.splitTextToSize(`${answerLabel}: ${result.userAnswer || "-"}`, pageWidth - margin * 2 - 5);
+      doc.text(aLines, margin + 4, y);
+      y += aLines.length * 4.5 + 2;
+
+      if (!result.isCorrect && result.explanation) {
+        doc.setTextColor(120);
+        doc.setFont("helvetica", "italic");
+        const explLabel = language === "es" ? "Corrección" : "Correction";
+        const eLines = doc.splitTextToSize(`${explLabel}: ${result.explanation}`, pageWidth - margin * 2 - 5);
+        doc.text(eLines, margin + 4, y);
+        y += eLines.length * 4.5;
+        doc.setFont("helvetica", "normal");
+      }
+
+      y += 5;
+    });
+
+    // MOTIVATOR MESSAGE
+    if (completedSummary.motivation_message) {
+      if (y > 245) { doc.addPage(); y = 20; }
+      doc.setDrawColor(230);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bolditalic");
+      doc.setTextColor(60);
+      doc.text(language === "es" ? "Mensaje de tu tutor AI:" : "Message from your AI tutor:", margin, y);
+      y += 6;
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(80);
+      const mLines = doc.splitTextToSize(`"${completedSummary.motivation_message}"`, pageWidth - margin * 2);
+      doc.text(mLines, margin, y);
+      y += mLines.length * 5 + 5;
+    }
+
+    // UNLOCKED BADGES
+    if (completedSummary.newly_unlocked?.length > 0) {
+      if (y > 250) { doc.addPage(); y = 20; }
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0);
+      doc.text(language === "es" ? "Logros desbloqueados en esta sesión:" : "Achievements unlocked this session:", margin, y);
+      y += 6;
+      completedSummary.newly_unlocked.forEach(badge => {
+        doc.setFont("helvetica", "normal");
+        const title = language === "es" ? badge.title_es : badge.title_en;
+        const desc = language === "es" ? badge.desc_es : badge.desc_en;
+        doc.text(`• ${title}: ${desc}`, margin + 4, y);
+        y += 6;
+      });
+    }
+
+    // FOOTER
+    doc.setFontSize(8);
+    doc.setTextColor(160);
+    doc.text("neural-math.vercel.app", pageWidth / 2, 287, { align: "center" });
+
+    // SAVE
+    const safeName = (topicName || "session").replace(/[^a-zA-Z0-9]/g, "_");
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    doc.save(`NeuralMath_${safeName}_${dateStamp}.pdf`);
   };
 
   const handleContinue = async () => {
@@ -593,6 +801,16 @@ export const Session: React.FC = () => {
               "{completedSummary.motivation_message}"
             </p>
           </div>
+
+          <button
+            onClick={handleDownloadPDF}
+            className="w-full flex items-center justify-center gap-2 font-semibold py-3.5 rounded-2xl border border-paper-300 dark:border-paper-700 text-paper-600 dark:text-paper-300 hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-all"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {language === "es" ? "Descargar resumen PDF" : "Download PDF summary"}
+          </button>
 
           <button
             onClick={() => navigate("/dashboard")}

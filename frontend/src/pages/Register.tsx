@@ -42,7 +42,8 @@ export const Register: React.FC = () => {
         level,
       });
       clearTimeout(timer);
-      navigate("/login");
+      localStorage.setItem("onboarding_pending", "true");
+      navigate("/onboarding");
     } catch (err: any) {
       clearTimeout(timer);
       setError(

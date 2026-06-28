@@ -10,6 +10,7 @@ import { Session } from "./pages/Session";
 import { Progress } from "./pages/Progress";
 import { Profile } from "./pages/Profile";
 import { AdminConsole } from "./pages/AdminConsole";
+import { Onboarding } from "./pages/Onboarding";
 import { Analytics } from "@vercel/analytics/react";
 import api from "./services/api";
 
@@ -89,6 +90,7 @@ export const App: React.FC = () => {
             {/* Public Authentication routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/onboarding" element={<Onboarding />} />
 
             {/* Secure Student Context routes */}
             <Route
